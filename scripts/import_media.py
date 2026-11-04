@@ -443,14 +443,15 @@ def entry(path, it=None):
 
 
 def apply(items, convert_height, encoder, jobs):
-    todo = [it for it in items if it["dest"] in ("show", "review")]
+    # Duplicates found in the inbox are moved aside (never deleted); ones on a drive are just skipped.
+    todo = [it for it in items if it["dest"] in ("show", "review") or (it["dest"] == "duplicate" and it["mode"] == "move")]
     if not todo:
         print("\nNothing to move.")
         return
 
     def run(it):
         sid = it["show"]["id"]
-        folder = (MEDIA_DIR / sid) if it["dest"] == "show" else (REVIEW / sid)
+        folder = {"show": MEDIA_DIR / sid, "review": REVIEW / sid, "duplicate": REVIEW / "_duplicates"}[it["dest"]]
         folder.mkdir(parents=True, exist_ok=True)
         src = it["path"]
         if convert_height and it["video"] and it["dest"] == "show":
@@ -475,7 +476,8 @@ def apply(items, convert_height, encoder, jobs):
 
     by_folder = {}
     for folder, dest, it in done:
-        by_folder.setdefault(folder, []).append((dest, it))
+        if it["dest"] != "duplicate":
+            by_folder.setdefault(folder, []).append((dest, it))
     for folder, files in by_folder.items():
         manifest = folder / MANIFEST
         entries = json.loads(manifest.read_text(encoding="utf-8")) if manifest.exists() else {}
@@ -485,11 +487,14 @@ def apply(items, convert_height, encoder, jobs):
             write_manifest(folder.name, entries)
         else:
             manifest.write_text(json.dumps(dict(sorted(entries.items(), key=lambda kv: (kv[1].get("taken") or "~", kv[0]))), indent=1) + "\n", encoding="utf-8")
-    if any(it["dest"] == "review" for _, _, it in done):
+    if any(it["dest"] in ("review", "duplicate") for _, _, it in done):
         write_review_readme()
     n_show = sum(it["dest"] == "show" for _, _, it in done)
-    n_rev = len(done) - n_show
-    print(f"\nDone: {n_show} into show folders, {n_rev} into media/_review/." + (" Originals left where they were." if any(it["mode"] == "copy" for _, _, it in done) else ""))
+    n_rev = sum(it["dest"] == "review" for _, _, it in done)
+    n_dup = sum(it["dest"] == "duplicate" for _, _, it in done)
+    print(f"\nDone: {n_show} into show folders, {n_rev} into media/_review/"
+          + (f", {n_dup} duplicate(s) of clips you already have into media/_review/_duplicates/ (safe to delete)" if n_dup else "") + "."
+          + (" Originals left where they were." if any(it["mode"] == "copy" for _, _, it in done) else ""))
 
 
 def write_review_readme():
@@ -498,8 +503,9 @@ def write_review_readme():
              "Each folder is named after the show it would go to; media.json in it says why.", "",
              "Keep one:  python3 scripts/import_media.py --restore IMG_1234.MOV   (moves it into its show)",
              "Keep all of a show's:  python3 scripts/import_media.py --restore 2026-11-03-thundercat",
-             "Don't want it: delete it. Nothing in this folder is put on the site or committed.", ""]
-    for folder in sorted(p for p in REVIEW.iterdir() if p.is_dir()):
+             "Don't want it: delete it. Nothing in this folder is put on the site or committed.",
+             "_duplicates/ holds extra copies of clips you already have: delete the whole folder.", ""]
+    for folder in sorted(p for p in REVIEW.iterdir() if p.is_dir() and p.name != "_duplicates"):
         m = folder / MANIFEST
         entries = json.loads(m.read_text(encoding="utf-8")) if m.exists() else {}
         for name in sorted(p.name for p in folder.iterdir() if p.is_file() and p.name != MANIFEST):
@@ -548,7 +554,7 @@ def restore(names):
         raise SystemExit("Nothing in media/_review/.")
     moved = 0
     for target in names:
-        folders = [REVIEW / target] if (REVIEW / target).is_dir() else [p for p in REVIEW.iterdir() if p.is_dir()]
+        folders = [REVIEW / target] if (REVIEW / target).is_dir() else [p for p in REVIEW.iterdir() if p.is_dir() and p.name != "_duplicates"]
         for folder in folders:
             rm = folder / MANIFEST
             rev = json.loads(rm.read_text(encoding="utf-8")) if rm.exists() else {}
