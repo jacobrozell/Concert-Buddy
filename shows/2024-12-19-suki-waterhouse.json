@@ -1,0 +1,71 @@
+{
+  "sets": [
+    {
+      "name": "Main set",
+      "songs": [
+        {
+          "title": "Gateway Drug"
+        },
+        {
+          "title": "Supersad"
+        },
+        {
+          "title": "OMG"
+        },
+        {
+          "title": "Johanna"
+        },
+        {
+          "title": "The Devil I Know"
+        },
+        {
+          "title": "Blackout Drunk"
+        },
+        {
+          "title": "Helpless"
+        },
+        {
+          "title": "Nonchalant"
+        },
+        {
+          "title": "My Fun"
+        },
+        {
+          "title": "Pushing Daisies",
+          "note": "Ashe & Suki Waterhouse cover; with Ashe"
+        },
+        {
+          "title": "Think Twice"
+        },
+        {
+          "title": "To Get You"
+        },
+        {
+          "title": "Big Love"
+        },
+        {
+          "title": "Moves"
+        },
+        {
+          "title": "To Love"
+        },
+        {
+          "title": "Model, Actress, Whatever"
+        }
+      ]
+    },
+    {
+      "name": "Encore",
+      "songs": [
+        {
+          "title": "Brutally"
+        },
+        {
+          "title": "Good Looking"
+        }
+      ]
+    }
+  ],
+  "extras": [],
+  "source": "https://www.setlist.fm/setlist/suki-waterhouse/2024/ryman-auditorium-nashville-tn-4356474b.html"
+}

@@ -1,0 +1,96 @@
+{
+  "sets": [
+    {
+      "name": "Main set",
+      "songs": [
+        {
+          "title": "Black Mountain Rag",
+          "note": "Curly Fox cover"
+        },
+        {
+          "title": "Love of a Girl"
+        },
+        {
+          "title": "Distraction #74"
+        },
+        {
+          "title": "Will You Return?"
+        },
+        {
+          "title": "Left on Laura, Left on Lisa"
+        },
+        {
+          "title": "Head Full of Doubt/Road Full of Promise"
+        },
+        {
+          "title": "I and Love and You"
+        },
+        {
+          "title": "Farewell Trion",
+          "note": "[traditional] cover"
+        },
+        {
+          "title": "As Good as I Once Was",
+          "note": "Toby Keith cover"
+        },
+        {
+          "title": "Denouncing November Blue (Uneasy Writer)"
+        },
+        {
+          "title": "Laundry Room"
+        },
+        {
+          "title": "Talk on Indolence"
+        },
+        {
+          "title": "Go to Sleep"
+        },
+        {
+          "title": "Colorshow"
+        },
+        {
+          "title": "Forever Now"
+        },
+        {
+          "title": "Live and Die"
+        },
+        {
+          "title": "No Hard Feelings"
+        },
+        {
+          "title": "Operator (That's Not the Way It Feels)",
+          "note": "Jim Croce cover"
+        },
+        {
+          "title": "Murder in the City"
+        },
+        {
+          "title": "I Wish I Was"
+        },
+        {
+          "title": "Satan Pulls the Strings"
+        },
+        {
+          "title": "Country Kid"
+        },
+        {
+          "title": "Ain't No Man"
+        }
+      ]
+    },
+    {
+      "name": "Encore",
+      "songs": [
+        {
+          "title": "The Prettiest Thing",
+          "note": "David Childers & The Modern Don Juans cover"
+        },
+        {
+          "title": "2020 Regret"
+        }
+      ]
+    }
+  ],
+  "extras": [],
+  "source": "https://www.setlist.fm/setlist/the-avett-brothers/2025/the-orion-amphitheater-huntsville-al-35eb10b.html"
+}

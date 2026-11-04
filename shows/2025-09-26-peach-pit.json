@@ -1,0 +1,84 @@
+{
+  "sets": [
+    {
+      "name": "VIP Sound Check",
+      "songs": [
+        {
+          "title": "Sweet FA"
+        },
+        {
+          "title": "Vickie"
+        },
+        {
+          "title": "Live at the Swamp"
+        }
+      ]
+    },
+    {
+      "name": "Main Set",
+      "songs": [
+        {
+          "title": "War Pigs / Magpie",
+          "note": "Black Sabbath cover"
+        },
+        {
+          "title": "Drop the Guillotine"
+        },
+        {
+          "title": "Black Licorice"
+        },
+        {
+          "title": "Brian's Movie"
+        },
+        {
+          "title": "Give Up Baby Go"
+        },
+        {
+          "title": "Outta Here"
+        },
+        {
+          "title": "Tell Me You Love Me"
+        },
+        {
+          "title": "What Once Was / Techno Show",
+          "note": "Her’s cover"
+        },
+        {
+          "title": "Wax & Wane"
+        },
+        {
+          "title": "St. Mark’s Funny Feeling"
+        },
+        {
+          "title": "Shampoo Bottles"
+        },
+        {
+          "title": "Not Me"
+        },
+        {
+          "title": "Alrighty Aphrodite"
+        },
+        {
+          "title": "Private Presley"
+        }
+      ]
+    },
+    {
+      "name": "Encore",
+      "songs": [
+        {
+          "title": "Peach Pit",
+          "note": "Acoustic, just Neil on stage"
+        },
+        {
+          "title": "Everything About You"
+        },
+        {
+          "title": "Tommy's Party"
+        }
+      ]
+    }
+  ],
+  "extras": [],
+  "source": "https://www.setlist.fm/setlist/peach-pit/2025/iron-city-birmingham-al-4341c7cf.html"
+}

@@ -1,0 +1,83 @@
+{
+  "sets": [
+    {
+      "name": "Main set",
+      "songs": [
+        {
+          "title": "MAKING TIME"
+        },
+        {
+          "title": "KEEP IT UP"
+        },
+        {
+          "title": "AMAZING"
+        },
+        {
+          "title": "ONE IN A MILLION"
+        },
+        {
+          "title": "Television/So Far So Good"
+        },
+        {
+          "title": "10/10"
+        },
+        {
+          "title": "7AM"
+        },
+        {
+          "title": "THE SHADE"
+        },
+        {
+          "title": "Lovin' You",
+          "note": "Minnie Riperton cover"
+        },
+        {
+          "title": "4 Seasons"
+        },
+        {
+          "title": "Untitled"
+        },
+        {
+          "title": "Happiness"
+        },
+        {
+          "title": "Always"
+        },
+        {
+          "title": "Corduroy Dreams"
+        },
+        {
+          "title": "OPEN A WINDOW"
+        },
+        {
+          "title": "IF YOU WANT IT"
+        },
+        {
+          "title": "Never Enough"
+        },
+        {
+          "title": "Sunflower"
+        },
+        {
+          "title": "Best Friend"
+        },
+        {
+          "title": "Loving Is Easy"
+        },
+        {
+          "title": "WHO CARES?"
+        }
+      ]
+    },
+    {
+      "name": "Encore",
+      "songs": [
+        {
+          "title": "Pluto Projector"
+        }
+      ]
+    }
+  ],
+  "extras": [],
+  "source": "https://www.setlist.fm/setlist/rex-orange-county/2022/ascend-amphitheater-nashville-tn-bb7f9de.html"
+}

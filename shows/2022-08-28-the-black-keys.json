@@ -1,0 +1,63 @@
+{
+  "sets": [
+    {
+      "name": "Main set",
+      "songs": [
+        {
+          "title": "I Got Mine"
+        },
+        {
+          "title": "Howlin' for You"
+        },
+        {
+          "title": "Fever"
+        },
+        {
+          "title": "Tighten Up"
+        },
+        {
+          "title": "Your Touch"
+        },
+        {
+          "title": "Gold on the Ceiling"
+        },
+        {
+          "title": "Goin' Down South",
+          "note": "R.L. Burnside cover"
+        },
+        {
+          "title": "Crawling King Snake",
+          "note": "Big Joe Williams cover"
+        },
+        {
+          "title": "Lo/Hi"
+        },
+        {
+          "title": "Next Girl"
+        },
+        {
+          "title": "Your Team Is Looking Good"
+        },
+        {
+          "title": "Wild Child"
+        }
+      ]
+    },
+    {
+      "name": "Encore",
+      "songs": [
+        {
+          "title": "Everlasting Light"
+        },
+        {
+          "title": "Little Black Submarines"
+        },
+        {
+          "title": "Lonely Boy"
+        }
+      ]
+    }
+  ],
+  "extras": [],
+  "source": "https://www.setlist.fm/setlist/the-black-keys/2022/the-orion-amphitheater-huntsville-al-4bb35706.html"
+}

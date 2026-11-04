@@ -1,0 +1,112 @@
+{
+  "sets": [
+    {
+      "name": "Set 1:",
+      "songs": [
+        {
+          "title": "Strangers",
+          "note": ">"
+        },
+        {
+          "title": "Evergreen",
+          "note": ">"
+        },
+        {
+          "title": "Sheep",
+          "note": ">"
+        },
+        {
+          "title": "Let Loose",
+          "note": ">"
+        },
+        {
+          "title": "Fire on the Mountain",
+          "note": "Grateful Dead cover"
+        },
+        {
+          "title": "My Vibe"
+        },
+        {
+          "title": "Orange Blood"
+        },
+        {
+          "title": "Phenomenon",
+          "note": ">"
+        },
+        {
+          "title": "Jenny Jenkins"
+        },
+        {
+          "title": "Bug Eyes",
+          "note": ">"
+        },
+        {
+          "title": "Where Is My Mind?",
+          "note": "Assumed to be \"Where Is My Mind?\" marked on setlist as \"Pixies\"; Pixies cover"
+        },
+        {
+          "title": "Bathroom Light"
+        },
+        {
+          "title": "Don’t It Feel Good"
+        }
+      ]
+    },
+    {
+      "name": "Set 2:",
+      "songs": [
+        {
+          "title": "I'm Your Wreck",
+          "note": ">"
+        },
+        {
+          "title": "Rearrange Us"
+        },
+        {
+          "title": "Lemon Tree"
+        },
+        {
+          "title": "Dirty Love"
+        },
+        {
+          "title": "Mt. Joy",
+          "note": ">"
+        },
+        {
+          "title": "Fire on the Mountain",
+          "note": "Grateful Dead cover"
+        },
+        {
+          "title": "Death"
+        },
+        {
+          "title": "Johnson Song"
+        },
+        {
+          "title": "Julia",
+          "note": ">"
+        },
+        {
+          "title": "Clint Eastwood",
+          "note": "Gorillaz cover"
+        },
+        {
+          "title": "Silver Lining"
+        }
+      ]
+    },
+    {
+      "name": "Encore",
+      "songs": [
+        {
+          "title": "Cardinal"
+        },
+        {
+          "title": "Astrovan"
+        }
+      ]
+    }
+  ],
+  "extras": [],
+  "source": "https://www.setlist.fm/setlist/mt-joy/2023/avondale-brewing-company-birmingham-al-2bb8b4c6.html"
+}

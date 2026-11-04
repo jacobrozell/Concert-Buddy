@@ -1,0 +1,91 @@
+{
+  "sets": [
+    {
+      "name": "Main set",
+      "songs": [
+        {
+          "title": "My Own Soul's Warning"
+        },
+        {
+          "title": "Enterlude"
+        },
+        {
+          "title": "When You Were Young"
+        },
+        {
+          "title": "Jenny Was a Friend of Mine"
+        },
+        {
+          "title": "Smile Like You Mean It"
+        },
+        {
+          "title": "Shot at the Night"
+        },
+        {
+          "title": "Quiet Town",
+          "note": "music video debuted as the visuals, with its director in the audience"
+        },
+        {
+          "title": "Human",
+          "note": "vocoder intro"
+        },
+        {
+          "title": "Somebody Told Me"
+        },
+        {
+          "title": "Fire in Bone"
+        },
+        {
+          "title": "boy"
+        },
+        {
+          "title": "Runaway Horses"
+        },
+        {
+          "title": "A Dustland Fairytale"
+        },
+        {
+          "title": "The First Time Ever I Saw Your Face",
+          "note": "Ewan MacColl & Peggy Seeger cover"
+        },
+        {
+          "title": "Runaways"
+        },
+        {
+          "title": "Read My Mind"
+        },
+        {
+          "title": "Dying Breed"
+        },
+        {
+          "title": "Caution",
+          "note": "Rut segue intro"
+        },
+        {
+          "title": "For Reasons Unknown",
+          "note": "a fan named Michael played the drums"
+        },
+        {
+          "title": "All These Things That I've Done"
+        }
+      ]
+    },
+    {
+      "name": "Encore",
+      "songs": [
+        {
+          "title": "Spaceman"
+        },
+        {
+          "title": "This Charming Man",
+          "note": "The Smiths cover, with Johnny Marr"
+        },
+        {
+          "title": "Mr. Brightside",
+          "note": "with Johnny Marr"
+        }
+      ]
+    }
+  ],
+  "extras": []
+}

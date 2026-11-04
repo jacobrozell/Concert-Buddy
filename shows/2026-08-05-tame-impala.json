@@ -1,0 +1,93 @@
+{
+  "sets": [
+    {
+      "name": "Main Stage",
+      "songs": [
+        {
+          "title": "Apocalypse Dreams"
+        },
+        {
+          "title": "Deadbeat Jam"
+        },
+        {
+          "title": "Borderline"
+        },
+        {
+          "title": "Loser"
+        },
+        {
+          "title": "Breathe Deeper"
+        },
+        {
+          "title": "Gossip"
+        },
+        {
+          "title": "Elephant"
+        },
+        {
+          "title": "Afterthought"
+        },
+        {
+          "title": "Feels Like We Only Go Backwards"
+        },
+        {
+          "title": "Dracula"
+        },
+        {
+          "title": "No Reply",
+          "note": "Reprise"
+        }
+      ]
+    },
+    {
+      "name": "B-Stage",
+      "songs": [
+        {
+          "title": "Ethereal Connection"
+        },
+        {
+          "title": "Not My World"
+        }
+      ]
+    },
+    {
+      "name": "Main Stage",
+      "songs": [
+        {
+          "title": "Let It Happen"
+        },
+        {
+          "title": "Nangs"
+        },
+        {
+          "title": "List of People (To Try and Forget About)"
+        },
+        {
+          "title": "Yes I'm Changing"
+        },
+        {
+          "title": "Eventually"
+        },
+        {
+          "title": "New Person, Same Old Mistakes"
+        }
+      ]
+    },
+    {
+      "name": "Encore",
+      "songs": [
+        {
+          "title": "My Old Ways"
+        },
+        {
+          "title": "The Less I Know the Better"
+        },
+        {
+          "title": "End of Summer"
+        }
+      ]
+    }
+  ],
+  "extras": [],
+  "source": "https://www.setlist.fm/setlist/tame-impala/2026/bridgestone-arena-nashville-tn-434b5727.html"
+}
