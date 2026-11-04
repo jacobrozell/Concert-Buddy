@@ -516,35 +516,63 @@ The full structure, with every optional field:
 
 ### Sorting a big batch automatically
 
-Your phone saves the time (and usually the place) inside every photo and video, so you don't have to sort clips by hand. Dump everything into `media/inbox/` and run:
+Your phone saves the time (and usually the place) inside every photo and video, so you don't have to sort clips by hand. Needs ffmpeg (`brew install ffmpeg`).
+
+**Files you've copied in** (exported from Photos, AirDropped…): put them in `media/inbox/` and run
 
 ```sh
-python3 scripts/import_media.py            # dry run: lists where each file would go
-python3 scripts/import_media.py --apply    # moves them into media/<show-id>/
+python3 scripts/import_media.py                       # dry run: lists where each file would go
+python3 scripts/import_media.py --apply --convert     # moves them into media/<show-id>/, shrinking videos to 1080p
 ```
 
-```
-2026-11-03-thundercat  (15 files)
-   8:38 PM  IMG_3967.MOV          52s
-   8:44 PM  IMG_3968.MOV          53s
-   …
-Not matched (1): left where they are
-  IMG_4569.MOV   2021-08-23 10:15 PM at 39.744,-104.992  (no show in your log on Mon Aug 23, 2021)
+**A folder or external drive** (years of old clips): the script reads them **where they are** and **copies** what matches. The originals are never moved or changed:
+
+```sh
+python3 scripts/import_media.py --from /Volumes/MyDrive/Videos                    # report only
+python3 scripts/import_media.py --from /Volumes/MyDrive/Videos --apply --convert  # copy matches, shrunk
 ```
 
-- **Which show:** the capture time decides. Anything after midnight and before 5 AM counts toward the previous night. A file whose time has no timezone is tried against every zone, and only matched if exactly one show fits.
-- **Files with no capture time** (some edited or exported clips) fall back to a date in the file name, then to their camera-roll neighbours: `IMG_5343` between two clips from the same show joins that show.
-- **Location check:** a clip whose GPS is far from that show's other clips is flagged.
-- **Not matched** usually means a show missing from `concerts.csv`, or a clip from another night. Nothing is deleted.
+With `--convert`, only the small 1080p copy lands on your Mac, never the original. The report looks like this:
+
+```
+2026-11-03-thundercat  (14 to the show, 2 to review, 3 already there)
+    8:38 PM  IMG_3967.MOV          52s
+    8:44 PM  IMG_3968.MOV           4s  → review: only 4.0s long
+    9:10 PM  IMG_3971 copy.MOV    101s  (already have it)
+    …
+Nights with clips but no show in your log (2). Probably shows to add to concerts.csv:
+  Thu May 7, 2026     21 clips  6:03 PM–9:57 PM   near 36.1593,-86.7785  https://maps.google.com/?q=36.15930,-86.77850
+  Mon Aug 23, 2021     1 clip   10:15 PM          near 39.7438,-104.9922  https://maps.google.com/?q=…
+```
+
+**How it decides:**
+- **Which show:** the capture time inside the file. Anything after midnight and before 5 AM counts toward the previous night. A time saved without a timezone is tried against every zone (and borrows the zone from that show's other clips) and is only matched if exactly one show fits.
+- **No capture time:** a date in the file name, then camera-roll neighbours (`IMG_5343` between two clips of the same show), then the file's own date. These are guesses, so those clips go to review.
+- **Location check:** a clip whose GPS is far from that show's other clips goes to review.
+- **Duplicates:** a clip you already have (same show, same capture time, same length, or the same file) is skipped, so you can re-run it on the same drive as often as you like.
+- **Nights with no show:** listed with a map link. That's how forgotten shows turn up. Add the show to `concerts.csv` and run it again.
 - The capture times are saved in each show folder (`media.json`), so clips stay in filming order.
-- Needs `ffprobe`, which comes with ffmpeg (`brew install ffmpeg`).
 
-Then shrink the videos so they fit on GitHub (originals are kept in `originals/`, which is never committed):
+### The review folder
+
+Videos **under 10 seconds** (pocket videos, false starts) and clips whose **show is a guess** go to `media/_review/<show-id>/` instead of the show folder. Nothing there is put on the site or committed. `media/_review/README.txt` lists every clip and why it's there.
 
 ```sh
-python3 scripts/import_media.py --convert        # 1080p H.264 MP4
+python3 scripts/import_media.py --restore IMG_1234.MOV              # keep one: moves it into its show
+python3 scripts/import_media.py --restore 2026-11-03-thundercat     # keep all of a show's review clips
+python3 scripts/import_media.py --review --apply                    # send short/unsure clips already in show folders to review
+```
+
+Don't want one? Delete it. Change the cut-off with `--min-seconds 5`.
+
+### Shrinking videos
+
+```sh
+python3 scripts/import_media.py --convert        # videos already in show folders → 1080p H.264 MP4
 python3 scripts/import_media.py --convert 720    # smaller still
 ```
+
+A 52-second iPhone clip goes from 68 MB to about 22 MB at 1080p, or 10 MB at 720p, and plays in every browser. On a Mac, ffmpeg uses **Apple's hardware video encoder** automatically, which is several times faster than the default and converts several clips at once. `--encoder x264` gives slightly smaller files, more slowly. Originals of files converted in place are kept in `originals/` (never committed); delete them once you're happy, since the originals are still in Photos or on your drive.
 
 The script can tell **which show** a clip is from, but not **which song**. For that, use the tagging screen.
 
@@ -720,6 +748,10 @@ for f in *.HEIC *.heic; do [ -e "$f" ] && sips -s format jpeg "$f" --out "${f%.*
 
 Unlisted videos don't show up in search but can be embedded. Link them like a fan video and add `"by": "me"`. This works well for full sets and long clips, and costs nothing.
 
+### Just for you: no hosting at all
+
+You don't need to host your videos anywhere to enjoy them. The local preview (`python3 scripts/build.py --serve`) plays every clip straight from your disk, so on your own computer the site is complete: song slots, Play the show, all of it. The public GitHub Pages site keeps working with setlists only and leaves out clips it can't serve.
+
 ### 3. Host your media on Cloudflare R2 (for lots of video)
 
 For more than a few dozen clips, keep the files in cloud storage and only the *list* of files in Git. Cloudflare R2 has a free tier (10 GB) and no download fees, which matters for video. The site works exactly the same; only where the files come from changes.
@@ -748,6 +780,8 @@ git add media/*/media.json shows/ config.json
 git commit -m "Add footage" && git push
 ```
 
+- **Staying free:** R2 includes 10 GB a month. `upload_media.py` shows the bucket's size before and after each upload, and **stops before going past 10 GB** unless you add `--allow-paid` (beyond that it's about $0.015 per GB per month; downloads are free). At 1080p, 10 GB is roughly 6 hours of video.
+- The free `r2.dev` address is rate-limited and meant for testing; it's fine for personal use. For a site other people will visit, connect a domain you own to the bucket and use that as `R2_PUBLIC_URL`.
 - `upload_media.py` uploads to `<bucket>/<show-id>/<file>` (the same layout as `media/`), skips anything already there with the same size, and never uploads `originals/`, `inbox/` or `media.json`. Add `--dry-run` to see what it would do, or `--show <show-id>` for one show. The first time it runs it sets `media_base_url` in `config.json` to your `R2_PUBLIC_URL`.
 - The `.gitignore` in this repo already keeps media files out of Git and commits only each show's `media.json`, the list of files with when they were filmed. That list is how GitHub's build knows the clips exist without having the files.
 - Your local preview still plays files from your own disk, so you can tag clips before uploading them.

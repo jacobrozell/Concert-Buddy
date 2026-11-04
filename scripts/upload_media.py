@@ -40,6 +40,7 @@ from common import CONFIG_PATH, MEDIA_DIR, ROOT, read_concerts  # noqa: E402
 
 MEDIA_EXT = {".mp4", ".m4v", ".mov", ".webm", ".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".heic",
              ".mp3", ".m4a", ".aac", ".wav", ".ogg"}
+FREE_TIER_BYTES = 10 * 1000 ** 3  # R2 includes 10 GB of storage a month for free
 TYPES = {".mov": "video/quicktime", ".m4v": "video/x-m4v", ".heic": "image/heic", ".m4a": "audio/mp4"}
 
 
@@ -152,6 +153,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--dry-run", action="store_true", help="list what would be uploaded, upload nothing")
     ap.add_argument("--show", metavar="SHOW_ID", help="only this show's folder")
+    ap.add_argument("--allow-paid", action="store_true", help="upload even if the bucket goes past R2's free 10 GB")
     args = ap.parse_args()
     load_env()
     r2 = R2(os.environ["R2_ACCOUNT_ID"], os.environ["R2_ACCESS_KEY_ID"], os.environ["R2_SECRET_ACCESS_KEY"], os.environ["R2_BUCKET"])
@@ -160,6 +162,16 @@ def main():
     todo = [(k, f) for k, f in local_files(args.show) if remote.get(k) != f.stat().st_size]
     total = sum(f.stat().st_size for _, f in todo)
     print(f"{len(remote)} files already in {os.environ['R2_BUCKET']}; {len(todo)} to upload ({total / 1048576:.0f} MB)")
+    now = sum(remote.values())
+    after = now + total - sum(remote.get(k, 0) for k, _ in todo)
+    gb = lambda b: f"{b / 1000 ** 3:.1f} GB"
+    print(f"Bucket size: {gb(now)} now, {gb(after)} after this upload (free up to {gb(FREE_TIER_BYTES)}/month)")
+    if after > FREE_TIER_BYTES and not args.allow_paid:
+        print(f"\nStopping: that's past R2's free tier, which would cost about ${(after - FREE_TIER_BYTES) / 1000 ** 3 * 0.015:.2f}/month.\n"
+              "Shrink videos first (python3 scripts/import_media.py --convert 720), upload one show at a time with --show,\n"
+              "or run again with --allow-paid if that's fine.")
+        if not args.dry_run:
+            return
     for i, (key, f) in enumerate(todo, 1):
         print(f"  [{i}/{len(todo)}] {key}  {f.stat().st_size / 1048576:.0f} MB", end="" if not args.dry_run else "\n", flush=True)
         if args.dry_run:
