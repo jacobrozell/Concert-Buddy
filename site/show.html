@@ -3,7 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Show</title>
+<title>{{site_title}}</title>
+<meta name="description" content="{{description}}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{site_title}}">
+<meta property="og:title" content="{{site_title}}">
+<meta property="og:description" content="{{description}}">
+<meta property="og:image" content="{{site_url}}assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#16121c">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;800;900&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
@@ -23,6 +36,7 @@
 .ticket h1{font-family:var(--display);font-weight:900;font-size:clamp(46px,8vw,96px);line-height:.86;text-transform:uppercase;margin:12px 0 10px;overflow-wrap:anywhere;text-wrap:balance}
 .ticket .where{font-size:17px}
 .ticket .where small{color:var(--ink-soft);font-size:15px}
+.ticket .where small::before{content:"· "}
 .ticket dl{display:flex;flex-wrap:wrap;gap:8px 28px;margin:18px 0 0;padding-top:14px;border-top:1px dashed color-mix(in srgb,var(--ink) 30%,transparent)}
 .ticket dl div{min-width:0}
 .ticket dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
@@ -62,11 +76,14 @@
 .song .num{font-family:var(--display);font-weight:800;font-size:34px;line-height:1;color:var(--muted);font-variant-numeric:tabular-nums}
 .song.has .num{color:var(--fg)}
 .song .head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;min-width:0}
-.song .title{font-family:var(--display);font-weight:800;font-size:26px;line-height:1;text-transform:uppercase;margin:0;overflow-wrap:anywhere}
+.song .title{font-family:var(--display);font-weight:800;font-size:28px;line-height:1;margin:0;overflow-wrap:anywhere}
+.song.bare{grid-template-columns:52px minmax(0,1fr);padding:9px 0;align-items:baseline}
+.song.bare .num{font-family:var(--mono);font-weight:400;font-size:13px;color:var(--muted)}
+.song.bare .title{font-family:var(--body);font-weight:500;font-size:17px;line-height:1.3}
+.song.bare .note{font-size:12.5px}
 .song .note{font-size:13px;color:var(--muted)}
 .song .count{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
 .song .play-from{margin-left:auto;font-size:11.5px;padding:6px 11px}
-.song .none{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:6px}
 .clips{grid-column:2;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:10px}
 
 .clip{background:var(--bg-2);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
@@ -95,7 +112,9 @@
 .howto code,.howto pre{font-family:var(--mono);font-size:12.5px;color:var(--fg)}
 .howto pre{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px;overflow:auto}
 
-.noset{margin-top:38px;padding:30px;border:1px dashed var(--line);border-radius:8px;color:var(--muted)}
+.noset{margin-top:38px;padding:26px 28px;border:1px dashed var(--line);border-radius:8px;color:var(--muted)}
+.noset p{margin:0}
+.noset pre{font-family:var(--mono);font-size:12.5px;color:var(--fg);white-space:pre-wrap;margin:12px 0 0}
 .noset h2{font-family:var(--display);font-weight:800;font-size:28px;text-transform:uppercase;color:var(--fg);margin:0 0 8px}
 
 /* theater */
@@ -110,12 +129,12 @@
 .stage video,.stage iframe,.stage img,.stage>div:not(.card):not(.timer){width:100%;height:100%;object-fit:contain;border:0}
 .stage .card{text-align:center;padding:24px;max-width:640px}
 .stage .card .n{font-family:var(--display);font-weight:800;font-size:72px;line-height:1;color:#463b52}
-.stage .card h2{font-family:var(--display);font-weight:900;font-size:clamp(40px,7vw,84px);line-height:.9;text-transform:uppercase;margin:8px 0 14px}
+.stage .card h2{font-family:var(--display);font-weight:900;font-size:clamp(40px,7vw,84px);line-height:.9;margin:8px 0 14px}
 .stage .card p{font-family:var(--mono);font-size:13px;color:#9a90a8;margin:0}
 .timer{position:absolute;left:0;bottom:0;height:3px;background:#ffb547;width:0}
 .th-bottom{padding-top:12px;display:grid;gap:10px}
 .now{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
-.now .t{font-family:var(--display);font-weight:800;font-size:28px;text-transform:uppercase;line-height:1}
+.now .t{font-family:var(--display);font-weight:800;font-size:28px;line-height:1}
 .now .who{font-family:var(--mono);font-size:12px;color:#9a90a8}
 .th-strip{display:flex;gap:3px;height:12px}
 .th-strip button{flex:1;min-width:0;border:0;border-radius:2px;background:#2a2333;cursor:pointer;padding:0}
@@ -136,6 +155,9 @@
   .song .title{font-size:22px}
   .clips{grid-column:1 / -1}
   .song .play-from{margin-left:0}
+  .ticket .where small{display:block;margin-top:2px}
+  .ticket .where small::before{content:none}
+  .song.bare{grid-template-columns:38px minmax(0,1fr)}
 }
 </style>
 </head>
@@ -219,16 +241,18 @@ function render(cfg){
   const fansOnly = filmed.length - mine.length;
   const dd = (k, v) => v ? `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>` : '';
   const sl = s.setlist_url || `https://www.setlist.fm/search?query=${encodeURIComponent(s.artist + ' ' + s.venue)}`;
+  const slHost = s.setlist_url ? new URL(s.setlist_url).hostname.replace(/^www\./,'') : '';
+  const slLabel = !s.setlist_url ? 'Find the setlist on setlist.fm' : slHost === 'setlist.fm' ? 'View on setlist.fm' : slHost === 'jambase.com' ? 'View on JamBase' : 'Setlist source';
 
   let h = `<header class="ticket" style="--paper:${paper(st)}">
     <div class="main">
       <div class="top"><span>${longDate(s.date)}</span><span>${esc(regionName(st))}</span></div>
       <h1>${esc(s.artist)}</h1>
-      <div class="where">${esc(s.venue)} <small>· ${esc(s.location)}</small></div>
+      <div class="where">${esc(s.venue)} <small>${esc(s.location)}</small></div>
       <dl>${dd('Opener', s.opener)}${dd('With', s.with)}${dd('Notes', s.notes)}</dl>
       <div class="actions">
-        ${SONGS.length ? `<button class="btn primary" id="play" ${filmed.length ? '' : 'disabled title="No footage yet"'}>▶ Play the show</button>` : ''}
-        <a class="btn" href="${esc(sl)}" target="_blank" rel="noopener">${s.setlist_url ? 'Setlist source' : 'Find setlist on setlist.fm'} ↗</a>
+        ${filmed.length ? `<button class="btn primary" id="play">▶ Play the show</button>` : ''}
+        <a class="btn" href="${esc(sl)}" target="_blank" rel="noopener">${slLabel} ↗</a>
       </div>
     </div>
     <div class="side"><span>No.</span><b>${String(s.no).padStart(2,'0')}</b></div>
@@ -237,42 +261,42 @@ function render(cfg){
   if (SONGS.length){
     h += `<section class="coverage" aria-label="Footage coverage">
       <div class="cov-head"><h2>The night, song by song</h2>
-        <div class="stat"><b>${filmed.length} of ${SONGS.length}</b> songs have footage${fansOnly ? ` · <b>${fansOnly}</b> filled in by fans` : ''}</div></div>
-      <div class="strip">${SONGS.map(x => { const c = x.media.some(m=>m.by==='me') ? 'me' : x.media.length ? 'fan' : '';
+        <div class="stat">${filmed.length ? `<b>${filmed.length} of ${SONGS.length}</b> songs have footage${fansOnly ? ` · <b>${fansOnly}</b> filled in by fans` : ''}` : `<b>${SONGS.length}</b> songs · no footage yet`}</div></div>
+      ${filmed.length ? `<div class="strip">${SONGS.map(x => { const c = x.media.some(m=>m.by==='me') ? 'me' : x.media.length ? 'fan' : '';
         return `<button class="${c}" data-jump="${x.n}" title="${x.n}. ${esc(x.title)}${x.media.length ? ` · ${x.media.length} clip${x.media.length>1?'s':''}` : ' · no footage yet'}" aria-label="Song ${x.n}: ${esc(x.title)}"></button>`; }).join('')}</div>
-      <div class="legend"><span><i style="background:var(--accent)"></i>My footage</span><span><i style="background:var(--fan)"></i>Fan footage only</span><span><i style="background:var(--bg-3)"></i>Not filmed yet</span></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>My footage</span><span><i style="background:var(--fan)"></i>Fan footage only</span><span><i style="background:var(--bg-3)"></i>Not filmed yet</span></div>` : ''}
     </section>`;
     if (s.provisional) h += `<div class="banner"><b>Provisional setlist</b>${esc(s.provisional)}</div>`;
     for (const set of s.sets){
       h += `<section class="set">${s.sets.length > 1 || set.name !== 'Main set' ? `<h3>${esc(set.name)}</h3>` : '<h3>Setlist</h3>'}<ol class="songs">`;
       for (const x of set.songs){
-        h += `<li class="song${x.media.length ? ' has' : ''}" id="song-${x.n}">
+        h += `<li class="song${x.media.length ? ' has' : ' bare'}" id="song-${x.n}">
           <div class="num">${String(x.n).padStart(2,'0')}</div>
           <div class="head"><h4 class="title">${esc(x.title)}</h4>${x.note ? `<span class="note">${esc(x.note)}</span>` : ''}
             ${x.media.length ? `<span class="count">${x.media.length} clip${x.media.length>1?'s':''}</span><button class="btn play-from" data-from="${x.n}">▶ Play from here</button>` : ''}</div>
-          ${x.media.length ? `<div class="clips">${x.media.map(m => clipCard(m, keyFor(m))).join('')}</div>` : `<div class="none" style="grid-column:2">No footage yet</div>`}
+          ${x.media.length ? `<div class="clips">${x.media.map(m => clipCard(m, keyFor(m))).join('')}</div>` : ''}
         </li>`;
       }
       h += `</ol></section>`;
     }
   } else {
     h += `<section class="noset"><h2>No setlist yet</h2>
-      <p>Once the setlist is in, each song becomes a slot for clips.</p>
-      <pre style="white-space:pre-wrap">python3 scripts/setlist.py ${esc(s.id)}</pre></section>`;
+      <p>Once the setlist is in, each song becomes a slot for photos and clips.</p>
+      ${CB.local ? `<pre>python3 scripts/setlist.py ${esc(s.id)}\n# or type it in:  python3 scripts/setlist.py ${esc(s.id)} --from-file songs.txt</pre>` : ''}</section>`;
   }
 
   if (s.extras.length){
     h += `<section class="extras"><h3>${SONGS.length ? 'Other moments' : 'Photos &amp; clips'}</h3><div class="clips">${s.extras.map(m => clipCard(m, keyFor(m))).join('')}</div></section>`;
   }
 
-  h += `<details class="howto"><summary>Add footage to this show</summary><div>
-    <p><b>Your own clips:</b> put them in <code>media/${esc(s.id)}/</code> and add the song name after <code>--</code> in the file name. The build puts each clip under its song:</p>
+  if (CB.local) h += `<details class="howto"><summary>Add footage to this show <span style="color:var(--muted)">(only shown in your local preview)</span></summary><div>
+    <p><b>Your photos and videos</b> (exported from Photos, Google Photos, or anywhere on your computer): put them in <code>media/${esc(s.id)}/</code> and add the song name after <code>--</code> in the file name. The build puts each one under its song; files without a song go in <i>Other moments</i>.</p>
     <pre>media/${esc(s.id)}/IMG_0412--${esc((SONGS[0]?.title || 'Song Name').replace(/[^\w]+/g,'-'))}.mp4</pre>
-    <p><b>Fan videos:</b> add a link to the song in <code>shows/${esc(s.id)}.json</code>. A full-show upload works too: give a start and end time to cut out just that song.</p>
+    <p><b>Someone else's video</b> (YouTube, Instagram, TikTok): add a link under the song in <code>shows/${esc(s.id)}.json</code>. For a full-show upload, give a start and end time to cut out just that song.</p>
     <pre>{ "title": "${esc(SONGS[0]?.title || 'Song Name')}", "media": [
   { "src": "https://youtu.be/VIDEO_ID", "start": "12:40", "end": "17:05", "credit": "@whoever" }
 ] }</pre>
-    <p>Then run <code>python3 scripts/build.py --serve</code> to preview.</p></div></details>`;
+    <p>Then rebuild: <code>python3 scripts/build.py --serve</code></p></div></details>`;
 
   document.getElementById('page').innerHTML = h;
   if (cfg.repo_url) document.getElementById('foot').innerHTML = `Made with ConcertBuddy — <a href="${esc(cfg.repo_url)}">grab the template and log your own shows</a>.`;

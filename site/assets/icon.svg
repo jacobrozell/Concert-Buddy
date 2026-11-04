@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- A ticket stub: notched on both long edges, perforated near the right end -->
+  <g transform="rotate(-12 32 32)">
+    <path fill="#ffb547" d="M8 18h48a2 2 0 0 1 2 2v7a5 5 0 0 0 0 10v7a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-7a5 5 0 0 0 0-10v-7a2 2 0 0 1 2-2z"/>
+    <path stroke="#1d1824" stroke-width="2.4" stroke-dasharray="3 3" d="M44 21v22"/>
+    <path fill="#1d1824" d="M14 27h22v4H14zM14 34h15v3H14z"/>
+  </g>
+</svg>

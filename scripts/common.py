@@ -55,6 +55,7 @@ def read_config():
         "highlight_companion": "",
         "media_base_url": "",
         "repo_url": "",
+        "site_url": "",
     }
     if CONFIG_PATH.exists():
         defaults.update(json.loads(CONFIG_PATH.read_text(encoding="utf-8")))
@@ -75,6 +76,16 @@ def load_show(sid):
 def save_show(sid, data):
     SHOWS_DIR.mkdir(exist_ok=True)
     show_path(sid).write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def clean_set_name(name, index=0):
+    """'Set 1:' -> 'Set 1', 'Main Set' / 'MAIN SET' -> 'Main set', '' -> 'Main set' or 'Set N'."""
+    name = re.sub(r"\s+", " ", (name or "")).strip().rstrip(":").strip()
+    if not name:
+        return "Main set" if index == 0 else f"Set {index + 1}"
+    if name.lower() == "main set":
+        return "Main set"
+    return name
 
 
 def iter_songs(show):

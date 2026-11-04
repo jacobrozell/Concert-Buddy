@@ -47,7 +47,7 @@ No server, no database, no accounts, no monthly bill. Your log is a CSV file, on
 **Show page**
 - Date, venue, opener, who you went with, and notes
 - The setlist, split into sets (main set, encores), with each song as a slot for media
-- A coverage strip showing at a glance which songs you filmed, which only fans filmed, and which nobody has yet
+- A coverage strip showing at a glance which songs you filmed, which only fans filmed, and which nobody has yet (appears once a show has any footage)
 - Your own videos, photos and audio, plus embedded YouTube, Instagram and TikTok posts, with credit to whoever posted them
 - YouTube clips with start and end times, so one fan's full-show upload can fill every song you missed
 - An "Other moments" section for anything that isn't a song: the line outside, the merch table, the crowd before doors
@@ -220,7 +220,11 @@ ConcertBuddy/
 │   ├── show.html                ← the show page and player
 │   └── assets/
 │       ├── base.css             ← colours, fonts, shared styles
-│       └── common.js            ← shared helpers (dates, state colours)
+│       ├── common.js            ← shared helpers (dates, state colours)
+│       ├── icon.svg, apple-touch-icon.png   ← browser tab / home-screen icon
+│       └── og.png               ← preview image for shared links
+├── docs/
+│   └── fan-uploads-spec.md      ← design for the planned fan-upload feature
 ├── .github/workflows/pages.yml  ← builds and publishes on every push
 ├── .gitignore
 └── _site/                       ← build output (generated, never committed)
@@ -262,6 +266,7 @@ The first line must be the header row. Column order doesn't matter, and extra co
 | `highlight_companion` | `"Samantha"` | Adds a *With Samantha* count to the stats and a filter chip. Matching is case-insensitive and partial, so `"Sam"` also matches `"Samantha"` and `"Sam & Holly"`. Leave empty to hide both. |
 | `media_base_url` | `""` or `"https://media.example.com"` | Where your own media files are served from. Empty (the default) means the files in `media/` are published with the site. Set a URL to host them somewhere else; see [Big videos](#big-videos-and-storage-limits). |
 | `repo_url` | `"https://github.com/you/repo"` | Adds a *"grab the template and log your own shows"* link in the footer. Leave empty to hide it. |
+| `site_url` | `"https://you.github.io/repo/"` | Your site's public address, used for the preview card when someone shares a link (iMessage, Slack, Reddit…). Leave empty and the GitHub build works it out from your repo name. **If you forked this repo, empty it or change it**, or your previews will point at mine. |
 
 Missing keys fall back to sensible defaults, so a config file with only `site_title` in it works.
 
@@ -474,6 +479,17 @@ If you'd rather keep the original file names, reference them by name in `shows/<
 
 A file listed like this isn't also tagged by its name, so you can mix both approaches freely. Listing a file is also how you give it a `caption`, `start` or `end`.
 
+### Getting files out of your photo library
+
+The build only sees files in `media/<show-id>/`, so first get your clips from the phone or photo app onto your computer:
+
+- **Apple Photos (Mac):** search the show's date (e.g. "Nov 3, 2026") or scroll to it in *Library → Days*, select the photos and videos, then **File → Export → Export Unmodified Original For N Items…** and choose the show's media folder. You get the camera's original `.HEIC` photos and `.MOV` videos; convert them with the commands in [Big videos](#big-videos-and-storage-limits).
+- **iPhone, without a Mac library:** select the items in Photos and AirDrop them to your Mac, or save them to Files → a synced folder.
+- **Google Photos:** select the items and choose **Download** (several at once arrive as a `.zip`). For a whole year at once, use [Google Takeout](https://takeout.google.com).
+- **Anything else** (Android file transfer, a camera's SD card, Dropbox): just copy the files in.
+
+Then rename each one with `--Song Name` (or list them in `shows/<id>.json`) and rebuild.
+
 ### Supported file types
 
 | Type | Extensions | Notes |
@@ -609,12 +625,12 @@ With `media_base_url` set, the build reads the file names in `media/` on your co
 
 `index.html` is the home page.
 
-- **Headline and stats.** Total shows; *Most seen* (the artist you've seen most, by the `artist` column); *Home venue* (most visits); *Cities* (distinct `location` values); *With …* (if `highlight_companion` is set); *Shows with footage*.
+- **Headline and stats.** Total shows; *Most seen* (the artist you've seen most, by the `artist` column); *Home venue* (most visits); *Cities* (distinct `location` values); *With …* (if `highlight_companion` is set); *Shows with footage* (once there is any).
 - **Shows-per-year chart.** Click a bar to jump to that year. Years with no shows appear as empty bars, and on the timeline a line like *"2019–2020 · no shows"* marks the gap.
 - **Sort.** *Newest first* / *Oldest first*.
 - **Search.** Matches artist, venue, location, opener and notes as you type.
 - **Filters.** One chip per state or region (the dot shows its stub colour), *With …*, and *Has footage* (appears once any show has media). Click a chip again to turn it off.
-- **Stubs.** Date, artist, venue, opener, and the show number in date order. Shows with a setlist get a bar of ticks (filled = song has footage) and a count like *4/16 filmed*. A show dated today gets a **TONIGHT** stamp. Click a stub to open its show page.
+- **Stubs.** Date, artist, venue, opener, and the show number in date order. Shows with a setlist say how long it was (*17-song setlist*); once a show has footage, that becomes a bar of ticks (filled = song has footage) and a count like *4/16 filmed*. A show dated today gets a **TONIGHT** stamp. Click a stub to open its show page.
 
 ---
 
@@ -629,9 +645,11 @@ With `media_base_url` set, the build reads the file names in `media/` on your co
 3. **Provisional banner** (if the setlist is a stand-in).
 4. **The setlist.** Each song numbered through the whole show (encores continue the count), with its note, a clip count, a **▶ Play from here** button, and its media. Each piece of media is labelled **MINE** or **FAN** (plus the credit), with its time range and caption. YouTube, Instagram and TikTok embeds load only when clicked, so a page with fifty clips still opens quickly.
 5. **Other moments.** Untagged files, `extras`, and the `media_links` from the CSV.
-6. **Add footage to this show.** A collapsed how-to with this show's exact folder name and an example, for when you come back to it months later.
+6. **Add footage to this show.** A collapsed how-to with this show's exact folder name and an example, for when you come back to it months later. **Only shown in your local preview** (`build.py --serve`), never on the public site.
 
-A show with no setlist shows a *No setlist yet* box with the command to fetch one, plus any media in *Photos & clips*.
+Until a show has any footage, the page stays compact: no coverage strip or play button, and songs show as a simple numbered list. Songs with clips get the full-size treatment.
+
+A show with no setlist shows a *No setlist yet* box, plus any media in *Photos & clips*. In your local preview it also shows the command to fetch the setlist.
 
 ### The player
 
@@ -787,7 +805,8 @@ Wait for the Action to finish, then hard-refresh (`Cmd+Shift+R` / `Ctrl+Shift+R`
 - [ ] **Finding fan footage:** a list of ready-made YouTube/TikTok searches for every empty song slot
 - [ ] **Song stats across shows:** songs you've heard live most often, first and last time you heard each, rarities
 - [ ] **Artist pages:** every time you've seen an artist, side by side
-- [ ] **Media upload helper:** convert, rename by song, and upload to cloud storage in one command
+- [ ] **Fan uploads:** a per-show upload page you can share (e.g. on Reddit) where people pick the song they filmed and upload it to a review inbox. See the [spec](docs/fan-uploads-spec.md).
+- [ ] **Media import helper:** convert, rename by song, and (optionally) upload to cloud storage in one command
 - [ ] **Ticket stub images:** attach a photo of the real ticket to each show
 - [ ] **Map view:** venues on a map, sized by number of visits
 

@@ -27,7 +27,7 @@ import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import load_show, read_concerts, save_show, slugify  # noqa: E402
+from common import clean_set_name, load_show, read_concerts, save_show, slugify  # noqa: E402
 
 API = "https://api.setlist.fm/rest/1.0"
 
@@ -67,7 +67,7 @@ def fetch_from_setlistfm(row, key, artist_override=None):
         return None, None
     sets = []
     for i, s in enumerate(data["sets"]["set"]):
-        name = s.get("name") or (f"Encore {s['encore']}" if s.get("encore", 0) > 1 else "Encore" if s.get("encore") else "Main set" if i == 0 else f"Set {i + 1}")
+        name = clean_set_name(s.get("name") or (f"Encore {s['encore']}" if s.get("encore", 0) > 1 else "Encore" if s.get("encore") else ""), i)
         songs = []
         for song in s.get("song", []):
             if song.get("tape") or not song.get("name"):

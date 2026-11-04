@@ -31,5 +31,8 @@ window.CB = (() => {
   };
   const getJSON = async url => { const r = await fetch(url, {cache:'no-cache'}); if (!r.ok) throw new Error(`${url}: ${r.status}`); return r.json(); };
 
-  return {esc, region, regionName, paper, date, stubDate, longDate, today, clock, getJSON};
+  // True when previewing with `build.py --serve`; owner-only hints show only then.
+  const local = ['localhost', '127.0.0.1', '[::1]', ''].includes(location.hostname);
+
+  return {esc, region, regionName, paper, date, stubDate, longDate, today, clock, getJSON, local};
 })();

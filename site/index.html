@@ -3,7 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Concert Log</title>
+<title>{{site_title}}</title>
+<meta name="description" content="{{description}}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{site_title}}">
+<meta property="og:title" content="{{site_title}}">
+<meta property="og:description" content="{{description}}">
+<meta property="og:image" content="{{site_url}}assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#16121c">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;800;900&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
@@ -32,8 +45,8 @@ h1 .count{color:var(--accent)}
 /* ---------- controls ---------- */
 .controls{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding-block:14px;border-bottom:1px solid var(--line);margin-bottom:8px}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-.search{flex:1 1 220px;min-width:0;background:var(--bg-2);border:1px solid var(--line);color:var(--fg);border-radius:999px;padding:9px 16px;font:inherit;font-size:14px}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
+.search{flex:1 1 280px;min-width:0;background:var(--bg-2);border:1px solid var(--line);color:var(--fg);border-radius:999px;padding:9px 16px;font:inherit;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;flex-basis:100%;order:4}
 .chip{font-family:var(--mono);font-size:12px;letter-spacing:.04em;border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:999px;padding:7px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
 .chip .dot{width:9px;height:9px;border-radius:50%}
 .chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
@@ -75,7 +88,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   .year{grid-template-columns:1fr;gap:14px}
   .year-label{position:static;display:flex;align-items:baseline;gap:12px}
   .year-label .y{font-size:52px}
-  .shown{margin-left:0;width:100%}
+  .shown{margin-left:0;width:100%;order:5}
 }
 @media (prefers-reduced-motion:reduce){.stub{transform:none}}
 </style>
@@ -99,8 +112,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   <div class="controls" role="search">
     <div class="seg" id="order" role="group" aria-label="Sort order"><button type="button" data-order="desc" aria-pressed="true">Newest first</button><button type="button" data-order="asc" aria-pressed="false">Oldest first</button></div>
     <input class="search" id="q" type="search" placeholder="Search artists, venues, openers…" aria-label="Search shows">
-    <div class="chips" id="chips"></div>
     <div class="shown" id="shown"></div>
+    <div class="chips" id="chips"></div>
   </div>
 
   <main id="timeline"><div class="empty">Loading shows…</div></main>
@@ -138,7 +151,7 @@ function init(){
      <div><span>Home venue</span> <b>${esc(topV[0])} ×${topV[1]}</b></div>
      <div><span>Cities</span> <b>${cities}</b></div>
      ${comp ? `<div><span>With ${esc(comp)}</span> <b>${SHOWS.filter(s=>compRe.test(s.with)).length}</b></div>` : ''}
-     <div><span>Shows with footage</span> <b>${filmed}</b></div>`;
+     ${filmed ? `<div><span>Shows with footage</span> <b>${filmed}</b></div>` : ''}`;
 
   // chart
   const per = {}; SHOWS.forEach(s => per[s.y] = (per[s.y]||0)+1);
@@ -175,8 +188,10 @@ function init(){
 function stub(s){
   const tonight = s.date === today();
   let cov = '';
-  if (s.songs){
-    const n = Math.min(s.songs, 24), on = Math.round(s.filmed / s.songs * n);
+  if (s.songs && !s.filmed){
+    cov = `<div class="cov"><span>${s.songs}-song setlist</span></div>`;
+  } else if (s.songs){
+    const n = Math.min(s.songs, 24), on = Math.max(1, Math.round(s.filmed / s.songs * n));
     cov = `<div class="cov"><span class="ticks" aria-hidden="true">${Array.from({length:n},(_,i)=>`<i class="${i<on?'on':''}"></i>`).join('')}</span>
       <span>${s.filmed}/${s.songs} filmed</span></div>`;
   }

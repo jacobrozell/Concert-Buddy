@@ -8,8 +8,10 @@ Reads concerts.csv, config.json, shows/<id>.json and media/<id>/, and writes
 _site/ (the folder GitHub Pages serves). Never edits your source files.
 """
 import argparse
+import html
 import http.server
 import json
+import os
 import re
 import shutil
 import socketserver
@@ -19,7 +21,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, quote, urlparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import MEDIA_DIR, ROOT, iter_songs, load_show, read_concerts, read_config, slugify  # noqa: E402
+from common import MEDIA_DIR, ROOT, clean_set_name, load_show, read_concerts, read_config, slugify  # noqa: E402
 
 OUT = ROOT / "_site"
 SITE_SRC = ROOT / "site"
@@ -125,6 +127,16 @@ def song_from_filename(name, songs_by_slug):
     return songs_by_slug[max(hits, key=len)] if hits else None
 
 
+def tidy_note(note):
+    """setlist.fm marks a segue with a bare '>' (or '> ' in front of other text)."""
+    note = (note or "").strip()
+    if note == ">":
+        return "segues into the next song"
+    if note.startswith("> "):
+        return "segues into the next song; " + note[2:]
+    return note
+
+
 # ---------- per-show build ----------
 
 def build_show(row, cfg, warnings):
@@ -132,19 +144,19 @@ def build_show(row, cfg, warnings):
     src = load_show(sid) or {}
     sets_out, songs_by_slug, n = [], {}, 0
 
-    for s in src.get("sets", []):
+    for si, s in enumerate(src.get("sets", [])):
         songs = []
         for song in s.get("songs", []):
             n += 1
             entry = {
                 "n": n,
                 "title": song.get("title", "").strip(),
-                "note": song.get("note", ""),
+                "note": tidy_note(song.get("note", "")),
                 "media": [resolve_media(m, sid, cfg, "me") for m in song.get("media", [])],
             }
             songs.append(entry)
             songs_by_slug.setdefault(slugify(entry["title"]), entry)
-        sets_out.append({"name": s.get("name", ""), "songs": songs})
+        sets_out.append({"name": clean_set_name(s.get("name", ""), si), "songs": songs})
 
     extras = [resolve_media(m, sid, cfg, "me") for m in src.get("extras", [])]
     for link in re.split(r"[\s|]+", row.get("media_links", "")):
@@ -209,6 +221,29 @@ def build_show(row, cfg, warnings):
     return show, summary
 
 
+def site_url(cfg):
+    """Public address of the site, for link previews. config.json wins; on GitHub Actions
+    it's worked out from the repo name, so forks get correct previews with no setup."""
+    url = (cfg.get("site_url") or "").strip()
+    if not url and os.environ.get("GITHUB_REPOSITORY"):
+        owner, repo = os.environ["GITHUB_REPOSITORY"].split("/", 1)
+        url = f"https://{owner}.github.io/" if repo.lower() == f"{owner.lower()}.github.io" else f"https://{owner}.github.io/{repo}/"
+    return url if not url or url.endswith("/") else url + "/"
+
+
+def fill_page_meta(cfg, summaries):
+    """Fill the {{placeholders}} in the page <head>s (title, description, preview image)."""
+    years = sorted(s["date"][:4] for s in summaries)
+    who = f"{cfg['owner']}'s" if cfg.get("owner") else "My"
+    desc = f"{len(summaries)} shows since {years[0]}. {who} concert log: setlists, photos and clips from every show, song by song." if years else cfg["tagline"]
+    values = {"site_title": cfg["site_title"], "description": desc, "site_url": site_url(cfg)}
+    for page in OUT.glob("*.html"):
+        text = page.read_text(encoding="utf-8")
+        for k, v in values.items():
+            text = text.replace("{{" + k + "}}", html.escape(v, quote=True))
+        page.write_text(text, encoding="utf-8")
+
+
 def build():
     cfg = read_config()
     rows = read_concerts()
@@ -229,6 +264,8 @@ def build():
     (OUT / "data" / "concerts.json").write_text(
         json.dumps({"config": site_cfg, "shows": summaries}, ensure_ascii=False), encoding="utf-8"
     )
+
+    fill_page_meta(cfg, summaries)
 
     if MEDIA_DIR.is_dir() and not cfg["media_base_url"]:
         shutil.copytree(MEDIA_DIR, OUT / "media", ignore=shutil.ignore_patterns(".*", "README*"))
