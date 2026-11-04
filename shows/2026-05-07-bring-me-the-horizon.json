@@ -1,0 +1,174 @@
+{
+  "acts": [
+    {
+      "artist": "Amira Elfeky",
+      "source": "https://www.setlist.fm/setlist/amira-elfeky/2026/bridgestone-arena-nashville-tn-3414907.html",
+      "sets": [
+        {
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Will You Love Me When I’m Dead"
+            },
+            {
+              "title": "Take Me Under"
+            },
+            {
+              "title": "Death of Me"
+            },
+            {
+              "title": "Forever Overdose"
+            },
+            {
+              "title": "Tonight"
+            },
+            {
+              "title": "Hold Onto Me"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "artist": "The Plot In You",
+      "source": "https://www.setlist.fm/setlist/the-plot-in-you/2026/bridgestone-arena-nashville-tn-3414903.html",
+      "sets": [
+        {
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Don't Look Away"
+            },
+            {
+              "title": "Divide"
+            },
+            {
+              "title": "You Get One"
+            },
+            {
+              "title": "Spare Me"
+            },
+            {
+              "title": "Forgotten"
+            },
+            {
+              "title": "Silence"
+            },
+            {
+              "title": "Left Behind"
+            },
+            {
+              "title": "FEEL NOTHING"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "artist": "Motionless In White",
+      "source": "https://www.setlist.fm/setlist/motionless-in-white/2026/bridgestone-arena-nashville-tn-1b414914.html",
+      "sets": [
+        {
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Meltdown"
+            },
+            {
+              "title": "Sign of Life"
+            },
+            {
+              "title": "Afraid of the Dark"
+            },
+            {
+              "title": "Voices"
+            },
+            {
+              "title": "Hollow Points"
+            },
+            {
+              "title": "Slaughterhouse"
+            },
+            {
+              "title": "Scoring the End of the World"
+            },
+            {
+              "title": "Another Life"
+            },
+            {
+              "title": "Eternally Yours"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "artist": "Bring Me The Horizon",
+      "source": "https://www.setlist.fm/setlist/bring-me-the-horizon/2026/bridgestone-arena-nashville-tn-13414915.html",
+      "sets": [
+        {
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "DArkSide"
+            },
+            {
+              "title": "The House of Wolves"
+            },
+            {
+              "title": "MANTRA"
+            },
+            {
+              "title": "Happy Song"
+            },
+            {
+              "title": "Teardrops"
+            },
+            {
+              "title": "AmEN!"
+            },
+            {
+              "title": "Kool-Aid"
+            },
+            {
+              "title": "Shadow Moses"
+            },
+            {
+              "title": "YOUtopia"
+            },
+            {
+              "title": "Kingslayer"
+            },
+            {
+              "title": "Antivist",
+              "note": "with a fan, Jessica (dressed as Captain Jack Sparrow), on vocals"
+            },
+            {
+              "title": "Follow You"
+            },
+            {
+              "title": "LosT"
+            },
+            {
+              "title": "Can You Feel My Heart"
+            }
+          ]
+        },
+        {
+          "name": "Encore",
+          "songs": [
+            {
+              "title": "Doomed"
+            },
+            {
+              "title": "Drown"
+            },
+            {
+              "title": "Throne"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
