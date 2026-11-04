@@ -1,0 +1,154 @@
+{
+  "acts": [
+    {
+      "artist": "Yacht Rock Revue",
+      "sets": [
+        {
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Sweet Freedom"
+            },
+            {
+              "title": "Kiss You All Over"
+            },
+            {
+              "title": "You Make Loving Fun"
+            },
+            {
+              "title": "Heart to Heart"
+            },
+            {
+              "title": "Brandy (You're a Fine Girl)"
+            },
+            {
+              "title": "Tropical Illusion"
+            },
+            {
+              "title": "Africa"
+            },
+            {
+              "title": "Baker Street"
+            },
+            {
+              "title": "More Than a Feeling"
+            }
+          ]
+        }
+      ],
+      "provisional": "Copied from the next night on the same tour (Ameris Bank Amphitheatre, Alpharetta, Aug 17, 2024). Replace with Pelham's if it's ever posted: python3 scripts/setlist.py 2024-08-16-train --refresh",
+      "source": "https://www.jambase.com/show/train-ameris-bank-amphitheatre-20240817"
+    },
+    {
+      "artist": "REO Speedwagon",
+      "sets": [
+        {
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Don't Let Him Go"
+            },
+            {
+              "title": "Take It on the Run"
+            },
+            {
+              "title": "Keep Pushin'"
+            },
+            {
+              "title": "Live Every Moment"
+            },
+            {
+              "title": "Tough Guys"
+            },
+            {
+              "title": "I Wish You Were There"
+            },
+            {
+              "title": "Music Man"
+            },
+            {
+              "title": "Can't Fight This Feeling"
+            },
+            {
+              "title": "Son of a Poor Man"
+            },
+            {
+              "title": "Time for Me to Fly"
+            },
+            {
+              "title": "Ridin' the Storm Out"
+            },
+            {
+              "title": "Keep On Loving You"
+            },
+            {
+              "title": "Roll With the Changes"
+            }
+          ]
+        }
+      ],
+      "provisional": "Copied from the next night on the same tour (Ameris Bank Amphitheatre, Alpharetta, Aug 17, 2024). Replace with Pelham's if it's ever posted: python3 scripts/setlist.py 2024-08-16-train --refresh",
+      "source": "https://www.jambase.com/show/train-ameris-bank-amphitheatre-20240817"
+    },
+    {
+      "artist": "Train",
+      "sets": [
+        {
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Calling All Angels"
+            },
+            {
+              "title": "If It's Love"
+            },
+            {
+              "title": "Get to Me"
+            },
+            {
+              "title": "Save Me, San Francisco"
+            },
+            {
+              "title": "Meet Virginia / The Joker"
+            },
+            {
+              "title": "Lose Control"
+            },
+            {
+              "title": "AM Gold"
+            },
+            {
+              "title": "Play That Song"
+            },
+            {
+              "title": "Angel in Blue Jeans / Too Sweet"
+            },
+            {
+              "title": "Long Yellow Dress"
+            },
+            {
+              "title": "50 Ways to Say Goodbye"
+            },
+            {
+              "title": "Marry Me"
+            },
+            {
+              "title": "Seven Bridges Road / Bruises"
+            },
+            {
+              "title": "Hey, Soul Sister"
+            },
+            {
+              "title": "Drive By / Hey Jude"
+            },
+            {
+              "title": "Drops of Jupiter"
+            }
+          ]
+        }
+      ],
+      "provisional": "Copied from the next night on the same tour (Ameris Bank Amphitheatre, Alpharetta, Aug 17, 2024). Replace with Pelham's if it's ever posted: python3 scripts/setlist.py 2024-08-16-train --refresh",
+      "source": "https://www.jambase.com/show/train-ameris-bank-amphitheatre-20240817"
+    }
+  ]
+}

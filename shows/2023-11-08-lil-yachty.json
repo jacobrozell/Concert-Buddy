@@ -1,0 +1,115 @@
+{
+  "acts": [
+    {
+      "artist": "Lil Yachty",
+      "sets": [
+        {
+          "name": "Set 1",
+          "songs": [
+            {
+              "title": "drive ME crazy!"
+            },
+            {
+              "title": "the ride-"
+            },
+            {
+              "title": "pRETTy"
+            },
+            {
+              "title": "The Alchemist."
+            },
+            {
+              "title": "sHouLd i B?"
+            },
+            {
+              "title": "In the Air Tonight",
+              "note": "Phil Collins cover"
+            }
+          ]
+        },
+        {
+          "name": "Set 2",
+          "songs": [
+            {
+              "title": "SOLO STEPPIN CRETE BOY"
+            },
+            {
+              "title": "Slide"
+            },
+            {
+              "title": "Split / Whole Time"
+            },
+            {
+              "title": "Get Dripped"
+            },
+            {
+              "title": "Yacht Club"
+            },
+            {
+              "title": "NBAYOUNGBOAT"
+            },
+            {
+              "title": "Flex Up"
+            },
+            {
+              "title": "Coffin"
+            },
+            {
+              "title": "Heyy",
+              "note": "Lil Baby cover, with Lil Baby"
+            },
+            {
+              "title": "Freestyle",
+              "note": "Lil Baby cover, with Lil Baby"
+            },
+            {
+              "title": "From the D to the A",
+              "note": "Tee Grizzley cover"
+            },
+            {
+              "title": "Minnesota"
+            },
+            {
+              "title": "Broccoli",
+              "note": "DRAM cover"
+            },
+            {
+              "title": "iSpy",
+              "note": "KYLE cover"
+            },
+            {
+              "title": "TESLA"
+            },
+            {
+              "title": "Poland"
+            },
+            {
+              "title": "Strike (Holster)"
+            },
+            {
+              "title": "One Night"
+            }
+          ]
+        },
+        {
+          "name": "Set 3",
+          "songs": [
+            {
+              "title": "IVE OFFICIALLY LOST ViSiON!!!!"
+            },
+            {
+              "title": "THE zone~"
+            },
+            {
+              "title": "WE SAW THE SUN!"
+            },
+            {
+              "title": "the BLACK seminole."
+            }
+          ]
+        }
+      ],
+      "source": "https://www.setlist.fm/setlist/lil-yachty/2023/coca-cola-roxy-atlanta-ga-6ba1f68e.html"
+    }
+  ]
+}
