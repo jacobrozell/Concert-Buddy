@@ -1,0 +1,63 @@
+{
+  "acts": [
+    {
+      "artist": "Aaron West",
+      "sets": [
+        {
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "'67, Cherry Red"
+            },
+            {
+              "title": "Our Apartment"
+            },
+            {
+              "title": "Grapefruit"
+            },
+            {
+              "title": "Get Me Out of Here Alive"
+            },
+            {
+              "title": "St. Joe Keeps Us Safe"
+            },
+            {
+              "title": "Going to Georgia",
+              "note": "The Mountain Goats cover"
+            },
+            {
+              "title": "Divorce and the American South"
+            },
+            {
+              "title": "The Thunderbird Inn"
+            },
+            {
+              "title": "Goodbye, Carolina Blues"
+            },
+            {
+              "title": "Runnin' Scared"
+            },
+            {
+              "title": "Carolina Coast"
+            },
+            {
+              "title": "Green Like the G Train, Green Like Sea Foam"
+            }
+          ]
+        },
+        {
+          "name": "Encore",
+          "songs": [
+            {
+              "title": "Orchard Park"
+            },
+            {
+              "title": "You Ain't No Saint"
+            }
+          ]
+        }
+      ],
+      "source": "https://www.setlist.fm/setlist/aaron-west-and-the-roaring-twenties/2017/the-masquerade-hell-atlanta-ga-2be014ca.html"
+    }
+  ]
+}

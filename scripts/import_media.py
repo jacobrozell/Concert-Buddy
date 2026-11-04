@@ -54,13 +54,18 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import MANIFEST, MEDIA_DIR, load_show, read_concerts, read_manifest, save_show, write_manifest  # noqa: E402
+from common import MANIFEST, MEDIA_DIR, load_show, read_concerts, read_config, read_manifest, save_show, write_manifest  # noqa: E402
 
 INBOX = MEDIA_DIR / "inbox"
 REVIEW = MEDIA_DIR / "_review"
 VIDEO_EXT = {".mp4", ".m4v", ".mov", ".webm", ".avi", ".mts", ".m2ts", ".3gp", ".mpg", ".mpeg", ".mkv", ".wmv"}
 PHOTO_EXT = {".jpg", ".jpeg", ".png", ".heic", ".webp"}
 NIGHT_ROLLOVER_HOURS = 5
+EVENING = (18, 3)          # 6 PM to 3 AM local: when shows happen
+POSSIBLE_SHOW_MIN_CLIPS = 3  # evening videos in one night before it's listed as a possible show
+POSSIBLE_SHOW_MIN_SECONDS = 5  # shorter clips (Live Photos, accidental taps) don't count
+LOUD_DB = -20.0            # phone recordings at shows average louder than this (mean volume, dB)
+HOME_NIGHTS = 8            # a spot filmed on this many different nights is home or work, not a venue
 GUESSES = {"date in file name", "between neighbouring files from that show", "file date"}
 
 
@@ -168,6 +173,28 @@ def date_from_name(name):
 
 # ---------- matching ----------
 
+def home_zone():
+    """config.json "timezone" (e.g. "America/Chicago"), else this computer's zone. Used to read
+    UTC-only timestamps (Snapchat) on nights that don't match a show."""
+    name = read_config().get("timezone")
+    if name:
+        try:
+            from zoneinfo import ZoneInfo
+            return ZoneInfo(name)
+        except Exception:
+            print(f"Unknown timezone {name!r} in config.json; using this computer's.", file=sys.stderr)
+    return dt.datetime.now().astimezone().tzinfo
+
+
+def local_time(it, zone):
+    """The clip's local time: its own zone when it has one, else UTC converted to the home zone."""
+    t = it["time"]
+    if not t:
+        return None
+    if t.tzinfo is None or it.get("utc_only"):
+        return t.replace(tzinfo=dt.timezone.utc).astimezone(zone)
+    return t
+
 def night_of(local_time):
     return (local_time - dt.timedelta(hours=NIGHT_ROLLOVER_HOURS)).date()
 
@@ -192,7 +219,8 @@ def candidates(sources):
                                and d not in ("$RECYCLE.BIN", "System Volume Information")]
                 for name in filenames:
                     p = Path(dirpath) / name
-                    if not name.startswith((".", "._")) and p.suffix.lower() in VIDEO_EXT | PHOTO_EXT:
+                    # Snapchat exports keep captions/stickers as separate "-overlay.png" layers: not media
+                    if not name.startswith((".", "._")) and p.suffix.lower() in VIDEO_EXT | PHOTO_EXT and not name.lower().endswith("-overlay.png"):
                         found.append((p, "copy"))
     else:
         files = [p for p in INBOX.rglob("*") if p.is_file()] if INBOX.is_dir() else []
@@ -201,13 +229,58 @@ def candidates(sources):
     return sorted(found)
 
 
+CACHE_PATH = MEDIA_DIR / ".meta-cache.json"  # what's been read from each file, so re-runs are quick
+_cache = None
+
+
+def _cache_key(path):
+    st = path.stat()
+    return f"{path.resolve()}|{st.st_size}|{int(st.st_mtime)}"
+
+
+def loudness(path):
+    """Average volume of the main audio track in dB (concerts are loud: about -8 to -19),
+    or None if there's no audio. Cached like read_meta."""
+    global _cache
+    if _cache is None:
+        read_meta(path)
+    key = _cache_key(path) + "|vol"
+    if key not in _cache:
+        out = subprocess.run(["ffmpeg", "-nostats", "-hide_banner", "-i", str(path), "-map", "0:a:0?", "-af", "volumedetect", "-f", "null", "-"],
+                             capture_output=True, text=True, timeout=300).stderr
+        m = re.search(r"mean_volume:\s*(-?[\d.]+) dB", out)
+        _cache[key] = float(m.group(1)) if m else None
+    return _cache[key]
+
+
+def save_cache():
+    if _cache is not None:
+        tmp = CACHE_PATH.with_suffix(".tmp")
+        tmp.write_text(json.dumps(_cache), encoding="utf-8")
+        tmp.replace(CACHE_PATH)
+
+
 def read_meta(path):
+    """(capture time, has timezone, gps, seconds) for a file, cached by path, size and date."""
+    global _cache
+    if _cache is None:
+        try:
+            _cache = json.loads(CACHE_PATH.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            _cache = {}
+    key = _cache_key(path)
+    if key in _cache:
+        t, has_tz, gps, dur = _cache[key]
+        return (dt.datetime.fromisoformat(t) if t else None), has_tz, (tuple(gps) if gps else None), dur
     ext = path.suffix.lower()
     if ext in VIDEO_EXT:
-        return probe_video(path)
-    if ext in (".jpg", ".jpeg"):
-        return (*read_exif(path), 0.0)
-    return None, False, None, 0.0
+        t, has_tz, gps, dur = probe_video(path)
+    elif ext in (".jpg", ".jpeg"):
+        t, has_tz, gps, dur = (*read_exif(path), 0.0)
+    else:
+        t, has_tz, gps, dur = None, False, None, 0.0
+    _cache[key] = [t.isoformat() if t else None, has_tz, list(gps) if gps else None, dur]
+    return t, has_tz, gps, dur
 
 
 def existing_keys():
@@ -215,7 +288,7 @@ def existing_keys():
     including ones in review: used to skip duplicates."""
     keys = set()
     folders = [p for p in MEDIA_DIR.iterdir() if p.is_dir() and not p.name.startswith((".", "_")) and p.name != "inbox"]
-    folders += [p for p in REVIEW.iterdir() if p.is_dir()] if REVIEW.is_dir() else []
+    folders += [p for p in REVIEW.iterdir() if p.is_dir() and not p.name.startswith("_")] if REVIEW.is_dir() else []
     for folder in folders:
         manifest = folder / MANIFEST
         if manifest.exists():
@@ -231,14 +304,21 @@ def dup_key(sid, taken, seconds):
     return (sid, stamp, round(seconds or 0))
 
 
-def plan(sources, min_seconds, progress=True):
+def plan(sources, min_seconds, progress=True, time_limit=None):
     shows_by_date = {}
     for r in read_concerts():
         shows_by_date.setdefault(dt.date.fromisoformat(r["date"]), []).append(r)
     files = candidates(sources)
     items = []
+    started = dt.datetime.now()
     for k, (p, mode) in enumerate(files, 1):
-        if progress and len(files) > 40 and k % 25 == 0:
+        if k % 200 == 0:
+            save_cache()
+        if time_limit and (dt.datetime.now() - started).total_seconds() > time_limit:
+            save_cache()
+            print(f"Read {k - 1} of {len(files)} files so far (saved). Run the same command again to continue.")
+            raise SystemExit(3)
+        if progress and len(files) > 40 and k % (250 if len(files) > 1000 else 25) == 0:
             print(f"  reading {k}/{len(files)}…", file=sys.stderr, flush=True)
         t, has_tz, gps, dur = read_meta(p)
         is_video = p.suffix.lower() in VIDEO_EXT
@@ -259,11 +339,12 @@ def plan(sources, min_seconds, progress=True):
                 item["show"], item["how"] = shows_by_date[hits[0]][0], "capture time (timezone guessed)"
                 item["utc"] = base  # the stored time is UTC; the local zone is settled below
             else:
-                item["night"] = night_of(base - dt.timedelta(hours=6))
+                item["utc_only"] = True
                 item["warn"] = "capture time has no timezone and fits " + ("no show" if not hits else f"{len(hits)} shows")
         elif date_from_name(p.name) in shows_by_date:
             item["show"], item["how"] = shows_by_date[date_from_name(p.name)][0], "date in file name"
         items.append(item)
+    save_cache()
 
     # Times saved in UTC: borrow the zone from the same show's other clips, else assume
     # the zone that puts the clip closest to 9 PM local.
@@ -319,6 +400,45 @@ def plan(sources, min_seconds, progress=True):
                 if it["gps"] and km(it["gps"], centre) > 5:
                     it["warn"] = f"{km(it['gps'], centre):.0f} km from the show's other clips"
 
+    # Nights with no show: work out the local night, and which look like concerts:
+    # several real videos in the evening, not at a place filmed on lots of other nights
+    # (home, work), and loud. Those evening clips go to review as possible shows.
+    zone = home_zone()
+    evening = {}
+    for it in items:
+        if it["show"] or not it["time"]:
+            continue
+        lt = local_time(it, zone)
+        it["local"], it["night"] = lt, night_of(lt)
+        it["warn"] = f"no show in your log on {it['night']:%a %b %-d, %Y}"
+        if it["video"] and it["duration"] >= POSSIBLE_SHOW_MIN_SECONDS and (lt.hour >= EVENING[0] or lt.hour < EVENING[1]):
+            evening.setdefault(it["night"], []).append(it)
+    spots = {}
+    for night, group in evening.items():
+        for it in group:
+            if it["gps"]:
+                spots.setdefault((round(it["gps"][0], 2), round(it["gps"][1], 2)), set()).add(night)
+    frequent = [spot for spot, ns in spots.items() if len(ns) >= HOME_NIGHTS]
+    started_loud = dt.datetime.now()
+    for night, group in sorted(evening.items()):
+        if len(group) < POSSIBLE_SHOW_MIN_CLIPS:
+            continue
+        pts = [it["gps"] for it in group if it["gps"]]
+        if pts:
+            centre = (statistics.median(p[0] for p in pts), statistics.median(p[1] for p in pts))
+            if any(km(centre, spot) < 1.5 for spot in frequent):
+                continue
+        if time_limit and (dt.datetime.now() - started).total_seconds() > time_limit:
+            save_cache()
+            print(f"Checked the sound of clips up to {night:%b %-d, %Y} (saved). Run the same command again to continue.")
+            raise SystemExit(3)
+        levels = [v for v in (loudness(it["path"]) for it in group) if v is not None]
+        if len(levels) < POSSIBLE_SHOW_MIN_CLIPS or statistics.median(levels) < LOUD_DB:
+            continue
+        for it in group:
+            it["dest"], it["why"], it["night_db"] = "possible", f"loud evening clips on {night:%a %b %-d, %Y}, which has no show in your log", statistics.median(levels)
+    save_cache()
+
     # Duplicates of clips you already have (or of each other in this batch).
     have = existing_keys()
     for it in items:
@@ -353,7 +473,7 @@ def describe(items, sources):
     for it in items:
         (by_show.setdefault(it["show"]["id"], []) if it["show"] else unmatched).append(it)
     for sid in sorted(by_show):
-        group = sorted(by_show[sid], key=lambda it: (it["time"] is None, it["time"].replace(tzinfo=None) if it["time"] else 0))
+        group = sorted(by_show[sid], key=lambda it: (it["time"] is None, it["time"].replace(tzinfo=None) if it["time"] else dt.datetime.min))
         n_show = sum(it["dest"] == "show" for it in group)
         n_rev = sum(it["dest"] == "review" for it in group)
         n_dup = sum(it["dest"] == "duplicate" for it in group)
@@ -367,24 +487,30 @@ def describe(items, sources):
             note = f"  [{it['how']}]" if it["how"] not in ("capture time", "") and it["dest"] != "review" else ""
             print(f"  {when:>9}  {it['path'].name[:44]:44} {extra:>5}  {tag}{note}")
 
-    nights = {}
+    possible = {}
     for it in unmatched:
-        if it.get("night"):
-            nights.setdefault(it["night"], []).append(it)
-    if nights:
-        print(f"\nNights with clips but no show in your log ({len(nights)}). Probably shows to add to concerts.csv:")
-        for d in sorted(nights):
-            group = nights[d]
-            times = sorted(it["time"] for it in group if it["time"])
+        if it["dest"] == "possible":
+            possible.setdefault(it["night"], []).append(it)
+    if possible:
+        ranked = sorted(possible.items(), key=lambda kv: (-len(kv[1]), kv[0]))
+        print(f"\nPossible shows not in your log ({len(possible)} nights with {POSSIBLE_SHOW_MIN_CLIPS}+ loud evening videos, most clips first).")
+        print("Their evening clips go to media/_review/_possible-shows/<date>/. Add the show to concerts.csv and run again to file them.")
+        for d, group in ranked:
+            times = sorted(it["local"] for it in group)
             pts = [it["gps"] for it in group if it["gps"]]
             where = ""
             if pts:
                 lat, lon = statistics.median(p[0] for p in pts), statistics.median(p[1] for p in pts)
-                where = f"  near {lat:.4f},{lon:.4f}  https://maps.google.com/?q={lat:.5f},{lon:.5f}"
-            span = f"{times[0]:%-I:%M %p}–{times[-1]:%-I:%M %p}" if times else ""
-            print(f"  {d:%a %b %-d, %Y}  {len(group):3} clip{'s' if len(group) > 1 else ' '}  {span:19}{where}")
+                where = f"  https://maps.google.com/?q={lat:.5f},{lon:.5f}"
+            print(f"  {d:%a %b %-d, %Y}  {len(group):3} clips  {times[0]:%-I:%M %p}–{times[-1]:%-I:%M %p}  {group[0]['night_db']:5.1f} dB{where}")
+    other = [it for it in unmatched if it.get("night") and it["dest"] != "possible"]
+    if other:
+        print(f"\n{len(other)} other clips are from {len({it['night'] for it in other})} days with no show that don't look like one"
+              f" (daytime, too few clips, quiet, or somewhere you filmed on {HOME_NIGHTS}+ nights). Left alone.")
     no_time = [it for it in unmatched if not it.get("night")]
-    if no_time:
+    if no_time and len(no_time) > 200:
+        print(f"\nNo usable date: {len(no_time)} files (mostly photos without EXIF). Left alone.")
+    elif no_time:
         print(f"\nNo usable date ({len(no_time)}): left alone")
         for it in no_time[:15]:
             print(f"  {it['path'].name}  ({it['warn'] or 'no capture time'})")
@@ -442,56 +568,91 @@ def entry(path, it=None):
     return e
 
 
-def apply(items, convert_height, encoder, jobs):
+def apply(items, convert_height, encoder, jobs, time_limit=None):
+    """Copy/move/convert. Safe to stop and run again: each file is written under a temporary
+    name and renamed when complete, lists are updated as it goes, and finished files are skipped."""
     # Duplicates found in the inbox are moved aside (never deleted); ones on a drive are just skipped.
-    todo = [it for it in items if it["dest"] in ("show", "review") or (it["dest"] == "duplicate" and it["mode"] == "move")]
+    todo = [it for it in items if it["dest"] in ("show", "review", "possible") or (it["dest"] == "duplicate" and it["mode"] == "move")]
     if not todo:
         print("\nNothing to move.")
         return
 
+    def target(it):
+        sid = it["show"]["id"] if it["show"] else None
+        return {"show": MEDIA_DIR / str(sid), "review": REVIEW / str(sid), "duplicate": REVIEW / "_duplicates",
+                "possible": REVIEW / "_possible-shows" / f"{it.get('night')}"}[it["dest"]]
+
     def run(it):
-        sid = it["show"]["id"]
-        folder = {"show": MEDIA_DIR / sid, "review": REVIEW / sid, "duplicate": REVIEW / "_duplicates"}[it["dest"]]
+        folder = target(it)
         folder.mkdir(parents=True, exist_ok=True)
         src = it["path"]
         if convert_height and it["video"] and it["dest"] == "show":
-            out = unique(folder / (src.stem + ".mp4"))
-            if encode(src, out, convert_height, encoder):
+            out = folder / (src.stem + ".mp4")
+            if out.exists() and out.stat().st_size > 0 and it["mode"] == "copy":
+                return folder, out, it, "already copied"
+            out = unique(out)
+            part = out.with_name(out.stem + ".part.mp4")
+            if encode(src, part, convert_height, encoder):
+                part.rename(out)
                 if it["mode"] == "move":  # keep the original out of the way (never committed)
                     (folder / "originals").mkdir(exist_ok=True)
                     shutil.move(str(src), unique(folder / "originals" / src.name))
-                return sid, folder, out, it, "converted"
+                return folder, out, it, "converted"
             # conversion failed: fall through and bring the original in as-is
-        dest = unique(folder / src.name)
-        (shutil.move if it["mode"] == "move" else shutil.copy2)(str(src), dest)
-        return sid, folder, dest, it, "moved" if it["mode"] == "move" else "copied"
+        same = folder / src.name
+        if it["mode"] == "copy" and same.exists() and same.stat().st_size == src.stat().st_size:
+            return folder, same, it, "already copied"
+        dest = unique(same)
+        if it["mode"] == "move":
+            shutil.move(str(src), dest)
+        else:
+            part = dest.with_name(dest.name + ".part")
+            shutil.copy2(str(src), part)
+            part.rename(dest)
+        return folder, dest, it, "moved" if it["mode"] == "move" else "copied"
 
-    done = []
-    with cf.ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
-        futures = [pool.submit(run, it) for it in todo]
-        for k, fut in enumerate(cf.as_completed(futures), 1):
-            sid, folder, dest, it, how = fut.result()
-            done.append((folder, dest, it))
-            print(f"  [{k}/{len(todo)}] {how} → {folder.relative_to(MEDIA_DIR)}/{dest.name}  {dest.stat().st_size / 1048576:.0f} MB", flush=True)
-
-    by_folder = {}
-    for folder, dest, it in done:
-        if it["dest"] != "duplicate":
-            by_folder.setdefault(folder, []).append((dest, it))
-    for folder, files in by_folder.items():
-        manifest = folder / MANIFEST
-        entries = json.loads(manifest.read_text(encoding="utf-8")) if manifest.exists() else {}
-        for dest, it in files:
-            entries[dest.name] = entry(dest, it)
+    def record(folder, dest, it):
+        if it["dest"] in ("duplicate", "possible"):
+            return
         if folder.parent == MEDIA_DIR:
+            entries = read_manifest(folder.name)
+            entries[dest.name] = entry(dest, it)
             write_manifest(folder.name, entries)
         else:
+            manifest = folder / MANIFEST
+            entries = json.loads(manifest.read_text(encoding="utf-8")) if manifest.exists() else {}
+            entries[dest.name] = entry(dest, it)
             manifest.write_text(json.dumps(dict(sorted(entries.items(), key=lambda kv: (kv[1].get("taken") or "~", kv[0]))), indent=1) + "\n", encoding="utf-8")
-    if any(it["dest"] in ("review", "duplicate") for _, _, it in done):
+
+    started, done, stopped = dt.datetime.now(), [], False
+    with cf.ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
+        pending, queue = set(), list(todo)
+        while queue or pending:
+            while queue and len(pending) < max(1, jobs) and not stopped:
+                if time_limit and (dt.datetime.now() - started).total_seconds() > time_limit:
+                    stopped = True
+                    break
+                pending.add(pool.submit(run, queue.pop(0)))
+            if not pending:
+                break
+            finished, pending = cf.wait(pending, return_when=cf.FIRST_COMPLETED)
+            for fut in finished:
+                folder, dest, it, how = fut.result()
+                record(folder, dest, it)
+                done.append((folder, dest, it))
+                if how != "already copied":
+                    print(f"  [{len(done)}/{len(todo)}] {how} → {folder.relative_to(MEDIA_DIR)}/{dest.name}  {dest.stat().st_size / 1048576:.0f} MB", flush=True)
+    if any(it["dest"] in ("review", "duplicate", "possible") for _, _, it in done):
         write_review_readme()
+    if stopped:
+        print(f"\nStopped after {len(done)} of {len(todo)} (time limit). Run the same command again to carry on; finished files are skipped.")
+        raise SystemExit(3)
     n_show = sum(it["dest"] == "show" for _, _, it in done)
     n_rev = sum(it["dest"] == "review" for _, _, it in done)
     n_dup = sum(it["dest"] == "duplicate" for _, _, it in done)
+    n_pos = sum(it["dest"] == "possible" for _, _, it in done)
+    if n_pos:
+        print(f"\n{n_pos} evening clip(s) from nights with no show are in media/_review/_possible-shows/<date>/.")
     print(f"\nDone: {n_show} into show folders, {n_rev} into media/_review/"
           + (f", {n_dup} duplicate(s) of clips you already have into media/_review/_duplicates/ (safe to delete)" if n_dup else "") + "."
           + (" Originals left where they were." if any(it["mode"] == "copy" for _, _, it in done) else ""))
@@ -504,8 +665,10 @@ def write_review_readme():
              "Keep one:  python3 scripts/import_media.py --restore IMG_1234.MOV   (moves it into its show)",
              "Keep all of a show's:  python3 scripts/import_media.py --restore 2026-11-03-thundercat",
              "Don't want it: delete it. Nothing in this folder is put on the site or committed.",
-             "_duplicates/ holds extra copies of clips you already have: delete the whole folder.", ""]
-    for folder in sorted(p for p in REVIEW.iterdir() if p.is_dir() and p.name != "_duplicates"):
+             "_duplicates/ holds extra copies of clips you already have: delete the whole folder.",
+             "_possible-shows/<date>/ holds evening clips from nights with no show in your log. If it was a show,",
+             "add it to concerts.csv and run the import again: the clips get filed. Then delete that date's folder.", ""]
+    for folder in sorted(p for p in REVIEW.iterdir() if p.is_dir() and p.name not in ("_duplicates", "_possible-shows")):
         m = folder / MANIFEST
         entries = json.loads(m.read_text(encoding="utf-8")) if m.exists() else {}
         for name in sorted(p.name for p in folder.iterdir() if p.is_file() and p.name != MANIFEST):
@@ -554,7 +717,7 @@ def restore(names):
         raise SystemExit("Nothing in media/_review/.")
     moved = 0
     for target in names:
-        folders = [REVIEW / target] if (REVIEW / target).is_dir() else [p for p in REVIEW.iterdir() if p.is_dir() and p.name != "_duplicates"]
+        folders = [REVIEW / target] if (REVIEW / target).is_dir() else [p for p in REVIEW.iterdir() if p.is_dir() and p.name not in ("_duplicates", "_possible-shows")]
         for folder in folders:
             rm = folder / MANIFEST
             rev = json.loads(rm.read_text(encoding="utf-8")) if rm.exists() else {}
@@ -680,6 +843,7 @@ if __name__ == "__main__":
     ap.add_argument("--review", action="store_true", help="send short/unsure clips already in show folders to review")
     ap.add_argument("--restore", nargs="+", metavar="NAME", help="move clips (file names or a show id) from review back into their show")
     ap.add_argument("--index", action="store_true", help="refresh media.json in every show folder")
+    ap.add_argument("--time-limit", type=float, metavar="SECONDS", help="stop reading after this long (progress is saved); run again to continue")
     args = ap.parse_args()
 
     if args.restore:
@@ -692,14 +856,14 @@ if __name__ == "__main__":
         enc = encoder_choice(args.encoder)
         convert_existing(args.convert, enc, args.jobs or (3 if enc == "apple" else 1))
     else:
-        items = plan(args.sources, args.min_seconds)
+        items = plan(args.sources, args.min_seconds, time_limit=args.time_limit)
         if not items:
             print("Nothing to sort. Put photos and videos in media/inbox/ (or media/), or use --from FOLDER.")
         else:
             describe(items, args.sources)
             if args.apply:
                 enc = encoder_choice(args.encoder) if args.convert else None
-                apply(items, args.convert, enc, args.jobs or (3 if enc == "apple" else 1))
+                apply(items, args.convert, enc, args.jobs or (3 if enc == "apple" else 1), args.time_limit)
             elif any(it["dest"] in ("show", "review") for it in items):
                 verb = "copy" if args.sources else "move"
                 print(f"\nDry run. Run again with --apply to {verb} them" + (" (add --convert to shrink videos on the way)." if not args.convert else "."))
