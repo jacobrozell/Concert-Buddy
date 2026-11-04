@@ -1,47 +1,51 @@
 {
-  "sets": [
+  "acts": [
     {
-      "name": "Main set",
-      "songs": [
+      "artist": "Godsmack",
+      "sets": [
         {
-          "title": "Surrender"
-        },
-        {
-          "title": "You and I"
-        },
-        {
-          "title": "When Legends Rise"
-        },
-        {
-          "title": "Cryin' Like a Bitch!!"
-        },
-        {
-          "title": "Straight Out of Line"
-        },
-        {
-          "title": "Awake"
-        },
-        {
-          "title": "Keep Away"
-        },
-        {
-          "title": "Voodoo"
-        },
-        {
-          "title": "Batalla de los tambores"
-        },
-        {
-          "title": "Whatever"
-        },
-        {
-          "title": "Bulletproof"
-        },
-        {
-          "title": "I Stand Alone"
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Surrender"
+            },
+            {
+              "title": "You and I"
+            },
+            {
+              "title": "When Legends Rise"
+            },
+            {
+              "title": "Cryin' Like a Bitch!!"
+            },
+            {
+              "title": "Straight Out of Line"
+            },
+            {
+              "title": "Awake"
+            },
+            {
+              "title": "Keep Away"
+            },
+            {
+              "title": "Voodoo"
+            },
+            {
+              "title": "Batalla de los tambores"
+            },
+            {
+              "title": "Whatever"
+            },
+            {
+              "title": "Bulletproof"
+            },
+            {
+              "title": "I Stand Alone"
+            }
+          ]
         }
-      ]
+      ],
+      "source": "https://www.setlist.fm/setlist/godsmack/2026/the-orion-amphitheater-huntsville-al-7b4b9e44.html"
     }
-  ],
-  "extras": [],
-  "source": "https://www.setlist.fm/setlist/godsmack/2026/the-orion-amphitheater-huntsville-al-7b4b9e44.html"
+  ]
 }

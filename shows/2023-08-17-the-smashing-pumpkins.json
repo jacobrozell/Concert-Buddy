@@ -1,124 +1,135 @@
 {
-  "sets": [
+  "acts": [
     {
-      "name": "Interpol",
-      "songs": [
+      "artist": "Interpol",
+      "sets": [
         {
-          "title": "Toni"
-        },
-        {
-          "title": "Obstacle 1"
-        },
-        {
-          "title": "Narc"
-        },
-        {
-          "title": "Say Hello to the Angels"
-        },
-        {
-          "title": "My Desire"
-        },
-        {
-          "title": "All the Rage Back Home"
-        },
-        {
-          "title": "Fables"
-        },
-        {
-          "title": "Evil"
-        },
-        {
-          "title": "The Rover"
-        },
-        {
-          "title": "Roland"
-        },
-        {
-          "title": "Rest My Chemistry"
-        },
-        {
-          "title": "No I in Threesome"
-        },
-        {
-          "title": "C'mere"
-        },
-        {
-          "title": "Slow Hands"
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Toni"
+            },
+            {
+              "title": "Obstacle 1"
+            },
+            {
+              "title": "Narc"
+            },
+            {
+              "title": "Say Hello to the Angels"
+            },
+            {
+              "title": "My Desire"
+            },
+            {
+              "title": "All the Rage Back Home"
+            },
+            {
+              "title": "Fables"
+            },
+            {
+              "title": "Evil"
+            },
+            {
+              "title": "The Rover"
+            },
+            {
+              "title": "Roland"
+            },
+            {
+              "title": "Rest My Chemistry"
+            },
+            {
+              "title": "No I in Threesome"
+            },
+            {
+              "title": "C'mere"
+            },
+            {
+              "title": "Slow Hands"
+            }
+          ]
         }
-      ]
+      ],
+      "source": "https://www.setlist.fm/setlist/interpol/2023/the-orion-amphitheater-huntsville-al-63a59697.html"
     },
     {
-      "name": "The Smashing Pumpkins",
-      "songs": [
+      "artist": "The Smashing Pumpkins",
+      "sets": [
         {
-          "title": "The Everlasting Gaze"
-        },
-        {
-          "title": "Doomsday Clock"
-        },
-        {
-          "title": "Once in a Lifetime",
-          "note": "Talking Heads cover"
-        },
-        {
-          "title": "Today"
-        },
-        {
-          "title": "Perfect"
-        },
-        {
-          "title": "Disarm"
-        },
-        {
-          "title": "The Celestials"
-        },
-        {
-          "title": "Purple Blood"
-        },
-        {
-          "title": "Ava Adore"
-        },
-        {
-          "title": "Tonight, Tonight",
-          "note": "Billy and James acoustic"
-        },
-        {
-          "title": "Bullet With Butterfly Wings"
-        },
-        {
-          "title": "This Time"
-        },
-        {
-          "title": "Spellbinding"
-        },
-        {
-          "title": "Hubble Bubble (Toil and Trouble)",
-          "note": "Manfred Mann cover"
-        },
-        {
-          "title": "Jellybelly"
-        },
-        {
-          "title": "Empires"
-        },
-        {
-          "title": "Hummer"
-        },
-        {
-          "title": "Beguiled"
-        },
-        {
-          "title": "1979"
-        },
-        {
-          "title": "Cherub Rock",
-          "note": "preceded by a snippet of \"Sweet Home Alabama\""
-        },
-        {
-          "title": "Zero"
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "The Everlasting Gaze"
+            },
+            {
+              "title": "Doomsday Clock"
+            },
+            {
+              "title": "Once in a Lifetime",
+              "note": "Talking Heads cover"
+            },
+            {
+              "title": "Today"
+            },
+            {
+              "title": "Perfect"
+            },
+            {
+              "title": "Disarm"
+            },
+            {
+              "title": "The Celestials"
+            },
+            {
+              "title": "Purple Blood"
+            },
+            {
+              "title": "Ava Adore"
+            },
+            {
+              "title": "Tonight, Tonight",
+              "note": "Billy and James acoustic"
+            },
+            {
+              "title": "Bullet With Butterfly Wings"
+            },
+            {
+              "title": "This Time"
+            },
+            {
+              "title": "Spellbinding"
+            },
+            {
+              "title": "Hubble Bubble (Toil and Trouble)",
+              "note": "Manfred Mann cover"
+            },
+            {
+              "title": "Jellybelly"
+            },
+            {
+              "title": "Empires"
+            },
+            {
+              "title": "Hummer"
+            },
+            {
+              "title": "Beguiled"
+            },
+            {
+              "title": "1979"
+            },
+            {
+              "title": "Cherub Rock",
+              "note": "preceded by a snippet of \"Sweet Home Alabama\""
+            },
+            {
+              "title": "Zero"
+            }
+          ]
         }
-      ]
+      ],
+      "source": "https://www.setlist.fm/setlist/the-smashing-pumpkins/2023/the-orion-amphitheater-huntsville-al-73a596d1.html"
     }
-  ],
-  "extras": []
+  ]
 }

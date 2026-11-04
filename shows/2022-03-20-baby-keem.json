@@ -1,69 +1,73 @@
 {
-  "sets": [
+  "acts": [
     {
-      "name": "Main set",
-      "songs": [
+      "artist": "Baby Keem",
+      "sets": [
         {
-          "title": "trademark usa"
-        },
-        {
-          "title": "hooligan"
-        },
-        {
-          "title": "pink panties"
-        },
-        {
-          "title": "scapegoats"
-        },
-        {
-          "title": "MOSHPIT"
-        },
-        {
-          "title": "HONEST"
-        },
-        {
-          "title": "ORANGE SODA"
-        },
-        {
-          "title": "booman"
-        },
-        {
-          "title": "issues"
-        },
-        {
-          "title": "range brothers"
-        },
-        {
-          "title": "16"
-        },
-        {
-          "title": "gorgeous"
-        },
-        {
-          "title": "durag activity"
-        },
-        {
-          "title": "Praise God",
-          "note": "Ye cover"
-        },
-        {
-          "title": "lost souls"
-        },
-        {
-          "title": "vent"
-        },
-        {
-          "title": "scars"
-        },
-        {
-          "title": "first order of business"
-        },
-        {
-          "title": "family ties"
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "trademark usa"
+            },
+            {
+              "title": "hooligan"
+            },
+            {
+              "title": "pink panties"
+            },
+            {
+              "title": "scapegoats"
+            },
+            {
+              "title": "MOSHPIT"
+            },
+            {
+              "title": "HONEST"
+            },
+            {
+              "title": "ORANGE SODA"
+            },
+            {
+              "title": "booman"
+            },
+            {
+              "title": "issues"
+            },
+            {
+              "title": "range brothers"
+            },
+            {
+              "title": "16"
+            },
+            {
+              "title": "gorgeous"
+            },
+            {
+              "title": "durag activity"
+            },
+            {
+              "title": "Praise God",
+              "note": "Ye cover"
+            },
+            {
+              "title": "lost souls"
+            },
+            {
+              "title": "vent"
+            },
+            {
+              "title": "scars"
+            },
+            {
+              "title": "first order of business"
+            },
+            {
+              "title": "family ties"
+            }
+          ]
         }
-      ]
+      ],
+      "source": "https://www.setlist.fm/setlist/baby-keem/2022/tabernacle-atlanta-ga-38911a3.html"
     }
-  ],
-  "extras": [],
-  "source": "https://www.setlist.fm/setlist/baby-keem/2022/tabernacle-atlanta-ga-38911a3.html"
+  ]
 }

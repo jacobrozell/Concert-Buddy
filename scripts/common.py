@@ -88,7 +88,50 @@ def clean_set_name(name, index=0):
     return name
 
 
-def iter_songs(show):
-    for s in (show or {}).get("sets", []):
-        for song in s.get("songs", []):
-            yield song
+def split_artists(text):
+    """'The Shins / Silversun Pickups' -> ['The Shins', 'Silversun Pickups']."""
+    return [a.strip() for a in re.split(r"\s+/\s+", text or "") if a.strip()]
+
+
+def bill(row, order=None):
+    """Every act on a show's bill, in the order they played (first on stage first).
+
+    The CSV lists artists the way a poster bills them, biggest name first, in both
+    the `artist` and `opener` columns, so the stage order is: openers reversed, then
+    the artist column reversed (the first-listed artist headlines and plays last).
+    A show file can override this with "order": ["First act", "Second act", ...].
+    """
+    heads = split_artists(row.get("artist", ""))
+    openers = split_artists(row.get("opener", ""))
+    opener_slugs = {slugify(o) for o in openers}
+    heads = [h for h in heads if slugify(h) not in opener_slugs] or heads[:1]
+    acts = [{"artist": a, "role": "opener"} for a in reversed(openers)]
+    acts += [{"artist": a, "role": "headliner" if i == 0 else "co-headliner"} for i, a in reversed(list(enumerate(heads)))]
+    if order:
+        rank = {slugify(a): i for i, a in enumerate(order)}
+        acts.sort(key=lambda a: rank.get(slugify(a["artist"]), len(rank)))
+    return acts
+
+
+def show_acts(show, row):
+    """A show file's acts as a list of {"artist", "sets", ...}, reading the older
+    single-setlist format ({"sets": [...]}) as the headliner's setlist."""
+    show = show or {}
+    if "acts" in show:
+        return show["acts"]
+    if show.get("sets"):
+        legacy = {k: v for k, v in show.items() if k in ("sets", "source", "provisional")}
+        return [{"artist": split_artists(row.get("artist", ""))[0], **legacy}]
+    return []
+
+
+def read_genres():
+    """artists.csv -> {artist slug: [genre, ...]} (first genre is the main one)."""
+    path = ROOT / "artists.csv"
+    if not path.exists():
+        return {}
+    with open(path, newline="", encoding="utf-8-sig") as f:
+        return {
+            slugify(r["artist"]): [g.strip() for g in (r.get("genres") or "").split(";") if g.strip()]
+            for r in csv.DictReader(f) if (r.get("artist") or "").strip()
+        }

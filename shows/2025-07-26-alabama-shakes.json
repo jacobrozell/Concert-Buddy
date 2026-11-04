@@ -1,79 +1,83 @@
 {
-  "sets": [
+  "acts": [
     {
-      "name": "Main set",
-      "songs": [
+      "artist": "Alabama Shakes",
+      "sets": [
         {
-          "title": "Hang Loose"
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Hang Loose"
+            },
+            {
+              "title": "Future People"
+            },
+            {
+              "title": "Dunes"
+            },
+            {
+              "title": "Guess Who"
+            },
+            {
+              "title": "Hold On"
+            },
+            {
+              "title": "This Feeling"
+            },
+            {
+              "title": "I Ain't the Same"
+            },
+            {
+              "title": "I Found You"
+            },
+            {
+              "title": "Rise to the Sun"
+            },
+            {
+              "title": "Don't Wanna Fight"
+            },
+            {
+              "title": "Shoegaze"
+            },
+            {
+              "title": "Over My Head"
+            },
+            {
+              "title": "Miss You"
+            },
+            {
+              "title": "Gemini"
+            },
+            {
+              "title": "Joe"
+            },
+            {
+              "title": "Someday"
+            },
+            {
+              "title": "Sound & Color"
+            },
+            {
+              "title": "Gimme All Your Love"
+            }
+          ]
         },
         {
-          "title": "Future People"
-        },
-        {
-          "title": "Dunes"
-        },
-        {
-          "title": "Guess Who"
-        },
-        {
-          "title": "Hold On"
-        },
-        {
-          "title": "This Feeling"
-        },
-        {
-          "title": "I Ain't the Same"
-        },
-        {
-          "title": "I Found You"
-        },
-        {
-          "title": "Rise to the Sun"
-        },
-        {
-          "title": "Don't Wanna Fight"
-        },
-        {
-          "title": "Shoegaze"
-        },
-        {
-          "title": "Over My Head"
-        },
-        {
-          "title": "Miss You"
-        },
-        {
-          "title": "Gemini"
-        },
-        {
-          "title": "Joe"
-        },
-        {
-          "title": "Someday"
-        },
-        {
-          "title": "Sound & Color"
-        },
-        {
-          "title": "Gimme All Your Love"
+          "name": "Encore",
+          "songs": [
+            {
+              "title": "American Dream"
+            },
+            {
+              "title": "Drive By Baby"
+            },
+            {
+              "title": "Always Alright"
+            }
+          ]
         }
-      ]
-    },
-    {
-      "name": "Encore",
-      "songs": [
-        {
-          "title": "American Dream"
-        },
-        {
-          "title": "Drive By Baby"
-        },
-        {
-          "title": "Always Alright"
-        }
-      ]
+      ],
+      "source": "https://www.setlist.fm/setlist/alabama-shakes/2025/coca-cola-amphitheater-birmingham-al-4b5a232a.html"
     }
-  ],
-  "extras": [],
-  "source": "https://www.setlist.fm/setlist/alabama-shakes/2025/coca-cola-amphitheater-birmingham-al-4b5a232a.html"
+  ]
 }

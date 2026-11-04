@@ -1,78 +1,82 @@
 {
-  "sets": [
+  "acts": [
     {
-      "name": "Main set",
-      "songs": [
+      "artist": "Tyler Childers",
+      "sets": [
         {
-          "title": "Eatin' Big Time"
-        },
-        {
-          "title": "I Swear (to God)"
-        },
-        {
-          "title": "Dirty Ought Trill"
-        },
-        {
-          "title": "Trudy",
-          "note": "The Charlie Daniels Band cover"
-        },
-        {
-          "title": "Rustin' in the Rain"
-        },
-        {
-          "title": "All Your'n"
-        },
-        {
-          "title": "In Your Love"
-        },
-        {
-          "title": "Jersey Giant"
-        },
-        {
-          "title": "Bitin' List"
-        },
-        {
-          "title": "Watch Out"
-        },
-        {
-          "title": "Lady May",
-          "note": "B stage, solo acoustic"
-        },
-        {
-          "title": "Nose on the Grindstone",
-          "note": "B stage, acoustic trio"
-        },
-        {
-          "title": "Follow You to Virgie",
-          "note": "B stage, acoustic trio"
-        },
-        {
-          "title": "The Old Country Church",
-          "note": "T. Texas Tyler cover"
-        },
-        {
-          "title": "Whitehouse Road"
-        },
-        {
-          "title": "Down Under"
-        },
-        {
-          "title": "Honky Tonk Flame"
-        },
-        {
-          "title": "Way of the Triune God"
-        },
-        {
-          "title": "Snipe Hunt"
-        },
-        {
-          "title": "Universal Sound"
-        },
-        {
-          "title": "Heart You've Been Tendin'"
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Eatin' Big Time"
+            },
+            {
+              "title": "I Swear (to God)"
+            },
+            {
+              "title": "Dirty Ought Trill"
+            },
+            {
+              "title": "Trudy",
+              "note": "The Charlie Daniels Band cover"
+            },
+            {
+              "title": "Rustin' in the Rain"
+            },
+            {
+              "title": "All Your'n"
+            },
+            {
+              "title": "In Your Love"
+            },
+            {
+              "title": "Jersey Giant"
+            },
+            {
+              "title": "Bitin' List"
+            },
+            {
+              "title": "Watch Out"
+            },
+            {
+              "title": "Lady May",
+              "note": "B stage, solo acoustic"
+            },
+            {
+              "title": "Nose on the Grindstone",
+              "note": "B stage, acoustic trio"
+            },
+            {
+              "title": "Follow You to Virgie",
+              "note": "B stage, acoustic trio"
+            },
+            {
+              "title": "The Old Country Church",
+              "note": "T. Texas Tyler cover"
+            },
+            {
+              "title": "Whitehouse Road"
+            },
+            {
+              "title": "Down Under"
+            },
+            {
+              "title": "Honky Tonk Flame"
+            },
+            {
+              "title": "Way of the Triune God"
+            },
+            {
+              "title": "Snipe Hunt"
+            },
+            {
+              "title": "Universal Sound"
+            },
+            {
+              "title": "Heart You've Been Tendin'"
+            }
+          ]
         }
       ]
     }
-  ],
-  "extras": []
+  ]
 }

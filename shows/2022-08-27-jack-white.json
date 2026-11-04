@@ -1,95 +1,99 @@
 {
-  "sets": [
+  "acts": [
     {
-      "name": "Main set",
-      "songs": [
+      "artist": "Jack White",
+      "sets": [
         {
-          "title": "Taking Me Back"
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Taking Me Back"
+            },
+            {
+              "title": "Fear of the Dawn"
+            },
+            {
+              "title": "Dead Leaves and the Dirty Ground",
+              "note": "The White Stripes song"
+            },
+            {
+              "title": "Hi-De-Ho"
+            },
+            {
+              "title": "Hotel Yorba",
+              "note": "The White Stripes song"
+            },
+            {
+              "title": "Fell in Love With a Girl",
+              "note": "The White Stripes song"
+            },
+            {
+              "title": "Lazaretto"
+            },
+            {
+              "title": "We're Going to Be Friends",
+              "note": "The White Stripes song"
+            },
+            {
+              "title": "I Cut Like a Buffalo",
+              "note": "The Dead Weather song"
+            },
+            {
+              "title": "Gasoline",
+              "note": "The Dead Weather song"
+            },
+            {
+              "title": "A Tree on Fire From Within"
+            },
+            {
+              "title": "A Tip From You to Me"
+            },
+            {
+              "title": "Love Is Selfish"
+            },
+            {
+              "title": "Temporary Ground"
+            },
+            {
+              "title": "Apple Blossom",
+              "note": "The White Stripes song"
+            },
+            {
+              "title": "If I Die Tomorrow"
+            },
+            {
+              "title": "Love Interruption"
+            },
+            {
+              "title": "Hello Operator",
+              "note": "The White Stripes song"
+            },
+            {
+              "title": "Ball and Biscuit",
+              "note": "The White Stripes song"
+            }
+          ]
         },
         {
-          "title": "Fear of the Dawn"
-        },
-        {
-          "title": "Dead Leaves and the Dirty Ground",
-          "note": "The White Stripes song"
-        },
-        {
-          "title": "Hi-De-Ho"
-        },
-        {
-          "title": "Hotel Yorba",
-          "note": "The White Stripes song"
-        },
-        {
-          "title": "Fell in Love With a Girl",
-          "note": "The White Stripes song"
-        },
-        {
-          "title": "Lazaretto"
-        },
-        {
-          "title": "We're Going to Be Friends",
-          "note": "The White Stripes song"
-        },
-        {
-          "title": "I Cut Like a Buffalo",
-          "note": "The Dead Weather song"
-        },
-        {
-          "title": "Gasoline",
-          "note": "The Dead Weather song"
-        },
-        {
-          "title": "A Tree on Fire From Within"
-        },
-        {
-          "title": "A Tip From You to Me"
-        },
-        {
-          "title": "Love Is Selfish"
-        },
-        {
-          "title": "Temporary Ground"
-        },
-        {
-          "title": "Apple Blossom",
-          "note": "The White Stripes song"
-        },
-        {
-          "title": "If I Die Tomorrow"
-        },
-        {
-          "title": "Love Interruption"
-        },
-        {
-          "title": "Hello Operator",
-          "note": "The White Stripes song"
-        },
-        {
-          "title": "Ball and Biscuit",
-          "note": "The White Stripes song"
-        }
-      ]
-    },
-    {
-      "name": "Encore",
-      "songs": [
-        {
-          "title": "What's the Trick?"
-        },
-        {
-          "title": "Sixteen Saltines"
-        },
-        {
-          "title": "Steady, as She Goes",
-          "note": "The Raconteurs song"
-        },
-        {
-          "title": "Seven Nation Army",
-          "note": "The White Stripes song"
+          "name": "Encore",
+          "songs": [
+            {
+              "title": "What's the Trick?"
+            },
+            {
+              "title": "Sixteen Saltines"
+            },
+            {
+              "title": "Steady, as She Goes",
+              "note": "The Raconteurs song"
+            },
+            {
+              "title": "Seven Nation Army",
+              "note": "The White Stripes song"
+            }
+          ]
         }
       ]
     }
-  ],
-  "extras": []
+  ]
 }

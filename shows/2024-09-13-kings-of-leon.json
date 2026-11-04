@@ -1,93 +1,97 @@
 {
-  "sets": [
+  "acts": [
     {
-      "name": "Main set",
-      "songs": [
+      "artist": "Kings of Leon",
+      "sets": [
         {
-          "title": "Ballerina Radio"
-        },
-        {
-          "title": "The Bucket"
-        },
-        {
-          "title": "Waste a Moment"
-        },
-        {
-          "title": "On Call"
-        },
-        {
-          "title": "Manhattan"
-        },
-        {
-          "title": "Nowhere to Run"
-        },
-        {
-          "title": "Razz"
-        },
-        {
-          "title": "My Party"
-        },
-        {
-          "title": "Sex on Fire"
-        },
-        {
-          "title": "Revelry"
-        },
-        {
-          "title": "Beautiful War"
-        },
-        {
-          "title": "Split Screen"
-        },
-        {
-          "title": "Ragoo",
-          "note": "first performance since 2014"
-        },
-        {
-          "title": "Mustang"
-        },
-        {
-          "title": "Molly's Chambers"
-        },
-        {
-          "title": "Supersoaker"
-        },
-        {
-          "title": "M Television"
-        },
-        {
-          "title": "WALLS",
-          "note": "tour debut; first time since 2018"
-        },
-        {
-          "title": "Back Down South"
-        },
-        {
-          "title": "Pyro"
-        },
-        {
-          "title": "Find Me"
-        },
-        {
-          "title": "The Bandit"
-        },
-        {
-          "title": "Seen"
-        },
-        {
-          "title": "Closer"
-        },
-        {
-          "title": "Rainbow Ball"
-        },
-        {
-          "title": "Knocked Up"
-        },
-        {
-          "title": "Use Somebody"
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Ballerina Radio"
+            },
+            {
+              "title": "The Bucket"
+            },
+            {
+              "title": "Waste a Moment"
+            },
+            {
+              "title": "On Call"
+            },
+            {
+              "title": "Manhattan"
+            },
+            {
+              "title": "Nowhere to Run"
+            },
+            {
+              "title": "Razz"
+            },
+            {
+              "title": "My Party"
+            },
+            {
+              "title": "Sex on Fire"
+            },
+            {
+              "title": "Revelry"
+            },
+            {
+              "title": "Beautiful War"
+            },
+            {
+              "title": "Split Screen"
+            },
+            {
+              "title": "Ragoo",
+              "note": "first performance since 2014"
+            },
+            {
+              "title": "Mustang"
+            },
+            {
+              "title": "Molly's Chambers"
+            },
+            {
+              "title": "Supersoaker"
+            },
+            {
+              "title": "M Television"
+            },
+            {
+              "title": "WALLS",
+              "note": "tour debut; first time since 2018"
+            },
+            {
+              "title": "Back Down South"
+            },
+            {
+              "title": "Pyro"
+            },
+            {
+              "title": "Find Me"
+            },
+            {
+              "title": "The Bandit"
+            },
+            {
+              "title": "Seen"
+            },
+            {
+              "title": "Closer"
+            },
+            {
+              "title": "Rainbow Ball"
+            },
+            {
+              "title": "Knocked Up"
+            },
+            {
+              "title": "Use Somebody"
+            }
+          ]
         }
       ]
     }
-  ],
-  "extras": []
+  ]
 }

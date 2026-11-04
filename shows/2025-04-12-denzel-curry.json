@@ -1,92 +1,96 @@
 {
-  "sets": [
+  "acts": [
     {
-      "name": "Main set",
-      "songs": [
+      "artist": "Denzel Curry",
+      "sets": [
         {
-          "title": "ACT A DAMN FOOL"
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "ACT A DAMN FOOL"
+            },
+            {
+              "title": "RICKY"
+            },
+            {
+              "title": "HIT THE FLOOR"
+            },
+            {
+              "title": "Zone 3"
+            },
+            {
+              "title": "Walkin"
+            },
+            {
+              "title": "COLE PIMP"
+            },
+            {
+              "title": "BLACK FLAG FREESTYLE"
+            },
+            {
+              "title": "G'Z UP"
+            },
+            {
+              "title": "Threatz"
+            },
+            {
+              "title": "GOATED.",
+              "note": "Armani White cover"
+            },
+            {
+              "title": "DIET_"
+            },
+            {
+              "title": "SUMO | ZUMO"
+            },
+            {
+              "title": "SKED",
+              "note": "with Kenny Mason"
+            },
+            {
+              "title": "GOT ME GEEKED"
+            },
+            {
+              "title": "ANOTHA LATE NIGHT",
+              "note": "With 454"
+            },
+            {
+              "title": "Twistin'",
+              "note": "Lil Ugly Mane cover"
+            },
+            {
+              "title": "ULT"
+            },
+            {
+              "title": "HOT ONE",
+              "note": "fan selected to perform onstage"
+            },
+            {
+              "title": "First Night",
+              "note": "Lyrical Lemonade cover"
+            },
+            {
+              "title": "STILL IN THE PAINT"
+            },
+            {
+              "title": "Ultimate"
+            },
+            {
+              "title": "CLOUT COBAIN | CLOUT CO13A1N"
+            }
+          ]
         },
         {
-          "title": "RICKY"
-        },
-        {
-          "title": "HIT THE FLOOR"
-        },
-        {
-          "title": "Zone 3"
-        },
-        {
-          "title": "Walkin"
-        },
-        {
-          "title": "COLE PIMP"
-        },
-        {
-          "title": "BLACK FLAG FREESTYLE"
-        },
-        {
-          "title": "G'Z UP"
-        },
-        {
-          "title": "Threatz"
-        },
-        {
-          "title": "GOATED.",
-          "note": "Armani White cover"
-        },
-        {
-          "title": "DIET_"
-        },
-        {
-          "title": "SUMO | ZUMO"
-        },
-        {
-          "title": "SKED",
-          "note": "with Kenny Mason"
-        },
-        {
-          "title": "GOT ME GEEKED"
-        },
-        {
-          "title": "ANOTHA LATE NIGHT",
-          "note": "With 454"
-        },
-        {
-          "title": "Twistin'",
-          "note": "Lil Ugly Mane cover"
-        },
-        {
-          "title": "ULT"
-        },
-        {
-          "title": "HOT ONE",
-          "note": "fan selected to perform onstage"
-        },
-        {
-          "title": "First Night",
-          "note": "Lyrical Lemonade cover"
-        },
-        {
-          "title": "STILL IN THE PAINT"
-        },
-        {
-          "title": "Ultimate"
-        },
-        {
-          "title": "CLOUT COBAIN | CLOUT CO13A1N"
+          "name": "Encore",
+          "songs": [
+            {
+              "title": "JPEGULTRA!",
+              "note": "JPEGMAFIA cover"
+            }
+          ]
         }
-      ]
-    },
-    {
-      "name": "Encore",
-      "songs": [
-        {
-          "title": "JPEGULTRA!",
-          "note": "JPEGMAFIA cover"
-        }
-      ]
+      ],
+      "source": "https://www.setlist.fm/setlist/denzel-curry/2025/the-pinnacle-nashville-tn-2b5f38e2.html"
     }
-  ],
-  "extras": [],
-  "source": "https://www.setlist.fm/setlist/denzel-curry/2025/the-pinnacle-nashville-tn-2b5f38e2.html"
+  ]
 }

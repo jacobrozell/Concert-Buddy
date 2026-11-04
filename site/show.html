@@ -112,10 +112,37 @@
 .howto code,.howto pre{font-family:var(--mono);font-size:12.5px;color:var(--fg)}
 .howto pre{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px;overflow:auto}
 
-.noset{margin-top:38px;padding:26px 28px;border:1px dashed var(--line);border-radius:8px;color:var(--muted)}
+.noset{margin-top:24px;padding:26px 28px;border:1px dashed var(--line);border-radius:8px;color:var(--muted)}
 .noset p{margin:0}
 .noset pre{font-family:var(--mono);font-size:12.5px;color:var(--fg);white-space:pre-wrap;margin:12px 0 0}
 .noset h2{font-family:var(--display);font-weight:800;font-size:28px;text-transform:uppercase;color:var(--fg);margin:0 0 8px}
+
+/* the bill: one tab per act, in the order they played */
+.bill{margin-top:34px}
+.bill-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;justify-content:space-between;margin-bottom:12px}
+.bill-head h2{font-family:var(--display);font-weight:800;font-size:30px;text-transform:uppercase;margin:0;line-height:1}
+.bill-head .stat{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.acts{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(170px,1fr);gap:10px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:thin}
+.act-tab{all:unset;box-sizing:border-box;cursor:pointer;border:1px solid var(--line);background:var(--bg-2);border-radius:10px;padding:12px 14px 13px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.act-tab:hover{border-color:var(--muted)}
+.act-tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.act-tab[aria-selected="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--bg-2))}
+.act-tab .ord{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.act-tab[aria-selected="true"] .ord{color:var(--accent)}
+.act-tab .name{font-family:var(--display);font-weight:800;font-size:23px;line-height:1;overflow-wrap:anywhere}
+.act-tab .meta{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+
+/* whole-night coverage strip, grouped by act */
+.night{display:flex;gap:10px;margin-top:16px}
+.night .grp{min-width:0;display:flex;flex-direction:column;gap:5px}
+.night .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.night .strip{margin-top:0}
+
+/* the selected act's setlist */
+.act-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 20px;margin-top:34px;padding-bottom:4px}
+.act-head h2{font-family:var(--display);font-weight:900;font-size:clamp(34px,5vw,52px);line-height:.9;text-transform:uppercase;margin:6px 0 0;overflow-wrap:anywhere}
+.act-head .actions{display:flex;flex-wrap:wrap;gap:8px}
+.genres{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:var(--muted)}
 
 /* theater */
 .theater{position:fixed;inset:0;z-index:50;background:#0b090f;color:#ece6f3;display:grid;grid-template-rows:auto minmax(0,1fr) auto;
@@ -158,6 +185,8 @@
   .ticket .where small{display:block;margin-top:2px}
   .ticket .where small::before{content:none}
   .song.bare{grid-template-columns:38px minmax(0,1fr)}
+  .acts{grid-auto-columns:minmax(150px,72%)}
+  .night .lbl{display:none}
 }
 </style>
 </head>
@@ -233,80 +262,148 @@ document.addEventListener('click', e => {
 });
 
 /* ---------- page ---------- */
+const ROLE = {opener:'Opener', 'co-headliner':'Co-headliner', headliner:'Headliner'};
+let ACTS = [], CUR = null;   // acts in stage order; the act whose setlist is showing
+
+const songsOf = a => a.sets.flatMap(st => st.songs);
+const filmedIn = a => songsOf(a).filter(x => x.media.length).length;
+function setlistLink(url, fallbackQuery){
+  if (!url) return {href:`https://www.setlist.fm/search?query=${encodeURIComponent(fallbackQuery)}`, label:'Find the setlist on setlist.fm'};
+  const host = new URL(url).hostname.replace(/^www\./,'');
+  return {href:url, label: host === 'setlist.fm' ? 'View on setlist.fm' : host === 'jambase.com' ? 'View on JamBase' : 'Setlist source'};
+}
+
 function render(cfg){
   const s = SHOW, st = region(s.location);
   document.title = `${s.artist} · ${stubDate(s.date)} — ${cfg.site_title || 'Concert Log'}`;
-  SONGS = s.sets.flatMap(set => set.songs);
-  const filmed = SONGS.filter(x => x.media.length), mine = SONGS.filter(x => x.media.some(m => m.by === 'me'));
+  ACTS = s.acts;
+  let idx = 0;
+  SONGS = [];
+  for (const a of ACTS) for (const x of songsOf(a)){ x.act = a; x.idx = idx++; x.key = `${a.n}-${x.n}`; SONGS.push(x); }
+  const multi = ACTS.length > 1;
+  const head = ACTS.find(a => a.role === 'headliner');
+  const fromHash = +(location.hash.match(/^#act-(\d+)/) || [])[1];
+  CUR = ACTS.find(a => a.n === fromHash) || head;
+
+  const filmed = SONGS.filter(x => x.media.length), mine = filmed.filter(x => x.media.some(m => m.by === 'me'));
   const fansOnly = filmed.length - mine.length;
   const dd = (k, v) => v ? `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>` : '';
-  const sl = s.setlist_url || `https://www.setlist.fm/search?query=${encodeURIComponent(s.artist + ' ' + s.venue)}`;
-  const slHost = s.setlist_url ? new URL(s.setlist_url).hostname.replace(/^www\./,'') : '';
-  const slLabel = !s.setlist_url ? 'Find the setlist on setlist.fm' : slHost === 'setlist.fm' ? 'View on setlist.fm' : slHost === 'jambase.com' ? 'View on JamBase' : 'Setlist source';
+  const sl = setlistLink(head.source, s.artist + ' ' + s.venue);
 
   let h = `<header class="ticket" style="--paper:${paper(st)}">
     <div class="main">
       <div class="top"><span>${longDate(s.date)}</span><span>${esc(regionName(st))}</span></div>
       <h1>${esc(s.artist)}</h1>
       <div class="where">${esc(s.venue)} <small>${esc(s.location)}</small></div>
-      <dl>${dd('Opener', s.opener)}${dd('With', s.with)}${dd('Notes', s.notes)}</dl>
+      <dl>${multi ? '' : dd('Opener', s.opener)}${dd('Genre', s.genres.join(' · '))}${dd('With', s.with)}${dd('Notes', s.notes)}</dl>
       <div class="actions">
-        ${filmed.length ? `<button class="btn primary" id="play">▶ Play the show</button>` : ''}
-        <a class="btn" href="${esc(sl)}" target="_blank" rel="noopener">${slLabel} ↗</a>
+        ${filmed.length ? `<button class="btn primary" data-play="0">▶ Play the show</button>` : ''}
+        ${multi ? '' : `<a class="btn" href="${esc(sl.href)}" target="_blank" rel="noopener">${sl.label} ↗</a>`}
       </div>
     </div>
     <div class="side"><span>No.</span><b>${String(s.no).padStart(2,'0')}</b></div>
   </header>`;
 
-  if (SONGS.length){
-    h += `<section class="coverage" aria-label="Footage coverage">
-      <div class="cov-head"><h2>The night, song by song</h2>
-        <div class="stat">${filmed.length ? `<b>${filmed.length} of ${SONGS.length}</b> songs have footage${fansOnly ? ` · <b>${fansOnly}</b> filled in by fans` : ''}` : `<b>${SONGS.length}</b> songs · no footage yet`}</div></div>
-      ${filmed.length ? `<div class="strip">${SONGS.map(x => { const c = x.media.some(m=>m.by==='me') ? 'me' : x.media.length ? 'fan' : '';
-        return `<button class="${c}" data-jump="${x.n}" title="${x.n}. ${esc(x.title)}${x.media.length ? ` · ${x.media.length} clip${x.media.length>1?'s':''}` : ' · no footage yet'}" aria-label="Song ${x.n}: ${esc(x.title)}"></button>`; }).join('')}</div>
-      <div class="legend"><span><i style="background:var(--accent)"></i>My footage</span><span><i style="background:var(--fan)"></i>Fan footage only</span><span><i style="background:var(--bg-3)"></i>Not filmed yet</span></div>` : ''}
-    </section>`;
-    if (s.provisional) h += `<div class="banner"><b>Provisional setlist</b>${esc(s.provisional)}</div>`;
-    for (const set of s.sets){
-      h += `<section class="set">${s.sets.length > 1 || set.name !== 'Main set' ? `<h3>${esc(set.name)}</h3>` : '<h3>Setlist</h3>'}<ol class="songs">`;
+  const withSongs = ACTS.filter(a => songsOf(a).length);
+  if (multi || SONGS.length){
+    const stat = filmed.length
+      ? `<b>${filmed.length} of ${SONGS.length}</b> songs have footage${fansOnly ? ` · <b>${fansOnly}</b> filled in by fans` : ''}`
+      : SONGS.length ? `<b>${SONGS.length}</b> songs${multi ? ` across ${withSongs.length} set${withSongs.length>1?'s':''}` : ''} · no footage yet` : 'No setlists yet';
+    h += `<section class="bill" aria-label="${multi ? 'The bill' : 'The night'}">
+      <div class="bill-head"><h2>${multi ? 'The bill' : 'The night, song by song'}</h2><div class="stat">${stat}</div></div>`;
+    if (multi) h += `<div class="acts" role="tablist" aria-label="Acts, in the order they played">${ACTS.map(a => {
+        const n = songsOf(a).length, f = filmedIn(a);
+        return `<button class="act-tab" role="tab" id="tab-${a.n}" data-act="${a.n}" aria-selected="${a === CUR}" aria-controls="act-panel">
+          <span class="ord">${a.n} · ${ROLE[a.role] || a.role}</span>
+          <span class="name">${esc(a.artist)}</span>
+          <span class="meta">${n ? `${n} songs${f ? ` · ${f} filmed` : ''}` : 'No setlist yet'}${a.genres.length ? ` · ${esc(a.genres[0])}` : ''}</span>
+        </button>`; }).join('')}</div>`;
+    if (filmed.length) h += `<div class="night">${withSongs.map(a => `<div class="grp" style="flex:${songsOf(a).length}">
+        ${multi ? `<span class="lbl">${esc(a.artist)}</span>` : ''}
+        <div class="strip">${songsOf(a).map(x => { const c = x.media.some(m=>m.by==='me') ? 'me' : x.media.length ? 'fan' : '';
+          return `<button class="${c}" data-jump="${x.key}" title="${multi ? esc(a.artist) + ' · ' : ''}${x.n}. ${esc(x.title)}${x.media.length ? ` · ${x.media.length} clip${x.media.length>1?'s':''}` : ' · no footage yet'}" aria-label="${esc(a.artist)}, song ${x.n}: ${esc(x.title)}"></button>`; }).join('')}</div>
+      </div>`).join('')}</div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>My footage</span><span><i style="background:var(--fan)"></i>Fan footage only</span><span><i style="background:var(--bg-3)"></i>Not filmed yet</span></div>`;
+    h += `</section>`;
+  }
+
+  h += `<div id="act-panel" role="${multi ? 'tabpanel' : 'region'}"></div>`;
+
+  if (s.extras.length){
+    h += `<section class="extras"><h3>${SONGS.length ? 'Other moments' : 'Photos &amp; clips'}</h3><div class="clips">${s.extras.map(m => clipCard(m, keyFor(m))).join('')}</div></section>`;
+  }
+
+  if (CB.local){
+    const eg = (CUR && songsOf(CUR)[0]?.title) || 'Song Name';
+    h += `<details class="howto"><summary>Add footage to this show <span style="color:var(--muted)">(only shown in your local preview)</span></summary><div>
+    <p><b>Your photos and videos</b> (exported from Photos, Google Photos, or anywhere on your computer): put them in <code>media/${esc(s.id)}/</code> and add the song name after <code>--</code> in the file name. The build puts each one under its song; files without a song go in <i>Other moments</i>.</p>
+    <pre>media/${esc(s.id)}/IMG_0412--${esc(eg.replace(/[^\w]+/g,'-'))}.mp4${multi ? `\nmedia/${esc(s.id)}/IMG_0398--${esc(ACTS[0].artist.replace(/[^\w]+/g,'-'))}--Song-Name.mp4   ← for an opener's song, name the act first` : ''}</pre>
+    <p><b>Someone else's video</b> (YouTube, Instagram, TikTok): add a link under the song in <code>shows/${esc(s.id)}.json</code>. For a full-show upload, give a start and end time to cut out just that song.</p>
+    <pre>{ "title": "${esc(eg)}", "media": [
+  { "src": "https://youtu.be/VIDEO_ID", "start": "12:40", "end": "17:05", "credit": "@whoever" }
+] }</pre>
+    <p>Then rebuild: <code>python3 scripts/build.py --serve</code></p></div></details>`;
+  }
+
+  const page = document.getElementById('page');
+  page.innerHTML = h;
+  renderAct();
+  if (cfg.repo_url) document.getElementById('foot').innerHTML = `Made with ConcertBuddy — <a href="${esc(cfg.repo_url)}">grab the template and log your own shows</a>.`;
+
+  page.addEventListener('click', e => {
+    const t = e.target.closest('[data-act]');
+    if (t){ selectAct(+t.dataset.act); return; }
+    const j = e.target.closest('[data-jump]');
+    if (j){ const x = SONGS.find(x => x.key === j.dataset.jump); if (x.act !== CUR) selectAct(x.act.n);
+      const el = document.getElementById('song-' + x.key); el.scrollIntoView({behavior:'smooth', block:'start'}); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); return; }
+    const f = e.target.closest('[data-play]'); if (f) Theater.open(+f.dataset.play);
+  });
+  page.addEventListener('keydown', e => {   // arrow keys move between act tabs
+    if (!e.target.classList.contains('act-tab') || !['ArrowLeft','ArrowRight'].includes(e.key)) return;
+    const k = ACTS.indexOf(CUR) + (e.key === 'ArrowRight' ? 1 : -1);
+    if (ACTS[k]){ selectAct(ACTS[k].n); document.getElementById('tab-' + ACTS[k].n).focus(); }
+  });
+  window.addEventListener('hashchange', () => { const n = +(location.hash.match(/^#act-(\d+)/) || [])[1]; if (n && n !== CUR.n) selectAct(n, false); });
+}
+
+function selectAct(n, updateHash = true){
+  CUR = ACTS.find(a => a.n === n) || CUR;
+  document.querySelectorAll('.act-tab').forEach(t => t.setAttribute('aria-selected', +t.dataset.act === CUR.n));
+  if (updateHash) history.replaceState(null, '', CUR.role === 'headliner' ? location.pathname + location.search : `#act-${CUR.n}`);
+  renderAct();
+}
+
+function renderAct(){
+  const a = CUR, s = SHOW, multi = ACTS.length > 1, songs = songsOf(a), f = filmedIn(a);
+  const sl = setlistLink(a.source, a.artist + ' ' + s.venue);
+  let h = '';
+  if (multi) h += `<div class="act-head"><div>
+      <div class="genres">${ROLE[a.role] || a.role}${a.genres.length ? ' · ' + esc(a.genres.join(', ')) : ''}</div>
+      <h2>${esc(a.artist)}</h2></div>
+      <div class="actions">${f ? `<button class="btn primary" data-play="${songs[0].idx}">▶ Play this set</button>` : ''}
+        <a class="btn" href="${esc(sl.href)}" target="_blank" rel="noopener">${sl.label} ↗</a></div></div>`;
+  if (a.provisional) h += `<div class="banner"><b>Provisional setlist</b>${esc(a.provisional)}</div>`;
+  if (songs.length){
+    for (const set of a.sets){
+      h += `<section class="set">${a.sets.length > 1 || set.name !== 'Main set' ? `<h3>${esc(set.name)}</h3>` : '<h3>Setlist</h3>'}<ol class="songs">`;
       for (const x of set.songs){
-        h += `<li class="song${x.media.length ? ' has' : ' bare'}" id="song-${x.n}">
+        h += `<li class="song${x.media.length ? ' has' : ' bare'}" id="song-${x.key}">
           <div class="num">${String(x.n).padStart(2,'0')}</div>
           <div class="head"><h4 class="title">${esc(x.title)}</h4>${x.note ? `<span class="note">${esc(x.note)}</span>` : ''}
-            ${x.media.length ? `<span class="count">${x.media.length} clip${x.media.length>1?'s':''}</span><button class="btn play-from" data-from="${x.n}">▶ Play from here</button>` : ''}</div>
+            ${x.media.length ? `<span class="count">${x.media.length} clip${x.media.length>1?'s':''}</span><button class="btn play-from" data-play="${x.idx}">▶ Play from here</button>` : ''}</div>
           ${x.media.length ? `<div class="clips">${x.media.map(m => clipCard(m, keyFor(m))).join('')}</div>` : ''}
         </li>`;
       }
       h += `</ol></section>`;
     }
   } else {
-    h += `<section class="noset"><h2>No setlist yet</h2>
+    h += `<section class="noset"><h2>No setlist${multi ? ` for ${esc(a.artist)}` : ''} yet</h2>
       <p>Once the setlist is in, each song becomes a slot for photos and clips.</p>
-      ${CB.local ? `<pre>python3 scripts/setlist.py ${esc(s.id)}\n# or type it in:  python3 scripts/setlist.py ${esc(s.id)} --from-file songs.txt</pre>` : ''}</section>`;
+      ${CB.local ? `<pre>python3 scripts/setlist.py ${esc(s.id)}${multi ? ` --act "${esc(a.artist)}"` : ''}\n# or type it in:  python3 scripts/setlist.py ${esc(s.id)}${multi ? ` --act "${esc(a.artist)}"` : ''} --from-file songs.txt</pre>` : ''}</section>`;
   }
-
-  if (s.extras.length){
-    h += `<section class="extras"><h3>${SONGS.length ? 'Other moments' : 'Photos &amp; clips'}</h3><div class="clips">${s.extras.map(m => clipCard(m, keyFor(m))).join('')}</div></section>`;
-  }
-
-  if (CB.local) h += `<details class="howto"><summary>Add footage to this show <span style="color:var(--muted)">(only shown in your local preview)</span></summary><div>
-    <p><b>Your photos and videos</b> (exported from Photos, Google Photos, or anywhere on your computer): put them in <code>media/${esc(s.id)}/</code> and add the song name after <code>--</code> in the file name. The build puts each one under its song; files without a song go in <i>Other moments</i>.</p>
-    <pre>media/${esc(s.id)}/IMG_0412--${esc((SONGS[0]?.title || 'Song Name').replace(/[^\w]+/g,'-'))}.mp4</pre>
-    <p><b>Someone else's video</b> (YouTube, Instagram, TikTok): add a link under the song in <code>shows/${esc(s.id)}.json</code>. For a full-show upload, give a start and end time to cut out just that song.</p>
-    <pre>{ "title": "${esc(SONGS[0]?.title || 'Song Name')}", "media": [
-  { "src": "https://youtu.be/VIDEO_ID", "start": "12:40", "end": "17:05", "credit": "@whoever" }
-] }</pre>
-    <p>Then rebuild: <code>python3 scripts/build.py --serve</code></p></div></details>`;
-
-  document.getElementById('page').innerHTML = h;
-  if (cfg.repo_url) document.getElementById('foot').innerHTML = `Made with ConcertBuddy — <a href="${esc(cfg.repo_url)}">grab the template and log your own shows</a>.`;
-
-  document.getElementById('play')?.addEventListener('click', () => Theater.open(1));
-  document.getElementById('page').addEventListener('click', e => {
-    const j = e.target.closest('[data-jump]');
-    if (j){ const el = document.getElementById('song-' + j.dataset.jump); el.scrollIntoView({behavior:'smooth', block:'start'}); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
-    const f = e.target.closest('[data-from]'); if (f) Theater.open(+f.dataset.from);
-  });
+  const panel = document.getElementById('act-panel');
+  panel.innerHTML = h;
+  if (multi) panel.setAttribute('aria-labelledby', 'tab-' + a.n);
 }
 
 /* ---------- theater: plays the show in setlist order ---------- */
@@ -315,20 +412,29 @@ const Theater = (() => {
   const el = $('theater'), stage = $('stage');
   let queue = [], i = 0, timer = null, yt = null, lastFocus = null;
 
+  // Whole night in stage order. An act with no footage at all gets one title card
+  // instead of a card per song; within a filmed set, unfilmed songs get a short card.
   function build(){
     const every = $('th-all').checked;
     queue = [];
-    for (const song of SONGS){
-      const media = song.media;
-      if (!media.length){ queue.push({song, gap:true}); continue; }
-      const picks = every ? media : [media.find(m => PLAYS.has(m.kind) && m.kind !== 'image') || media.find(m => PLAYS.has(m.kind)) || media[0]];
-      picks.forEach(m => queue.push({song, m}));
+    for (const act of ACTS){
+      const songs = songsOf(act);
+      if (!songs.length) continue;
+      if (!filmedIn(act)){ queue.push({act, pos: songs[0].idx, actcard: true}); continue; }
+      for (const song of songs){
+        const media = song.media;
+        if (!media.length){ queue.push({act, song, pos: song.idx, gap: true}); continue; }
+        const picks = every ? media : [media.find(m => PLAYS.has(m.kind) && m.kind !== 'image') || media.find(m => PLAYS.has(m.kind)) || media[0]];
+        picks.forEach(m => queue.push({act, song, pos: song.idx, m}));
+      }
     }
   }
   function strip(){
     $('th-strip').innerHTML = queue.map((q, k) => {
-      const c = q.gap ? '' : q.m.by === 'me' ? 'me' : 'fan';
-      return `<button class="${c}${k < i ? ' done' : ''}${k === i ? ' cur' : ''}" data-k="${k}" title="${q.song.n}. ${esc(q.song.title)}${q.gap ? ' (no footage)' : ''}"></button>`;
+      const c = q.gap || q.actcard ? '' : q.m.by === 'me' ? 'me' : 'fan';
+      const gapBefore = k && queue[k-1].act !== q.act ? ' style="margin-left:8px"' : '';
+      const label = q.actcard ? `${q.act.artist} (no footage)` : `${q.act.artist} · ${q.song.n}. ${q.song.title}${q.gap ? ' (no footage)' : ''}`;
+      return `<button class="${c}${k < i ? ' done' : ''}${k === i ? ' cur' : ''}" data-k="${k}"${gapBefore} title="${esc(label)}"></button>`;
     }).join('');
   }
   function clear(){
@@ -348,9 +454,16 @@ const Theater = (() => {
     clear();
     if (i >= queue.length){
       stage.innerHTML = `<div class="card"><div class="n">♥</div><h2>That's the show</h2><p>${esc(SHOW.artist)} · ${esc(SHOW.venue)} · ${longDate(SHOW.date)}</p></div>`;
+      $('th-eyebrow').textContent = '';
       $('th-title').textContent = ''; $('th-who').textContent = ''; strip(); return;
     }
     const q = queue[i], song = q.song;
+    $('th-eyebrow').textContent = `${ACTS.length > 1 ? `${q.act.artist} · ${ROLE[q.act.role] || ''} · ` : ''}${SHOW.venue} · ${stubDate(SHOW.date)}`;
+    if (q.actcard){
+      $('th-title').textContent = q.act.artist; $('th-who').textContent = `${ROLE[q.act.role] || ''} set · no footage yet`; strip();
+      stage.innerHTML = `<div class="card"><div class="n">${q.act.n}</div><h2>${esc(q.act.artist)}</h2><p>${ROLE[q.act.role] || ''} · ${songsOf(q.act).length} songs · no footage of this set yet. Skipping ahead…</p></div>`;
+      countdown(2500); return;
+    }
     $('th-title').textContent = `${String(song.n).padStart(2,'0')} · ${song.title}`;
     $('th-who').innerHTML = q.gap ? 'No footage yet' : (q.m.by === 'me' ? 'My footage' : `Fan footage${q.m.credit ? ' · ' + esc(q.m.credit) : ''}`) + (range(q.m) ? ' · ' + range(q.m) : '');
     strip();
@@ -393,10 +506,9 @@ const Theater = (() => {
   }
   function next(){ if (i < queue.length){ i++; play(); } }
   function prev(){ if (i > 0){ i--; play(); } }
-  function open(fromSong){
+  function open(fromPos){
     lastFocus = document.activeElement;
-    build(); i = Math.max(0, queue.findIndex(q => q.song.n >= fromSong));
-    $('th-eyebrow').textContent = `${SHOW.artist} · ${SHOW.venue} · ${stubDate(SHOW.date)}`;
+    build(); i = Math.max(0, queue.findIndex(q => q.pos >= fromPos));
     el.hidden = false; document.body.style.overflow = 'hidden'; $('th-next').focus(); play();
   }
   function close(){ clear(); el.hidden = true; document.body.style.overflow = ''; lastFocus?.focus(); }
@@ -404,7 +516,7 @@ const Theater = (() => {
   $('th-next').addEventListener('click', next);
   $('th-prev').addEventListener('click', prev);
   $('th-close').addEventListener('click', close);
-  $('th-all').addEventListener('change', () => { const song = queue[i]?.song.n || 1; build(); i = Math.max(0, queue.findIndex(q => q.song.n >= song)); play(); });
+  $('th-all').addEventListener('change', () => { const pos = queue[i]?.pos || 0; build(); i = Math.max(0, queue.findIndex(q => q.pos >= pos)); play(); });
   $('th-strip').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b){ i = +b.dataset.k; play(); } });
   document.addEventListener('keydown', e => {
     if (el.hidden) return;

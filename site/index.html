@@ -40,6 +40,20 @@ h1 .count{color:var(--accent)}
 .bar i{display:block;width:100%;border-radius:3px 3px 0 0;background:var(--fg);opacity:.85;transition:opacity .15s}
 .bar.zero i{height:2px!important;opacity:.25}
 .bar:hover i{background:var(--accent);opacity:1}
+.chart-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px}
+.chart-head h2{margin:0}
+.chart .seg button{padding:4px 10px;font-size:11px}
+.gbars{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:3px 10px;align-items:center;max-height:196px;overflow-y:auto;font-family:var(--mono);font-size:11.5px;line-height:1.3}
+.gbars button{all:unset;display:contents;cursor:pointer}
+.gbars .g{color:var(--fg);white-space:nowrap;text-align:right}
+.gbars .track{height:11px}
+.gbars .track i{display:block;height:100%;border-radius:0 3px 3px 0;background:var(--fg);opacity:.85;min-width:2px}
+.gbars .c{color:var(--muted);font-variant-numeric:tabular-nums}
+.gbars button:hover .track i,.gbars button[aria-pressed="true"] .track i{background:var(--accent);opacity:1}
+.gbars button[aria-pressed="true"] .g{color:var(--accent)}
+.gbars button:focus-visible .g{outline:2px solid var(--accent);outline-offset:2px}
+.genre-select{font-family:var(--mono);font-size:12px;letter-spacing:.04em;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:999px;padding:7px 12px;cursor:pointer}
+.genre-select.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .years{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin-top:6px;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center}
 
 /* ---------- controls ---------- */
@@ -102,16 +116,17 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
       <p class="lede" id="lede"></p>
       <div class="facts" id="facts"></div>
     </div>
-    <div class="chart" aria-label="Shows per year">
-      <h2>Shows per year</h2>
-      <div class="bars" id="bars"></div>
-      <div class="years" id="years"></div>
+    <div class="chart">
+      <div class="chart-head"><h2 id="chart-title">Shows per year</h2>
+        <div class="seg" id="chart-view" role="group" aria-label="Chart"><button type="button" data-view="year" aria-pressed="true">By year</button><button type="button" data-view="genre" aria-pressed="false">By genre</button></div></div>
+      <div id="by-year"><div class="bars" id="bars"></div><div class="years" id="years"></div></div>
+      <div id="by-genre" hidden><div class="gbars" id="gbars"></div></div>
     </div>
   </header>
 
   <div class="controls" role="search">
     <div class="seg" id="order" role="group" aria-label="Sort order"><button type="button" data-order="desc" aria-pressed="true">Newest first</button><button type="button" data-order="asc" aria-pressed="false">Oldest first</button></div>
-    <input class="search" id="q" type="search" placeholder="Search artists, venues, openers…" aria-label="Search shows">
+    <input class="search" id="q" type="search" placeholder="Search artists, venues, openers, genres…" aria-label="Search shows">
     <div class="shown" id="shown"></div>
     <div class="chips" id="chips"></div>
   </div>
@@ -124,7 +139,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 <script>
 const {esc, region, regionName, paper, stubDate, longDate, today, getJSON} = CB;
 let SHOWS = [], CFG = {};
-const filt = {q:'', state:null, comp:false, filmed:false, order:'desc'};
+const filt = {q:'', state:null, genre:'', comp:false, filmed:false, order:'desc'};
 
 getJSON('data/concerts.json').then(data => {
   CFG = data.config; SHOWS = data.shows;
@@ -144,12 +159,14 @@ function init(){
 
   const count = k => { const m = {}; SHOWS.forEach(s => { const v = k(s); if (v) m[v] = (m[v]||0)+1; }); return Object.entries(m).sort((a,b)=>b[1]-a[1]); };
   const topA = count(s=>s.artist)[0], topV = count(s=>s.venue)[0], cities = new Set(SHOWS.map(s=>s.location)).size;
+  const genreCounts = (() => { const m = {}; SHOWS.forEach(s => s.genres.forEach(g => m[g] = (m[g]||0)+1)); return Object.entries(m).sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0])); })();
   const comp = CFG.highlight_companion, compRe = comp ? new RegExp(comp.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i') : null;
   const filmed = SHOWS.filter(s=>s.clips>0).length;
   document.getElementById('facts').innerHTML =
     `<div><span>Most seen</span> <b>${esc(topA[0])} ×${topA[1]}</b></div>
      <div><span>Home venue</span> <b>${esc(topV[0])} ×${topV[1]}</b></div>
      <div><span>Cities</span> <b>${cities}</b></div>
+     ${genreCounts.length ? `<div><span>Top genre</span> <b>${esc(genreCounts[0][0])} ×${genreCounts[0][1]}</b></div>` : ''}
      ${comp ? `<div><span>With ${esc(comp)}</span> <b>${SHOWS.filter(s=>compRe.test(s.with)).length}</b></div>` : ''}
      ${filmed ? `<div><span>Shows with footage</span> <b>${filmed}</b></div>` : ''}`;
 
@@ -169,6 +186,7 @@ function init(){
     filt.order = btn.dataset.order; document.querySelectorAll('#order button').forEach(x => x.setAttribute('aria-pressed', x===btn)); render(); });
   const present = [...new Set(SHOWS.map(s=>s.st))];
   let h = present.map(k => `<button class="chip" data-state="${esc(k)}" aria-pressed="false"><span class="dot" style="background:${paper(k)}"></span>${esc(regionName(k))}</button>`).join('');
+  if (genreCounts.length) h += `<select class="genre-select" id="genre" aria-label="Genre"><option value="">All genres</option>${genreCounts.map(([g,n]) => `<option value="${esc(g)}">${esc(g)} (${n})</option>`).join('')}</select>`;
   if (comp) h += `<button class="chip" id="comp" aria-pressed="false">With ${esc(comp)}</button>`;
   if (filmed) h += `<button class="chip" id="filmed" aria-pressed="false">Has footage</button>`;
   const c = document.getElementById('chips'); c.innerHTML = h;
@@ -179,17 +197,38 @@ function init(){
       c.querySelectorAll('[data-state]').forEach(x => x.setAttribute('aria-pressed', x.dataset.state===filt.state)); }
     render(); });
   document.getElementById('q').addEventListener('input', e => { filt.q = e.target.value.trim().toLowerCase(); render(); });
+  document.getElementById('genre')?.addEventListener('change', e => setGenre(e.target.value));
+
+  // genre chart: one bar per genre (a show can count under more than one); click to filter
+  const gmax = genreCounts.length ? genreCounts[0][1] : 1;
+  document.getElementById('gbars').innerHTML = genreCounts.map(([g,n]) =>
+    `<button data-genre="${esc(g)}" aria-pressed="false" aria-label="${esc(g)}: ${n} shows"><span class="g">${esc(g)}</span><span class="track"><i style="width:${n/gmax*100}%"></i></span><span class="c">${n}</span></button>`).join('');
+  document.getElementById('gbars').addEventListener('click', e => { const b = e.target.closest('[data-genre]'); if (b) setGenre(filt.genre === b.dataset.genre ? '' : b.dataset.genre); });
+  if (!genreCounts.length) document.getElementById('chart-view').hidden = true;
+  document.getElementById('chart-view').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
+    const g = b.dataset.view === 'genre';
+    document.querySelectorAll('#chart-view button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    document.getElementById('by-year').hidden = g; document.getElementById('by-genre').hidden = !g;
+    document.getElementById('chart-title').textContent = g ? 'Shows by genre' : 'Shows per year'; });
   filt.compRe = compRe;
 
   if (CFG.repo_url) document.getElementById('foot').innerHTML +=
     ` Made with ConcertBuddy — <a href="${esc(CFG.repo_url)}">grab the template and log your own shows</a>.`;
 }
 
+function setGenre(g){
+  filt.genre = g;
+  const sel = document.getElementById('genre'); if (sel){ sel.value = g; sel.classList.toggle('on', !!g); }
+  document.querySelectorAll('#gbars [data-genre]').forEach(b => b.setAttribute('aria-pressed', b.dataset.genre === g));
+  render();
+}
+
 function stub(s){
   const tonight = s.date === today();
   let cov = '';
+  const sets = s.acts.filter(a => a.songs).length;
   if (s.songs && !s.filmed){
-    cov = `<div class="cov"><span>${s.songs}-song setlist</span></div>`;
+    cov = `<div class="cov"><span>${sets > 1 ? `${s.songs} songs · ${sets} sets` : `${s.songs}-song setlist`}</span></div>`;
   } else if (s.songs){
     const n = Math.min(s.songs, 24), on = Math.max(1, Math.round(s.filmed / s.songs * n));
     cov = `<div class="cov"><span class="ticks" aria-hidden="true">${Array.from({length:n},(_,i)=>`<i class="${i<on?'on':''}"></i>`).join('')}</span>
@@ -213,13 +252,14 @@ function render(){
     if (filt.state && s.st !== filt.state) return false;
     if (filt.comp && !filt.compRe.test(s.with)) return false;
     if (filt.filmed && !s.clips) return false;
-    if (filt.q && !(`${s.artist} ${s.venue} ${s.location} ${s.opener} ${s.notes}`.toLowerCase().includes(filt.q))) return false;
+    if (filt.genre && !s.genres.includes(filt.genre)) return false;
+    if (filt.q && !(`${s.artist} ${s.venue} ${s.location} ${s.opener} ${s.notes} ${s.genres.join(' ')}`.toLowerCase().includes(filt.q))) return false;
     return true; });
   document.getElementById('shown').textContent = `Showing ${list.length} of ${SHOWS.length}`;
   const el = document.getElementById('timeline');
   if (!list.length){ el.innerHTML = '<div class="empty">No shows match. Try a different search or clear the filters.</div>'; return; }
   const by = {}; list.forEach(s => (by[s.y] = by[s.y] || []).push(s));
-  const filtered = filt.q || filt.state || filt.comp || filt.filmed, asc = filt.order === 'asc';
+  const filtered = filt.q || filt.state || filt.genre || filt.comp || filt.filmed, asc = filt.order === 'asc';
   const years = Object.keys(by).map(Number).sort((a,b) => asc ? a-b : b-a);
   let h = '', prev = null;
   years.forEach(y => {

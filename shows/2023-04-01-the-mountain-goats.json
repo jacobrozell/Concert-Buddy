@@ -1,80 +1,84 @@
 {
-  "sets": [
+  "acts": [
     {
-      "name": "Main set",
-      "songs": [
+      "artist": "The Mountain Goats",
+      "sets": [
         {
-          "title": "Just Can't Get Enough"
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Just Can't Get Enough"
+            },
+            {
+              "title": "Pigs That Ran Straightaway Into the Water, Triumph Of"
+            },
+            {
+              "title": "Hostages"
+            },
+            {
+              "title": "Hebrews 11:40"
+            },
+            {
+              "title": "Incandescent Ruins"
+            },
+            {
+              "title": "Going to Kansas"
+            },
+            {
+              "title": "Psalms 40:2"
+            },
+            {
+              "title": "Quetzalcoatl Eats Plums",
+              "note": "John solo"
+            },
+            {
+              "title": "Tomb of the Assassin"
+            },
+            {
+              "title": "Solidarity Forever"
+            },
+            {
+              "title": "Lizard Suit",
+              "note": "full band returns"
+            },
+            {
+              "title": "Andrew Eldritch Is Moving Back to Leeds"
+            },
+            {
+              "title": "The Diaz Brothers"
+            },
+            {
+              "title": "Rain in Soho"
+            },
+            {
+              "title": "Minnesota"
+            },
+            {
+              "title": "Game Shows Touch Our Lives"
+            },
+            {
+              "title": "Training Montage"
+            },
+            {
+              "title": "Up the Wolves"
+            }
+          ]
         },
         {
-          "title": "Pigs That Ran Straightaway Into the Water, Triumph Of"
-        },
-        {
-          "title": "Hostages"
-        },
-        {
-          "title": "Hebrews 11:40"
-        },
-        {
-          "title": "Incandescent Ruins"
-        },
-        {
-          "title": "Going to Kansas"
-        },
-        {
-          "title": "Psalms 40:2"
-        },
-        {
-          "title": "Quetzalcoatl Eats Plums",
-          "note": "John solo"
-        },
-        {
-          "title": "Tomb of the Assassin"
-        },
-        {
-          "title": "Solidarity Forever"
-        },
-        {
-          "title": "Lizard Suit",
-          "note": "full band returns"
-        },
-        {
-          "title": "Andrew Eldritch Is Moving Back to Leeds"
-        },
-        {
-          "title": "The Diaz Brothers"
-        },
-        {
-          "title": "Rain in Soho"
-        },
-        {
-          "title": "Minnesota"
-        },
-        {
-          "title": "Game Shows Touch Our Lives"
-        },
-        {
-          "title": "Training Montage"
-        },
-        {
-          "title": "Up the Wolves"
-        }
-      ]
-    },
-    {
-      "name": "Encore",
-      "songs": [
-        {
-          "title": "No Children"
-        },
-        {
-          "title": "This Year"
-        },
-        {
-          "title": "Heel Turn 2"
+          "name": "Encore",
+          "songs": [
+            {
+              "title": "No Children"
+            },
+            {
+              "title": "This Year"
+            },
+            {
+              "title": "Heel Turn 2"
+            }
+          ]
         }
       ]
     }
-  ],
-  "extras": []
+  ]
 }

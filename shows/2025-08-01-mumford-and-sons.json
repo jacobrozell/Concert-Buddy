@@ -1,100 +1,104 @@
 {
-  "sets": [
+  "acts": [
     {
-      "name": "Main set",
-      "songs": [
+      "artist": "Mumford & Sons",
+      "sets": [
         {
-          "title": "Malibu"
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Malibu"
+            },
+            {
+              "title": "Rushmere"
+            },
+            {
+              "title": "Caroline"
+            },
+            {
+              "title": "Babel"
+            },
+            {
+              "title": "Little Lion Man"
+            },
+            {
+              "title": "White Blank Page"
+            },
+            {
+              "title": "Lover of the Light"
+            },
+            {
+              "title": "Awake My Soul"
+            },
+            {
+              "title": "Believe"
+            },
+            {
+              "title": "Hopeless Wanderer"
+            },
+            {
+              "title": "Where It Belongs"
+            },
+            {
+              "title": "Ghosts That We Knew"
+            },
+            {
+              "title": "Truth"
+            },
+            {
+              "title": "Ditmas"
+            },
+            {
+              "title": "Slip Away"
+            },
+            {
+              "title": "The Wolf"
+            },
+            {
+              "title": "I Will Wait"
+            }
+          ]
         },
         {
-          "title": "Rushmere"
+          "name": "B-Stage",
+          "songs": [
+            {
+              "title": "Timshel",
+              "note": "acoustic"
+            },
+            {
+              "title": "Reminder",
+              "note": "acoustic"
+            },
+            {
+              "title": "If I Needed You",
+              "note": "acoustic; Townes Van Zandt cover; with Margo Price"
+            },
+            {
+              "title": "Wagon Wheel",
+              "note": "and Matt Menefee; acoustic; Old Crow Medicine Show cover; with Margo Price"
+            }
+          ]
         },
         {
-          "title": "Caroline"
-        },
-        {
-          "title": "Babel"
-        },
-        {
-          "title": "Little Lion Man"
-        },
-        {
-          "title": "White Blank Page"
-        },
-        {
-          "title": "Lover of the Light"
-        },
-        {
-          "title": "Awake My Soul"
-        },
-        {
-          "title": "Believe"
-        },
-        {
-          "title": "Hopeless Wanderer"
-        },
-        {
-          "title": "Where It Belongs"
-        },
-        {
-          "title": "Ghosts That We Knew"
-        },
-        {
-          "title": "Truth"
-        },
-        {
-          "title": "Ditmas"
-        },
-        {
-          "title": "Slip Away"
-        },
-        {
-          "title": "The Wolf"
-        },
-        {
-          "title": "I Will Wait"
+          "name": "Encore",
+          "songs": [
+            {
+              "title": "Delta"
+            },
+            {
+              "title": "Icarus"
+            },
+            {
+              "title": "Roll Away Your Stone"
+            },
+            {
+              "title": "The Cave"
+            }
+          ]
         }
-      ]
-    },
-    {
-      "name": "B-Stage",
-      "songs": [
-        {
-          "title": "Timshel",
-          "note": "acoustic"
-        },
-        {
-          "title": "Reminder",
-          "note": "acoustic"
-        },
-        {
-          "title": "If I Needed You",
-          "note": "acoustic; Townes Van Zandt cover; with Margo Price"
-        },
-        {
-          "title": "Wagon Wheel",
-          "note": "and Matt Menefee; acoustic; Old Crow Medicine Show cover; with Margo Price"
-        }
-      ]
-    },
-    {
-      "name": "Encore",
-      "songs": [
-        {
-          "title": "Delta"
-        },
-        {
-          "title": "Icarus"
-        },
-        {
-          "title": "Roll Away Your Stone"
-        },
-        {
-          "title": "The Cave"
-        }
-      ]
+      ],
+      "source": "https://www.setlist.fm/setlist/mumford-and-sons/2025/the-orion-amphitheater-huntsville-al-2b5908c6.html"
     }
-  ],
-  "extras": [],
-  "source": "https://www.setlist.fm/setlist/mumford-and-sons/2025/the-orion-amphitheater-huntsville-al-2b5908c6.html"
+  ]
 }

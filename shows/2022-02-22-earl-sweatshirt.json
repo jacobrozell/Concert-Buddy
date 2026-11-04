@@ -1,95 +1,99 @@
 {
-  "sets": [
+  "acts": [
     {
-      "name": "Main set",
-      "songs": [
+      "artist": "Earl Sweatshirt",
+      "sets": [
         {
-          "title": "E. Coli",
-          "note": "The Alchemist cover"
-        },
-        {
-          "title": "The Bends"
-        },
-        {
-          "title": "Mo(u)rning",
-          "note": "Black Noi$e cover"
-        },
-        {
-          "title": "Off Top"
-        },
-        {
-          "title": "Cold Summers"
-        },
-        {
-          "title": "Ontheway!"
-        },
-        {
-          "title": "The Mint"
-        },
-        {
-          "title": "Old Friend"
-        },
-        {
-          "title": "2010"
-        },
-        {
-          "title": "OD"
-        },
-        {
-          "title": "MTOMB"
-        },
-        {
-          "title": "Vision"
-        },
-        {
-          "title": "Live"
-        },
-        {
-          "title": "Grief"
-        },
-        {
-          "title": "Underworld"
-        },
-        {
-          "title": "EAST"
-        },
-        {
-          "title": "Homebound"
-        },
-        {
-          "title": "Lye"
-        },
-        {
-          "title": "Lobby (Int)"
-        },
-        {
-          "title": "Photographic Memories",
-          "note": "Boldy James & The Alchemist cover"
-        },
-        {
-          "title": "Titanic"
-        },
-        {
-          "title": "Shattered Dreams"
-        },
-        {
-          "title": "Head Heavy 2"
-        },
-        {
-          "title": "NOWHERE2GO"
-        },
-        {
-          "title": "December 24"
-        },
-        {
-          "title": "Quest/Power"
-        },
-        {
-          "title": "Fire in the Hole"
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "E. Coli",
+              "note": "The Alchemist cover"
+            },
+            {
+              "title": "The Bends"
+            },
+            {
+              "title": "Mo(u)rning",
+              "note": "Black Noi$e cover"
+            },
+            {
+              "title": "Off Top"
+            },
+            {
+              "title": "Cold Summers"
+            },
+            {
+              "title": "Ontheway!"
+            },
+            {
+              "title": "The Mint"
+            },
+            {
+              "title": "Old Friend"
+            },
+            {
+              "title": "2010"
+            },
+            {
+              "title": "OD"
+            },
+            {
+              "title": "MTOMB"
+            },
+            {
+              "title": "Vision"
+            },
+            {
+              "title": "Live"
+            },
+            {
+              "title": "Grief"
+            },
+            {
+              "title": "Underworld"
+            },
+            {
+              "title": "EAST"
+            },
+            {
+              "title": "Homebound"
+            },
+            {
+              "title": "Lye"
+            },
+            {
+              "title": "Lobby (Int)"
+            },
+            {
+              "title": "Photographic Memories",
+              "note": "Boldy James & The Alchemist cover"
+            },
+            {
+              "title": "Titanic"
+            },
+            {
+              "title": "Shattered Dreams"
+            },
+            {
+              "title": "Head Heavy 2"
+            },
+            {
+              "title": "NOWHERE2GO"
+            },
+            {
+              "title": "December 24"
+            },
+            {
+              "title": "Quest/Power"
+            },
+            {
+              "title": "Fire in the Hole"
+            }
+          ]
         }
-      ]
+      ],
+      "source": "https://www.setlist.fm/setlist/earl-sweatshirt/2022/tabernacle-atlanta-ga-4389bbbf.html"
     }
-  ],
-  "extras": [],
-  "source": "https://www.setlist.fm/setlist/earl-sweatshirt/2022/tabernacle-atlanta-ga-4389bbbf.html"
+  ]
 }

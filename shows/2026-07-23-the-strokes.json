@@ -1,74 +1,78 @@
 {
-  "sets": [
+  "acts": [
     {
-      "name": "Main set",
-      "songs": [
+      "artist": "The Strokes",
+      "sets": [
         {
-          "title": "Killing Lies"
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Killing Lies"
+            },
+            {
+              "title": "Hard to Explain"
+            },
+            {
+              "title": "Bad Decisions"
+            },
+            {
+              "title": "Juicebox"
+            },
+            {
+              "title": "Going Shopping"
+            },
+            {
+              "title": "Ize of the World"
+            },
+            {
+              "title": "Dine N’Dash",
+              "note": "Live debut"
+            },
+            {
+              "title": "Someday"
+            },
+            {
+              "title": "One Way Trigger"
+            },
+            {
+              "title": "Take It or Leave It"
+            },
+            {
+              "title": "Life Is Simple in the Moonlight"
+            },
+            {
+              "title": "Reptilia"
+            },
+            {
+              "title": "Last Nite"
+            },
+            {
+              "title": "Evening Sun"
+            },
+            {
+              "title": "What Ever Happened?"
+            },
+            {
+              "title": "The Adults Are Talking"
+            }
+          ]
         },
         {
-          "title": "Hard to Explain"
-        },
-        {
-          "title": "Bad Decisions"
-        },
-        {
-          "title": "Juicebox"
-        },
-        {
-          "title": "Going Shopping"
-        },
-        {
-          "title": "Ize of the World"
-        },
-        {
-          "title": "Dine N’Dash",
-          "note": "Live debut"
-        },
-        {
-          "title": "Someday"
-        },
-        {
-          "title": "One Way Trigger"
-        },
-        {
-          "title": "Take It or Leave It"
-        },
-        {
-          "title": "Life Is Simple in the Moonlight"
-        },
-        {
-          "title": "Reptilia"
-        },
-        {
-          "title": "Last Nite"
-        },
-        {
-          "title": "Evening Sun"
-        },
-        {
-          "title": "What Ever Happened?"
-        },
-        {
-          "title": "The Adults Are Talking"
+          "name": "Encore",
+          "songs": [
+            {
+              "title": "You Only Live Once"
+            },
+            {
+              "title": "Threat of Joy"
+            },
+            {
+              "title": "Ode to the Mets"
+            }
+          ]
         }
-      ]
-    },
-    {
-      "name": "Encore",
-      "songs": [
-        {
-          "title": "You Only Live Once"
-        },
-        {
-          "title": "Threat of Joy"
-        },
-        {
-          "title": "Ode to the Mets"
-        }
-      ]
+      ],
+      "source": "https://www.setlist.fm/setlist/the-strokes/2026/red-rocks-amphitheatre-morrison-co-b76717a.html"
     }
-  ],
-  "extras": [],
-  "source": "https://www.setlist.fm/setlist/the-strokes/2026/red-rocks-amphitheatre-morrison-co-b76717a.html"
+  ]
 }

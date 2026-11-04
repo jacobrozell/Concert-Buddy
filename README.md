@@ -18,8 +18,10 @@ No server, no database, no accounts, no monthly bill. Your log is a CSV file, on
 - [`concerts.csv`: your shows](#concertscsv-your-shows)
 - [`config.json`: site settings](#configjson-site-settings)
 - [Show ids](#show-ids)
+- [Acts: openers and co-headliners](#acts-openers-and-co-headliners)
+- [Genres](#genres)
 - [Setlists](#setlists)
-- [`shows/<id>.json`: setlist and media for one show](#showsidjson-setlist-and-media-for-one-show)
+- [`shows/<id>.json`: setlists and media for one show](#showsidjson-setlists-and-media-for-one-show)
 - [Adding your own footage](#adding-your-own-footage)
 - [Adding other fans' videos](#adding-other-fans-videos)
 - [Big videos and storage limits](#big-videos-and-storage-limits)
@@ -39,12 +41,13 @@ No server, no database, no accounts, no monthly bill. Your log is a CSV file, on
 **Timeline**
 - Every show as a ticket stub, grouped by year, newest or oldest first
 - Stub colour shows the state (or country) the show was in
-- Stats at the top: total shows, most-seen artist, most-visited venue, number of cities, and a shows-per-year chart you can click to jump to a year
+- Stats at the top: total shows, most-seen artist, most-visited venue, number of cities, top genre, and a chart that switches between shows per year (click to jump to a year) and shows by genre (click to filter)
 - Search across artists, venues, openers and notes; filter by state, by the person you go to shows with most, or by shows that have footage
 - A small coverage bar on each stub showing how much of the setlist has footage
 - A red **TONIGHT** stamp on the stub for a show happening today
 
 **Show page**
+- **The bill:** every act (openers, co-headliners, headliner) as a tab in the order they played, each with its own setlist and genres
 - Date, venue, opener, who you went with, and notes
 - The setlist, split into sets (main set, encores), with each song as a slot for media
 - A coverage strip showing at a glance which songs you filmed, which only fans filmed, and which nobody has yet (appears once a show has any footage)
@@ -201,6 +204,7 @@ python3 scripts/build.py
 ConcertBuddy/
 ├── concerts.csv                 ← your shows, one row each (you edit this)
 ├── config.json                  ← site title, your name, options (you edit this)
+├── artists.csv                  ← genres for each artist (you edit this)
 ├── shows/
 │   └── 2026-11-03-thundercat.json   ← setlist + fan-video links for one show (you edit these)
 ├── media/
@@ -238,12 +242,12 @@ The first line must be the header row. Column order doesn't matter, and extra co
 
 | Column | Required | Example | Details |
 |---|---|---|---|
-| `artist` | **yes** | `Thundercat` | The headliner. For co-headliners or a festival-style bill, separate names with ` / ` (space, slash, space): `The Smashing Pumpkins / Interpol`. The first name is used for the show id and for the setlist.fm search. |
+| `artist` | **yes** | `Thundercat` | The headliner. For co-headliners, separate names with ` / ` (space, slash, space), **biggest name first** the way the poster bills them: `The Smashing Pumpkins / Interpol`. The first name is the headliner and is used for the show id. |
 | `date` | **yes** | `2026-11-03` | Must be `YYYY-MM-DD`. The build stops with a clear message if it isn't. If you only know the year, pick a placeholder date and say so in `notes`. |
 | `venue` | | `Avondale Brewing Company` | |
 | `location` | | `Birmingham, AL` | City and region. **Everything after the last comma** is treated as the region: it picks the stub colour and the state filter. US state codes (`AL`, `TN`…) show their full names; anything else (`UK`, `Ontario`) is shown as written. Wrap the value in double quotes because it contains a comma. |
 | `companions` | | `Samantha` | Who you went with, in any format. Searchable, and used by the `highlight_companion` filter. |
-| `opener` | | `Channel Tres` | Openers or support acts. Separate several with ` / `. |
+| `opener` | | `The Shins / Silversun Pickups` | Openers and support acts, **biggest name first** (main support, then the first act on). Every opener becomes its own act on the show page, with its own setlist and footage slots. See [Acts](#acts-openers-and-co-headliners). |
 | `setlist_url` | | `https://www.setlist.fm/setlist/jack-white/2022/…-73b36ec1.html` | A setlist.fm link. `setlist.py` uses the id at the end of it to fetch the exact setlist, and the show page links to it. Any other URL works as a plain link. |
 | `media_links` | | `https://youtu.be/abc https://youtu.be/def` | Links for the show as a whole (a full-show upload, a photo album). Separate with spaces or `\|`. These appear under "Other moments". To attach a link to a *song*, use `shows/<id>.json` instead. |
 | `notes` | | `Distracted AF Tour` | Anything: tour name, where you sat, what happened. Shown on the show page and searchable. |
@@ -305,9 +309,56 @@ python3 scripts/setlist.py --list
 
 ---
 
+## Acts: openers and co-headliners
+
+Every artist on a show's bill, from the `artist` and `opener` columns, is an **act** with its own setlist and its own footage slots. The show page lists them as tabs in the order they played, and **Play the show** runs the whole night from the first opener to the headliner's encore.
+
+**Playing order.** Write both columns the way a poster bills them, biggest name first. The site plays them in reverse: openers from the last-listed up, then co-headliners, then the headliner.
+
+```
+artist:  A Day To Remember / Yellowcard
+opener:  The Wonder Years / Dinosaur Pile-Up
+
+stage order → 1 Dinosaur Pile-Up · 2 The Wonder Years · 3 Yellowcard (co-headliner) · 4 A Day To Remember (headliner)
+```
+
+If a night ran differently, put the order in that show's file:
+
+```json
+{ "order": ["Escape the Fate", "Hollywood Undead", "Falling in Reverse", "Papa Roach"], "acts": [ … ] }
+```
+
+`python3 scripts/setlist.py --list` prints every show's acts in playing order, so you can check them:
+
+```
+2026-05-23-godsmack            ✓ Dorothy   · Stone Temple Pilots   ✓ Godsmack
+2026-11-03-thundercat          ✗ Channel Tres   ✓ Thundercat
+
+✓ setlist   ~ provisional   ✗ missing   · not on setlist.fm when last checked
+```
+
+---
+
+## Genres
+
+`artists.csv` gives each artist one or more genres, separated by `;`. The first one is the main genre:
+
+```csv
+artist,genres
+Thundercat,R&B & soul; Electronic
+Tyler Childers,Country; Folk & Americana
+```
+
+- A **show's genres** are its headliner's and co-headliners' genres. Openers' genres appear on their own tab but don't change the show's.
+- The timeline gets a **genre filter**, a **By genre** chart (click a bar to filter), and a *Top genre* stat. Genres are searchable too.
+- The build lists any artist that has no genre yet: `! No genre in artists.csv for: Glove`.
+- Use whatever genre names you like. Fewer, broader genres make a more useful chart than many narrow ones.
+
+---
+
 ## Setlists
 
-A show page needs a setlist before it has song slots. There are three ways to add one.
+An act needs a setlist before it has song slots. There are three ways to add one.
 
 ### Option A: from setlist.fm (recommended)
 
@@ -317,19 +368,21 @@ A show page needs a setlist before it has song slots. There are three ways to ad
    export SETLISTFM_API_KEY=your-key-here
    ```
    (To set it permanently, add that line to `~/.zshrc` or `~/.bashrc`. **Never commit your key to the repo.**)
-3. Fetch one show:
+3. Fetch every act on one show's bill:
    ```sh
    python3 scripts/setlist.py 2026-11-03-thundercat
+   python3 scripts/setlist.py 2026-11-03-thundercat --act "Channel Tres"   # just one act
    ```
-   or every show that doesn't have a setlist yet (plus any marked provisional):
+   or every act on every show that doesn't have a setlist yet (plus any marked provisional):
    ```sh
    python3 scripts/setlist.py --all
    ```
 
 **How it finds the setlist:**
-- If the CSV row has a `setlist_url`, it fetches that exact setlist.
-- Otherwise it searches setlist.fm for the artist on that date. On a ` / ` bill it tries each artist in turn. To search for a specific name instead, use `--artist "Interpol"`.
-- If nothing turns up (setlists for last night's show often take a day or two to appear), it says so and changes nothing.
+- For the headliner, if the CSV row has a `setlist_url`, it fetches that exact setlist.
+- Otherwise it searches setlist.fm for each act's name on that date, preferring a result in the same city.
+- It only accepts a result whose artist name matches. If setlist.fm spells the name differently (`BØRNS` vs `Borns`), it tells you what it found; run it again with `--act "Borns" --search "BØRNS"`.
+- If nothing turns up, it says so and remembers, so `--all` won't ask about that act again. Use `--all --retry` to check those again later. Setlists for last night's show often take a day or two to appear; openers' sets are often never posted, which is what Option B is for.
 
 **What gets saved:**
 - Sets keep their setlist.fm names; otherwise they're named *Main set*, *Encore*, *Encore 2*, or *Set 2*…
@@ -337,7 +390,7 @@ A show page needs a setlist before it has song slots. There are three ways to ad
 - Extra details go into the song's `note`: setlist.fm's own notes (*"acoustic"*), covers (*"David Bowie cover"*), and guests (*"with Channel Tres"*).
 - The setlist.fm page is saved as the setlist source and linked from the show page.
 
-`--all` waits a moment between requests to stay under setlist.fm's rate limit, so a few hundred shows take a few minutes.
+`--all` waits a moment between requests to stay under setlist.fm's rate limit, so a few hundred acts take a few minutes. `--refresh` fetches again even where a setlist exists (your media is kept).
 
 ### Option B: type or paste it
 
@@ -355,7 +408,8 @@ Funny Thing
 ```
 
 ```sh
-python3 scripts/setlist.py 2026-11-03-thundercat --from-file songs.txt
+python3 scripts/setlist.py 2026-11-03-thundercat --from-file songs.txt                       # the headliner
+python3 scripts/setlist.py 2026-11-03-thundercat --act "Channel Tres" --from-file songs.txt  # an opener
 ```
 
 or straight from the clipboard on a Mac:
@@ -372,7 +426,7 @@ Format rules:
 
 ### Option C: edit the JSON yourself
 
-Create or edit `shows/<id>.json` by hand. See the [next section](#showsidjson-setlist-and-media-for-one-show) for the format, and `templates/show_template.json` for an example.
+Create or edit `shows/<id>.json` by hand. See the [next section](#showsidjson-setlists-and-media-for-one-show) for the format, and `templates/show_template.json` for an example.
 
 ### Re-running is safe
 
@@ -387,37 +441,47 @@ Running `setlist.py` on a show that already has a setlist **replaces the song li
 Want song slots before the real setlist is posted? Copy the setlist from another night on the same tour and add a `provisional` note to the show's JSON:
 
 ```json
-{ "provisional": "Copied from the Oct 6 Jacksonville show. Replace when Birmingham is posted.", "sets": [ … ] }
+{ "acts": [ { "artist": "Thundercat", "provisional": "Copied from the Oct 6 Jacksonville show. Replace when Birmingham is posted.", "sets": [ … ] } ] }
 ```
 
 The show page displays the note as a banner, the timeline counts the show as provisional, and `setlist.py --all` fetches it again until a real setlist exists.
 
 ---
 
-## `shows/<id>.json`: setlist and media for one show
+## `shows/<id>.json`: setlists and media for one show
 
 The full structure, with every optional field:
 
 ```jsonc
 {
-  "provisional": "Optional. A banner shown on the page; marks the setlist as a stand-in.",
-  "source": "Optional. Link to where the setlist came from (set automatically by setlist.py).",
+  "order": ["Channel Tres", "Thundercat"],    // optional: playing order, if the CSV billing order is wrong
 
-  "sets": [
+  "acts": [                                   // one entry per act that has a setlist (any order; the site sorts them)
     {
-      "name": "Main set",                     // shown above the songs; "Main set" alone shows as "Setlist"
-      "songs": [
-        {
-          "title": "Them Changes",            // required
-          "note": "extended outro",           // optional, shown next to the title
-          "media": [                          // optional, list of media items (below)
-            { "src": "IMG_0412.mov" },
-            { "src": "https://youtu.be/VIDEO_ID", "start": "1:02:15", "end": "1:06:40", "credit": "@fan" }
-          ]
-        }
-      ]
+      "artist": "Channel Tres",               // must match a name in the CSV's artist or opener column
+      "sets": [ { "name": "Main set", "songs": [ { "title": "Topless" }, { "title": "Jet Black" } ] } ]
     },
-    { "name": "Encore", "songs": [ { "title": "Funny Thing" } ] }
+    {
+      "artist": "Thundercat",
+      "source": "https://www.setlist.fm/…",   // optional: where the setlist came from (set by setlist.py)
+      "provisional": "…",                     // optional: banner text; marks the setlist as a stand-in
+      "sets": [
+        {
+          "name": "Main set",                 // shown above the songs; "Main set" alone shows as "Setlist"
+          "songs": [
+            {
+              "title": "Them Changes",        // required
+              "note": "extended outro",       // optional, shown next to the title
+              "media": [                      // optional, list of media items (below)
+                { "src": "IMG_0412.mov" },
+                { "src": "https://youtu.be/VIDEO_ID", "start": "1:02:15", "end": "1:06:40", "credit": "@fan" }
+              ]
+            }
+          ]
+        },
+        { "name": "Encore", "songs": [ { "title": "Friend Zone" } ] }
+      ]
+    }
   ],
 
   "extras": [                                 // optional: media that isn't a song ("Other moments")
@@ -426,7 +490,7 @@ The full structure, with every optional field:
 }
 ```
 
-(`//` comments are only here to explain; real JSON files can't contain comments.)
+(`//` comments are only here to explain; real JSON files can't contain comments.) An older file with a single top-level `"sets"` list still works; it's read as the headliner's setlist.
 
 ### Media item fields
 
@@ -468,6 +532,7 @@ media/2026-11-03-thundercat/
 - A counter at the end (`-2`, `-3`, `-b`) is ignored, so you can have several clips of one song.
 - Text after the song name also works: `--Them-Changes-encore-singalong` matches "Them Changes" (the longest matching song title wins).
 - If a tagged file doesn't match any song, the build warns you and puts the file in *Other moments*.
+- **Openers' songs:** the build looks for the song in the headliner's set first, then co-headliners', then openers'. To point a clip at a specific act (say an opener played a song with the same title), name the act first: `IMG_0398--Channel-Tres--Jet-Black.mp4`.
 
 ### The no-rename way: list it in the JSON
 
@@ -640,12 +705,14 @@ With `media_base_url` set, the build reads the file names in `media/` on your co
 
 ### Page sections
 
-1. **Ticket header.** Full date, region, artist, venue, opener, who you went with, notes, the show number, and buttons for **▶ Play the show** and the setlist source (or a setlist.fm search if there's no link).
-2. **The night, song by song.** The coverage strip: one block per song, **orange** = you have footage, **teal** = only fans' footage, **grey** = nothing yet. Hover to see the song name, click to jump to it. The count on the right says how many songs have footage and how many of those were filled in by fans.
-3. **Provisional banner** (if the setlist is a stand-in).
-4. **The setlist.** Each song numbered through the whole show (encores continue the count), with its note, a clip count, a **▶ Play from here** button, and its media. Each piece of media is labelled **MINE** or **FAN** (plus the credit), with its time range and caption. YouTube, Instagram and TikTok embeds load only when clicked, so a page with fifty clips still opens quickly.
-5. **Other moments.** Untagged files, `extras`, and the `media_links` from the CSV.
-6. **Add footage to this show.** A collapsed how-to with this show's exact folder name and an example, for when you come back to it months later. **Only shown in your local preview** (`build.py --serve`), never on the public site.
+1. **Ticket header.** Full date, region, artist, venue, genres, who you went with, notes, the show number, and **▶ Play the show**.
+2. **The bill** (shows with openers or co-headliners). One tab per act in playing order (*1 · Opener*, *2 · Headliner*…), with its song count, how many songs are filmed, and its main genre. Click a tab, or use the arrow keys, to show that act's setlist below. The headliner is shown first; other acts get a shareable link like `show.html?id=…#act-1`. Shows with a single act skip the tabs.
+3. **The night, song by song.** The coverage strip for the whole night, grouped by act: one block per song, **orange** = you have footage, **teal** = only fans' footage, **grey** = nothing yet. Hover to see the song name, click to jump to it (switching acts if needed). Appears once the show has any footage.
+4. **The selected act.** Its name, role and genres, **▶ Play this set**, and a link to its setlist source.
+5. **Provisional banner** (if the setlist is a stand-in).
+6. **The setlist.** Each song numbered through the act's set (encores continue the count), with its note, a clip count, a **▶ Play from here** button, and its media. Each piece of media is labelled **MINE** or **FAN** (plus the credit), with its time range and caption. YouTube, Instagram and TikTok embeds load only when clicked, so a page with fifty clips still opens quickly.
+7. **Other moments.** Untagged files, `extras`, and the `media_links` from the CSV.
+8. **Add footage to this show.** A collapsed how-to with this show's exact folder name and an example, for when you come back to it months later. **Only shown in your local preview** (`build.py --serve`), never on the public site.
 
 Until a show has any footage, the page stays compact: no coverage strip or play button, and songs show as a simple numbered list. Songs with clips get the full-size treatment.
 
@@ -653,11 +720,12 @@ A show with no setlist shows a *No setlist yet* box, plus any media in *Photos &
 
 ### The player
 
-**▶ Play the show** opens a full-screen player that runs through the setlist in order.
+**▶ Play the show** opens a full-screen player that runs through the whole night in order: every act from the first opener to the headliner's encore. **▶ Play this set** starts at the selected act, and **▶ Play from here** at a song.
 
 - **Which clip plays for each song:** by default, the single best one. That's the first video, YouTube clip or audio file (your own before fans'), then a photo if there's none of those, then anything else.
 - **Every clip** (the checkbox at the bottom right) plays all the media for each song in turn instead.
 - **Songs with no footage** show a title card for about two seconds, then it moves on.
+- **An act with no footage at all** gets a single card for its whole set instead of one per song.
 - **Photos** stay up for 5 seconds.
 - **Videos and YouTube** move on when the clip ends, or when the `end` time is reached.
 - **Instagram, TikTok and other links** wait for you to press **Next**.
@@ -802,6 +870,8 @@ Wait for the Action to finish, then hard-refresh (`Cmd+Shift+R` / `Ctrl+Shift+R`
 - [x] Setlists from setlist.fm or pasted by hand, with safe re-runs
 - [x] Per-song media slots: your files and fan videos, with start/end times
 - [x] Play the show in setlist order
+- [x] Openers and co-headliners as full acts, with their own setlists, in playing order
+- [x] Genres: filter, by-genre chart, per-act genres
 - [ ] **Finding fan footage:** a list of ready-made YouTube/TikTok searches for every empty song slot
 - [ ] **Song stats across shows:** songs you've heard live most often, first and last time you heard each, rarities
 - [ ] **Artist pages:** every time you've seen an artist, side by side

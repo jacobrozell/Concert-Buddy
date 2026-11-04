@@ -1,67 +1,71 @@
 {
-  "sets": [
+  "acts": [
     {
-      "name": "Main set",
-      "songs": [
+      "artist": "Thundercat",
+      "sets": [
         {
-          "title": "Children of the Baked Potato"
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Children of the Baked Potato"
+            },
+            {
+              "title": "Candlelight"
+            },
+            {
+              "title": "No More Lies"
+            },
+            {
+              "title": "She Knows Too Much"
+            },
+            {
+              "title": "Black Qualls"
+            },
+            {
+              "title": "How Sway"
+            },
+            {
+              "title": "Uh Uh"
+            },
+            {
+              "title": "Overseas"
+            },
+            {
+              "title": "I Wish I Didn't Waste Your Time"
+            },
+            {
+              "title": "Pozole"
+            },
+            {
+              "title": "A.D.D. Through the Roof"
+            },
+            {
+              "title": "Walking on the Moon"
+            },
+            {
+              "title": "Anakin Learns His Fate"
+            },
+            {
+              "title": "Dragonball Durag"
+            },
+            {
+              "title": "Funny Thing"
+            },
+            {
+              "title": "Them Changes"
+            }
+          ]
         },
         {
-          "title": "Candlelight"
-        },
-        {
-          "title": "No More Lies"
-        },
-        {
-          "title": "She Knows Too Much"
-        },
-        {
-          "title": "Black Qualls"
-        },
-        {
-          "title": "How Sway"
-        },
-        {
-          "title": "Uh Uh"
-        },
-        {
-          "title": "Overseas"
-        },
-        {
-          "title": "I Wish I Didn't Waste Your Time"
-        },
-        {
-          "title": "Pozole"
-        },
-        {
-          "title": "A.D.D. Through the Roof"
-        },
-        {
-          "title": "Walking on the Moon"
-        },
-        {
-          "title": "Anakin Learns His Fate"
-        },
-        {
-          "title": "Dragonball Durag"
-        },
-        {
-          "title": "Funny Thing"
-        },
-        {
-          "title": "Them Changes"
+          "name": "Encore",
+          "songs": [
+            {
+              "title": "Friend Zone"
+            }
+          ]
         }
-      ]
-    },
-    {
-      "name": "Encore",
-      "songs": [
-        {
-          "title": "Friend Zone"
-        }
-      ]
+      ],
+      "source": "https://www.setlist.fm/setlist/thundercat/2026/avondale-brewing-company-birmingham-al-1b7dedf8.html"
     }
-  ],
-  "extras": [],
-  "source": "https://www.setlist.fm/setlist/thundercat/2026/avondale-brewing-company-birmingham-al-1b7dedf8.html"
+  ]
 }

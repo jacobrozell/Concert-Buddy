@@ -1,14 +1,18 @@
 {
-  "sets": [
+  "acts": [
     {
-      "name": "Main set",
-      "songs": [
+      "artist": "Shakey Graves",
+      "sets": [
         {
-          "title": "Nobody's Fool"
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Nobody's Fool"
+            }
+          ]
         }
-      ]
+      ],
+      "source": "https://www.setlist.fm/setlist/shakey-graves/2025/brooklyn-bowl-nashville-nashville-tn-134fd1d5.html"
     }
-  ],
-  "extras": [],
-  "source": "https://www.setlist.fm/setlist/shakey-graves/2025/brooklyn-bowl-nashville-nashville-tn-134fd1d5.html"
+  ]
 }

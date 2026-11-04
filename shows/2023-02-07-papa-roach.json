@@ -1,60 +1,64 @@
 {
-  "sets": [
+  "acts": [
     {
-      "name": "Main set",
-      "songs": [
+      "artist": "Papa Roach",
+      "sets": [
         {
-          "title": "Kill the Noise"
-        },
-        {
-          "title": "Getting Away With Murder"
-        },
-        {
-          "title": "Help"
-        },
-        {
-          "title": "Blood Brothers / Dead Cell"
-        },
-        {
-          "title": "Firestarter",
-          "note": "The Prodigy cover"
-        },
-        {
-          "title": "...To Be Loved"
-        },
-        {
-          "title": "Lullaby",
-          "note": "The Cure cover"
-        },
-        {
-          "title": "Scars"
-        },
-        {
-          "title": "No Apologies"
-        },
-        {
-          "title": "Still D.R.E.",
-          "note": "Dr. Dre cover"
-        },
-        {
-          "title": "Swerve",
-          "note": "with Hollywood Undead"
-        },
-        {
-          "title": "Ego Trip"
-        },
-        {
-          "title": "Between Angels and Insects"
-        },
-        {
-          "title": "Last Resort"
-        },
-        {
-          "title": "Born for Greatness"
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Kill the Noise"
+            },
+            {
+              "title": "Getting Away With Murder"
+            },
+            {
+              "title": "Help"
+            },
+            {
+              "title": "Blood Brothers / Dead Cell"
+            },
+            {
+              "title": "Firestarter",
+              "note": "The Prodigy cover"
+            },
+            {
+              "title": "...To Be Loved"
+            },
+            {
+              "title": "Lullaby",
+              "note": "The Cure cover"
+            },
+            {
+              "title": "Scars"
+            },
+            {
+              "title": "No Apologies"
+            },
+            {
+              "title": "Still D.R.E.",
+              "note": "Dr. Dre cover"
+            },
+            {
+              "title": "Swerve",
+              "note": "with Hollywood Undead"
+            },
+            {
+              "title": "Ego Trip"
+            },
+            {
+              "title": "Between Angels and Insects"
+            },
+            {
+              "title": "Last Resort"
+            },
+            {
+              "title": "Born for Greatness"
+            }
+          ]
         }
-      ]
+      ],
+      "source": "https://www.setlist.fm/setlist/papa-roach/2023/propst-arena-huntsville-al-23bd78b3.html"
     }
-  ],
-  "extras": [],
-  "source": "https://www.setlist.fm/setlist/papa-roach/2023/propst-arena-huntsville-al-23bd78b3.html"
+  ]
 }

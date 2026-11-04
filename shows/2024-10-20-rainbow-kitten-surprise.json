@@ -1,87 +1,91 @@
 {
-  "sets": [
+  "acts": [
     {
-      "name": "Main set",
-      "songs": [
+      "artist": "Rainbow Kitten Surprise",
+      "sets": [
         {
-          "title": "Devil Like Me"
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Devil Like Me"
+            },
+            {
+              "title": "Cocaine Jesus"
+            },
+            {
+              "title": "Holy War"
+            },
+            {
+              "title": "SVO"
+            },
+            {
+              "title": "Fever Pitch"
+            },
+            {
+              "title": "Hide"
+            },
+            {
+              "title": "Hot Pink Ice Cube"
+            },
+            {
+              "title": "Work Out"
+            },
+            {
+              "title": "First Class"
+            },
+            {
+              "title": "Drop Stop Roll"
+            },
+            {
+              "title": "When It Lands"
+            },
+            {
+              "title": "Sickset"
+            },
+            {
+              "title": "Wasted"
+            },
+            {
+              "title": "Cold Love"
+            },
+            {
+              "title": "Goodnight Chicago"
+            },
+            {
+              "title": "Our Song"
+            },
+            {
+              "title": "Lucky"
+            },
+            {
+              "title": "Meticulous"
+            },
+            {
+              "title": "Painkillers"
+            },
+            {
+              "title": "Matchbox"
+            },
+            {
+              "title": "Superstar"
+            },
+            {
+              "title": "Run"
+            }
+          ]
         },
         {
-          "title": "Cocaine Jesus"
-        },
-        {
-          "title": "Holy War"
-        },
-        {
-          "title": "SVO"
-        },
-        {
-          "title": "Fever Pitch"
-        },
-        {
-          "title": "Hide"
-        },
-        {
-          "title": "Hot Pink Ice Cube"
-        },
-        {
-          "title": "Work Out"
-        },
-        {
-          "title": "First Class"
-        },
-        {
-          "title": "Drop Stop Roll"
-        },
-        {
-          "title": "When It Lands"
-        },
-        {
-          "title": "Sickset"
-        },
-        {
-          "title": "Wasted"
-        },
-        {
-          "title": "Cold Love"
-        },
-        {
-          "title": "Goodnight Chicago"
-        },
-        {
-          "title": "Our Song"
-        },
-        {
-          "title": "Lucky"
-        },
-        {
-          "title": "Meticulous"
-        },
-        {
-          "title": "Painkillers"
-        },
-        {
-          "title": "Matchbox"
-        },
-        {
-          "title": "Superstar"
-        },
-        {
-          "title": "Run"
-        }
-      ]
-    },
-    {
-      "name": "Encore",
-      "songs": [
-        {
-          "title": "Thanks for Coming"
-        },
-        {
-          "title": "It's Called: Freefall"
+          "name": "Encore",
+          "songs": [
+            {
+              "title": "Thanks for Coming"
+            },
+            {
+              "title": "It's Called: Freefall"
+            }
+          ]
         }
       ]
     }
-  ],
-  "extras": []
+  ]
 }
