@@ -1,0 +1,9 @@
+# Built site (GitHub Actions rebuilds it on every push)
+_site/
+__pycache__/
+.DS_Store
+.env
+
+# Raw phone videos are usually too big for GitHub (100 MB per file limit).
+# Keep originals here; commit trimmed .mp4 clips or host them elsewhere (see README).
+media/**/originals/

@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Concert Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;800;900&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/base.css">
+<style>
+/* Layout: a hero with a shows-per-year chart, then a wall of ticket stubs grouped by year. */
+
+/* ---------- hero ---------- */
+.hero{position:relative;padding-block:56px 36px;background:radial-gradient(ellipse 60% 70% at 18% 0%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 70%);display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;align-items:end}
+h1{font-family:var(--display);font-weight:900;font-size:clamp(56px,9vw,124px);line-height:.84;margin:10px 0 0;text-transform:uppercase;letter-spacing:-.01em;text-wrap:balance}
+h1 .count{color:var(--accent)}
+.lede{max-width:44ch;color:var(--muted);margin:18px 0 0;font-size:16px}
+.facts{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:22px;font-family:var(--mono);font-size:13px}
+.facts b{font-weight:500;color:var(--fg)}
+.facts span{color:var(--muted)}
+
+.chart{min-width:0}
+.chart h2{font-family:var(--mono);font-weight:400;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.bars{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;align-items:end;height:170px;border-bottom:1px solid var(--line)}
+.bar{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:4px;font-family:var(--mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;cursor:pointer;background:none;border:0;padding:0}
+.bar i{display:block;width:100%;border-radius:3px 3px 0 0;background:var(--fg);opacity:.85;transition:opacity .15s}
+.bar.zero i{height:2px!important;opacity:.25}
+.bar:hover i{background:var(--accent);opacity:1}
+.years{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin-top:6px;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center}
+
+/* ---------- controls ---------- */
+.controls{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding-block:14px;border-bottom:1px solid var(--line);margin-bottom:8px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.search{flex:1 1 220px;min-width:0;background:var(--bg-2);border:1px solid var(--line);color:var(--fg);border-radius:999px;padding:9px 16px;font:inherit;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--mono);font-size:12px;letter-spacing:.04em;border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:999px;padding:7px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.chip .dot{width:9px;height:9px;border-radius:50%}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px;background:var(--bg-2)}
+.seg button{font-family:var(--mono);font-size:12px;letter-spacing:.04em;border:0;background:transparent;color:var(--muted);border-radius:999px;padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#1d1824}
+.shown{font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+
+/* ---------- year groups ---------- */
+.year{display:grid;grid-template-columns:150px minmax(0,1fr);gap:28px;padding-block:34px;border-bottom:1px solid var(--line)}
+.year-label{position:sticky;top:80px;align-self:start}
+.year-label .y{font-family:var(--display);font-weight:800;font-size:68px;line-height:.9;color:transparent;-webkit-text-stroke:1.5px var(--fg)}
+.year-label .n{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:6px;letter-spacing:.06em}
+.gap{padding-block:18px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.06em}
+.wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:22px 20px}
+
+/* ---------- ticket stub ---------- */
+.stub{--paper:#f3a597;position:relative;display:grid;grid-template-columns:minmax(0,1fr) 54px;background:var(--paper);color:var(--ink);
+  border-radius:6px;text-decoration:none;transform:rotate(var(--tilt,0deg));transition:transform .2s ease,box-shadow .2s ease;box-shadow:0 1px 0 rgba(0,0,0,.25),0 8px 18px -10px rgba(0,0,0,.6)}
+.stub:hover,.stub:focus-visible{transform:rotate(0) translateY(-4px);box-shadow:0 1px 0 rgba(0,0,0,.25),0 18px 28px -14px rgba(0,0,0,.7)}
+.stub::before,.stub::after{content:"";position:absolute;right:46px;width:16px;height:16px;border-radius:50%;background:var(--bg)}
+.stub::before{top:-8px}.stub::after{bottom:-8px}
+.stub .main{padding:14px 14px 13px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.stub .top{display:flex;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.stub .artist{font-family:var(--display);font-weight:800;font-size:28px;line-height:.95;text-transform:uppercase;overflow-wrap:anywhere;text-wrap:balance}
+.stub .venue{font-size:13px;line-height:1.3}
+.stub .venue small{display:block;color:var(--ink-soft);font-size:12px}
+.stub .open{font-family:var(--mono);font-size:11px;color:var(--ink-soft);border-top:1px dashed color-mix(in srgb,var(--ink) 30%,transparent);padding-top:7px;margin-top:2px}
+.stub .cov{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--ink-soft)}
+.stub .ticks{display:flex;gap:2px;flex:1;min-width:0;max-width:120px}
+.stub .ticks i{flex:1;height:8px;border-radius:1px;background:color-mix(in srgb,var(--ink) 18%,transparent)}
+.stub .ticks i.on{background:var(--ink)}
+.stub .side{border-left:2px dashed color-mix(in srgb,var(--ink) 32%,transparent);display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);gap:10px;padding-block:10px}
+.stub .side b{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:0;color:var(--ink)}
+.stamp{position:absolute;bottom:14px;right:64px;transform:rotate(-8deg);font-family:var(--display);font-weight:900;font-size:15px;letter-spacing:.08em;color:#b3261e;border:2px solid #b3261e;border-radius:4px;padding:1px 6px;text-transform:uppercase;opacity:.9}
+
+@media (max-width:760px){
+  .hero{grid-template-columns:1fr;padding-top:36px;gap:28px}
+  .year{grid-template-columns:1fr;gap:14px}
+  .year-label{position:static;display:flex;align-items:baseline;gap:12px}
+  .year-label .y{font-size:52px}
+  .shown{margin-left:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce){.stub{transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <div class="eyebrow" id="eyebrow">&nbsp;</div>
+      <h1><span class="count" id="total">—</span> shows<br>and counting</h1>
+      <p class="lede" id="lede"></p>
+      <div class="facts" id="facts"></div>
+    </div>
+    <div class="chart" aria-label="Shows per year">
+      <h2>Shows per year</h2>
+      <div class="bars" id="bars"></div>
+      <div class="years" id="years"></div>
+    </div>
+  </header>
+
+  <div class="controls" role="search">
+    <div class="seg" id="order" role="group" aria-label="Sort order"><button type="button" data-order="desc" aria-pressed="true">Newest first</button><button type="button" data-order="asc" aria-pressed="false">Oldest first</button></div>
+    <input class="search" id="q" type="search" placeholder="Search artists, venues, openers…" aria-label="Search shows">
+    <div class="chips" id="chips"></div>
+    <div class="shown" id="shown"></div>
+  </div>
+
+  <main id="timeline"><div class="empty">Loading shows…</div></main>
+  <footer class="site" id="foot">Stub colour shows the state the show was in.</footer>
+</div>
+
+<script src="assets/common.js"></script>
+<script>
+const {esc, region, regionName, paper, stubDate, longDate, today, getJSON} = CB;
+let SHOWS = [], CFG = {};
+const filt = {q:'', state:null, comp:false, filmed:false, order:'desc'};
+
+getJSON('data/concerts.json').then(data => {
+  CFG = data.config; SHOWS = data.shows;
+  SHOWS.sort((a,b) => a.date.localeCompare(b.date));
+  SHOWS.forEach((s,i) => { s.no = i+1; s.st = region(s.location); s.y = +s.date.slice(0,4); s.tilt = (((i*37)%7)-3)*0.45; });
+  init(); render();
+}).catch(err => {
+  document.getElementById('timeline').innerHTML = `<div class="empty">Couldn't load data/concerts.json. Run <code>python3 scripts/build.py --serve</code> and open the page from there.<br>${esc(err.message)}</div>`;
+});
+
+function init(){
+  document.title = CFG.site_title || 'Concert Log';
+  const y0 = Math.min(...SHOWS.map(s=>s.y)), y1 = Math.max(...SHOWS.map(s=>s.y));
+  document.getElementById('eyebrow').textContent = [CFG.owner, `live music since ${y0}`].filter(Boolean).join(' · ');
+  document.getElementById('lede').textContent = CFG.tagline || '';
+  document.getElementById('total').textContent = SHOWS.length;
+
+  const count = k => { const m = {}; SHOWS.forEach(s => { const v = k(s); if (v) m[v] = (m[v]||0)+1; }); return Object.entries(m).sort((a,b)=>b[1]-a[1]); };
+  const topA = count(s=>s.artist)[0], topV = count(s=>s.venue)[0], cities = new Set(SHOWS.map(s=>s.location)).size;
+  const comp = CFG.highlight_companion, compRe = comp ? new RegExp(comp.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i') : null;
+  const filmed = SHOWS.filter(s=>s.clips>0).length;
+  document.getElementById('facts').innerHTML =
+    `<div><span>Most seen</span> <b>${esc(topA[0])} ×${topA[1]}</b></div>
+     <div><span>Home venue</span> <b>${esc(topV[0])} ×${topV[1]}</b></div>
+     <div><span>Cities</span> <b>${cities}</b></div>
+     ${comp ? `<div><span>With ${esc(comp)}</span> <b>${SHOWS.filter(s=>compRe.test(s.with)).length}</b></div>` : ''}
+     <div><span>Shows with footage</span> <b>${filmed}</b></div>`;
+
+  // chart
+  const per = {}; SHOWS.forEach(s => per[s.y] = (per[s.y]||0)+1);
+  const max = Math.max(...Object.values(per)); let b = '', l = '';
+  for (let y=y0; y<=y1; y++){ const c = per[y]||0;
+    b += `<button class="bar${c?'':' zero'}" data-year="${y}" aria-label="${y}: ${c} shows"><span>${c||''}</span><i style="height:${c/max*130}px"></i></button>`;
+    l += `<span>'${String(y).slice(2)}</span>`; }
+  const bars = document.getElementById('bars'); bars.innerHTML = b; document.getElementById('years').innerHTML = l;
+  bars.addEventListener('click', e => { const t = e.target.closest('.bar'); if (!t) return;
+    const el = document.getElementById('y'+t.dataset.year);
+    if (el) el.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth', block:'start'}); });
+
+  // filters
+  document.getElementById('order').addEventListener('click', e => { const btn = e.target.closest('button'); if (!btn) return;
+    filt.order = btn.dataset.order; document.querySelectorAll('#order button').forEach(x => x.setAttribute('aria-pressed', x===btn)); render(); });
+  const present = [...new Set(SHOWS.map(s=>s.st))];
+  let h = present.map(k => `<button class="chip" data-state="${esc(k)}" aria-pressed="false"><span class="dot" style="background:${paper(k)}"></span>${esc(regionName(k))}</button>`).join('');
+  if (comp) h += `<button class="chip" id="comp" aria-pressed="false">With ${esc(comp)}</button>`;
+  if (filmed) h += `<button class="chip" id="filmed" aria-pressed="false">Has footage</button>`;
+  const c = document.getElementById('chips'); c.innerHTML = h;
+  c.addEventListener('click', e => { const btn = e.target.closest('.chip'); if (!btn) return;
+    if (btn.id === 'comp'){ filt.comp = !filt.comp; btn.setAttribute('aria-pressed', filt.comp); }
+    else if (btn.id === 'filmed'){ filt.filmed = !filt.filmed; btn.setAttribute('aria-pressed', filt.filmed); }
+    else { const k = btn.dataset.state; filt.state = filt.state===k ? null : k;
+      c.querySelectorAll('[data-state]').forEach(x => x.setAttribute('aria-pressed', x.dataset.state===filt.state)); }
+    render(); });
+  document.getElementById('q').addEventListener('input', e => { filt.q = e.target.value.trim().toLowerCase(); render(); });
+  filt.compRe = compRe;
+
+  if (CFG.repo_url) document.getElementById('foot').innerHTML +=
+    ` Made with ConcertBuddy — <a href="${esc(CFG.repo_url)}">grab the template and log your own shows</a>.`;
+}
+
+function stub(s){
+  const tonight = s.date === today();
+  let cov = '';
+  if (s.songs){
+    const n = Math.min(s.songs, 24), on = Math.round(s.filmed / s.songs * n);
+    cov = `<div class="cov"><span class="ticks" aria-hidden="true">${Array.from({length:n},(_,i)=>`<i class="${i<on?'on':''}"></i>`).join('')}</span>
+      <span>${s.filmed}/${s.songs} filmed</span></div>`;
+  }
+  return `<a class="stub" href="show.html?id=${encodeURIComponent(s.id)}" style="--paper:${paper(s.st)};--tilt:${s.tilt}deg" aria-label="${esc(s.artist)}, ${esc(s.venue)}, ${longDate(s.date)}">
+    <div class="main">
+      <div class="top"><span>Admit one</span><span>${stubDate(s.date)}</span></div>
+      <div class="artist">${esc(s.artist)}</div>
+      <div class="venue">${esc(s.venue)}<small>${esc(s.location)}</small></div>
+      ${s.opener ? `<div class="open">w/ ${esc(s.opener)}</div>` : ''}
+      ${cov}
+    </div>
+    <div class="side"><span>No.</span><b>${String(s.no).padStart(2,'0')}</b></div>
+    ${tonight ? '<span class="stamp">Tonight</span>' : ''}
+  </a>`;
+}
+
+function render(){
+  const list = SHOWS.filter(s => {
+    if (filt.state && s.st !== filt.state) return false;
+    if (filt.comp && !filt.compRe.test(s.with)) return false;
+    if (filt.filmed && !s.clips) return false;
+    if (filt.q && !(`${s.artist} ${s.venue} ${s.location} ${s.opener} ${s.notes}`.toLowerCase().includes(filt.q))) return false;
+    return true; });
+  document.getElementById('shown').textContent = `Showing ${list.length} of ${SHOWS.length}`;
+  const el = document.getElementById('timeline');
+  if (!list.length){ el.innerHTML = '<div class="empty">No shows match. Try a different search or clear the filters.</div>'; return; }
+  const by = {}; list.forEach(s => (by[s.y] = by[s.y] || []).push(s));
+  const filtered = filt.q || filt.state || filt.comp || filt.filmed, asc = filt.order === 'asc';
+  const years = Object.keys(by).map(Number).sort((a,b) => asc ? a-b : b-a);
+  let h = '', prev = null;
+  years.forEach(y => {
+    if (!filtered && prev && Math.abs(prev-y) > 1){ const a = Math.min(prev,y)+1, b = Math.max(prev,y)-1;
+      h += `<div class="gap">${a===b ? a : a+'–'+b} · no shows</div>`; }
+    const g = by[y].sort((a,b) => asc ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date));
+    h += `<section class="year" id="y${y}"><div class="year-label"><div class="y">${y}</div><div class="n">${g.length} show${g.length>1?'s':''}</div></div>
+      <div class="wall">${g.map(stub).join('')}</div></section>`;
+    prev = y; });
+  el.innerHTML = h;
+}
+</script>
+</body>
+</html>

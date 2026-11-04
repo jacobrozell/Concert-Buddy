@@ -1,0 +1,28 @@
+{
+  "provisional": "Placeholder from the Oct 6, 2026 Jacksonville show on the same tour. Replace with the Birmingham setlist once it's posted: python3 scripts/setlist.py 2026-11-03-thundercat",
+  "source": "https://seatgeek.com/blog/what-to-expect-at-thundercats-distracted-af-tour-setlist-start-time-openers-and-more",
+  "sets": [
+    {
+      "name": "Main set",
+      "songs": [
+        { "title": "Children of the Baked Potato" },
+        { "title": "Candlelight" },
+        { "title": "No More Lies" },
+        { "title": "She Knows Too Much" },
+        { "title": "Black Qualls" },
+        { "title": "How Sway / Uh Uh" },
+        { "title": "Overseas" },
+        { "title": "I Wish I Didn't Waste Your Time" },
+        { "title": "Pozole" },
+        { "title": "A.D.D. Through the Roof" },
+        { "title": "MmmHmm" },
+        { "title": "Walking on the Moon" },
+        { "title": "Anakin Learns His Fate" },
+        { "title": "Dragonball Durag" },
+        { "title": "Funny Thing" },
+        { "title": "Them Changes" }
+      ]
+    }
+  ],
+  "extras": []
+}

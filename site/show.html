@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Show</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;800;900&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/base.css">
+<style>
+/* Show page: ticket header → footage coverage strip → the setlist, each song a slot for clips → theater that plays the night in order. */
+.crumb{padding-block:22px 18px;font-family:var(--mono);font-size:12.5px}
+.crumb a{text-decoration:none;color:var(--muted)} .crumb a:hover{color:var(--fg)}
+
+/* ticket header */
+.ticket{--paper:#f3a597;position:relative;background:var(--paper);color:var(--ink);border-radius:8px;display:grid;grid-template-columns:minmax(0,1fr) 78px;
+  box-shadow:0 1px 0 rgba(0,0,0,.25),0 18px 40px -22px rgba(0,0,0,.8)}
+.ticket::before,.ticket::after{content:"";position:absolute;right:70px;width:22px;height:22px;border-radius:50%;background:var(--bg)}
+.ticket::before{top:-11px}.ticket::after{bottom:-11px}
+.ticket .main{padding:26px 28px 24px;min-width:0}
+.ticket .top{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);display:flex;flex-wrap:wrap;gap:6px 16px}
+.ticket h1{font-family:var(--display);font-weight:900;font-size:clamp(46px,8vw,96px);line-height:.86;text-transform:uppercase;margin:12px 0 10px;overflow-wrap:anywhere;text-wrap:balance}
+.ticket .where{font-size:17px}
+.ticket .where small{color:var(--ink-soft);font-size:15px}
+.ticket dl{display:flex;flex-wrap:wrap;gap:8px 28px;margin:18px 0 0;padding-top:14px;border-top:1px dashed color-mix(in srgb,var(--ink) 30%,transparent)}
+.ticket dl div{min-width:0}
+.ticket dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.ticket dd{margin:2px 0 0;font-size:14px}
+.ticket .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.ticket .btn{border-color:color-mix(in srgb,var(--ink) 35%,transparent);color:var(--ink)}
+.ticket .btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.ticket .side{border-left:2px dashed color-mix(in srgb,var(--ink) 32%,transparent);display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;
+  font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);gap:12px}
+.ticket .side b{font-family:var(--display);font-weight:800;font-size:30px;letter-spacing:0;color:var(--ink)}
+
+/* coverage */
+.coverage{margin-top:34px}
+.cov-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;justify-content:space-between}
+.cov-head h2{font-family:var(--display);font-weight:800;font-size:30px;text-transform:uppercase;margin:0;line-height:1}
+.cov-head .stat{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.cov-head .stat b{color:var(--fg);font-weight:500}
+.strip{display:flex;gap:3px;margin-top:14px;height:34px}
+.strip button{flex:1;min-width:0;border:0;border-radius:3px;cursor:pointer;background:var(--bg-3);padding:0;position:relative}
+.strip button.me{background:var(--accent)}
+.strip button.fan{background:var(--fan)}
+.strip button:hover{outline:2px solid var(--fg);outline-offset:1px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+
+.banner{margin-top:22px;padding:12px 16px;border:1px dashed var(--accent);border-radius:8px;font-size:14px;color:var(--fg);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.banner b{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-right:8px;font-weight:500}
+.banner code{font-size:12.5px}
+
+/* setlist */
+.set{margin-top:38px}
+.set h3{font-family:var(--mono);font-weight:500;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.songs{list-style:none;margin:0;padding:0}
+.song{display:grid;grid-template-columns:52px minmax(0,1fr);gap:4px 14px;padding:16px 0;border-bottom:1px solid var(--line);scroll-margin-top:20px}
+.song:target,.song.flash{animation:flash 1.6s ease}
+@keyframes flash{from{background:color-mix(in srgb,var(--accent) 22%,transparent)}to{background:transparent}}
+.song .num{font-family:var(--display);font-weight:800;font-size:34px;line-height:1;color:var(--muted);font-variant-numeric:tabular-nums}
+.song.has .num{color:var(--fg)}
+.song .head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;min-width:0}
+.song .title{font-family:var(--display);font-weight:800;font-size:26px;line-height:1;text-transform:uppercase;margin:0;overflow-wrap:anywhere}
+.song .note{font-size:13px;color:var(--muted)}
+.song .count{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.song .play-from{margin-left:auto;font-size:11.5px;padding:6px 11px}
+.song .none{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:6px}
+.clips{grid-column:2;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:10px}
+
+.clip{background:var(--bg-2);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.clip .frame{position:relative;aspect-ratio:16/9;background:#000;display:flex;align-items:center;justify-content:center}
+.clip .frame.tall{aspect-ratio:9/14}
+.clip .frame>a{display:block;width:100%;height:100%}
+.clip video,.clip iframe,.clip .frame img{width:100%;height:100%;object-fit:contain;border:0;display:block;background:#000}
+.clip audio{width:100%}
+.clip .poster{all:unset;cursor:pointer;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000 center/cover no-repeat}
+.clip .poster::after{content:"";width:58px;height:58px;border-radius:50%;background:rgba(0,0,0,.62) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8 5v14l11-7z' fill='white'/%3E%3C/svg%3E") 55% 50%/26px no-repeat;box-shadow:0 0 0 2px rgba(255,255,255,.8)}
+.clip .poster:focus-visible{outline:2px solid var(--accent);outline-offset:-4px}
+.clip .platform{font-family:var(--display);font-weight:800;font-size:22px;text-transform:uppercase;color:#fff;position:absolute;top:12px;left:14px;pointer-events:none}
+.clip .meta{padding:10px 12px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:12.5px;color:var(--muted)}
+.tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;border-radius:999px;padding:3px 8px;color:#1d1824;background:var(--accent)}
+.tag.fan{background:var(--fan)}
+.clip .meta a{color:var(--fg)}
+.clip .range{font-family:var(--mono);font-size:11.5px}
+
+.extras{margin-top:44px}
+.extras h3{font-family:var(--mono);font-weight:500;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.extras .clips{grid-column:auto;margin-top:0}
+
+.howto{margin-top:44px;border:1px solid var(--line);border-radius:8px;padding:0 18px;background:var(--bg-2)}
+.howto summary{cursor:pointer;padding:14px 0;font-family:var(--mono);font-size:12.5px;letter-spacing:.06em}
+.howto div{padding-bottom:16px;font-size:14px;color:var(--muted)}
+.howto code,.howto pre{font-family:var(--mono);font-size:12.5px;color:var(--fg)}
+.howto pre{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px;overflow:auto}
+
+.noset{margin-top:38px;padding:30px;border:1px dashed var(--line);border-radius:8px;color:var(--muted)}
+.noset h2{font-family:var(--display);font-weight:800;font-size:28px;text-transform:uppercase;color:var(--fg);margin:0 0 8px}
+
+/* theater */
+.theater{position:fixed;inset:0;z-index:50;background:#0b090f;color:#ece6f3;display:grid;grid-template-rows:auto minmax(0,1fr) auto;
+  padding:max(12px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(14px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.th-top{display:flex;align-items:center;gap:14px;padding-bottom:12px}
+.th-top .eyebrow{color:#9a90a8}
+.th-top .x{margin-left:auto}
+.theater .btn{color:#ece6f3;border-color:#463b52}
+.theater .btn.primary{background:#ffb547;border-color:#ffb547;color:#1d1824}
+.stage{position:relative;min-height:0;display:flex;align-items:center;justify-content:center;background:#000;border-radius:8px;overflow:hidden}
+.stage video,.stage iframe,.stage img,.stage>div:not(.card):not(.timer){width:100%;height:100%;object-fit:contain;border:0}
+.stage .card{text-align:center;padding:24px;max-width:640px}
+.stage .card .n{font-family:var(--display);font-weight:800;font-size:72px;line-height:1;color:#463b52}
+.stage .card h2{font-family:var(--display);font-weight:900;font-size:clamp(40px,7vw,84px);line-height:.9;text-transform:uppercase;margin:8px 0 14px}
+.stage .card p{font-family:var(--mono);font-size:13px;color:#9a90a8;margin:0}
+.timer{position:absolute;left:0;bottom:0;height:3px;background:#ffb547;width:0}
+.th-bottom{padding-top:12px;display:grid;gap:10px}
+.now{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+.now .t{font-family:var(--display);font-weight:800;font-size:28px;text-transform:uppercase;line-height:1}
+.now .who{font-family:var(--mono);font-size:12px;color:#9a90a8}
+.th-strip{display:flex;gap:3px;height:12px}
+.th-strip button{flex:1;min-width:0;border:0;border-radius:2px;background:#2a2333;cursor:pointer;padding:0}
+.th-strip button.me{background:color-mix(in srgb,#ffb547 45%,#2a2333)}
+.th-strip button.fan{background:color-mix(in srgb,#7fd1c7 45%,#2a2333)}
+.th-strip button.done{opacity:.55}
+.th-strip button.cur{background:#ece6f3;opacity:1}
+.th-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.th-controls label{font-family:var(--mono);font-size:12px;color:#9a90a8;display:inline-flex;gap:6px;align-items:center;margin-left:auto}
+
+@media (max-width:640px){
+  .ticket{grid-template-columns:minmax(0,1fr) 54px}
+  .ticket::before,.ticket::after{right:46px}
+  .ticket .main{padding:20px 18px}
+  .ticket h1{font-size:clamp(30px,10.5vw,60px);overflow-wrap:break-word;hyphens:auto}
+  .song{grid-template-columns:38px minmax(0,1fr)}
+  .song .num{font-size:26px}
+  .song .title{font-size:22px}
+  .clips{grid-column:1 / -1}
+  .song .play-from{margin-left:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="crumb"><a href="./">← All shows</a></nav>
+  <main id="page"><div class="empty">Loading…</div></main>
+  <footer class="site" id="foot"></footer>
+</div>
+
+<div class="theater" id="theater" hidden role="dialog" aria-modal="true" aria-label="Play the show">
+  <div class="th-top"><span class="eyebrow" id="th-eyebrow"></span><button class="btn x" id="th-close">Close ✕</button></div>
+  <div class="stage" id="stage"></div>
+  <div class="th-bottom">
+    <div class="now"><span class="t" id="th-title"></span><span class="who" id="th-who"></span></div>
+    <div class="th-strip" id="th-strip"></div>
+    <div class="th-controls">
+      <button class="btn" id="th-prev">◀ Prev</button>
+      <button class="btn primary" id="th-next">Next ▶</button>
+      <label><input type="checkbox" id="th-all"> Every clip, not just the best one per song</label>
+    </div>
+  </div>
+</div>
+
+<script src="assets/common.js"></script>
+<script>
+const {esc, region, regionName, paper, longDate, stubDate, clock, getJSON} = CB;
+const id = new URLSearchParams(location.search).get('id');
+let SHOW, SONGS = [];
+
+Promise.all([getJSON('data/concerts.json'), id ? getJSON(`data/shows/${encodeURIComponent(id)}.json`) : Promise.reject(new Error('No show id in the link.'))])
+  .then(([index, show]) => {
+    SHOW = show;
+    const all = index.shows.slice().sort((a,b) => a.date.localeCompare(b.date));
+    SHOW.no = all.findIndex(s => s.id === SHOW.id) + 1;
+    render(index.config);
+  })
+  .catch(err => {
+    document.getElementById('page').innerHTML = `<div class="empty">Couldn't find that show. <a href="./">Back to all shows</a><br>${esc(err.message)}</div>`;
+  });
+
+/* ---------- media helpers ---------- */
+const PLAYS = new Set(['video','youtube','audio','image']);          // things the theater can auto-advance through
+const range = m => (m.start != null || m.end != null) ? `${clock(m.start ?? 0)}${m.end != null ? '–' + clock(m.end) : '→'}` : '';
+const who = m => m.by === 'me' ? '<span class="tag">Mine</span>' : `<span class="tag fan">Fan</span>${m.credit ? ' ' + esc(m.credit) : ''}`;
+const ytEmbed = (m, auto) => {
+  const p = new URLSearchParams({rel:'0', playsinline:'1'});
+  if (m.start != null) p.set('start', m.start); if (m.end != null) p.set('end', m.end); if (auto) p.set('autoplay','1');
+  return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(m.id)}?${p}`;
+};
+const PLATFORM = {youtube:'YouTube', instagram:'Instagram', tiktok:'TikTok'};
+
+function clipCard(m, key){
+  let frame;
+  if (m.kind === 'video') frame = `<div class="frame"><video controls playsinline preload="metadata" src="${esc(m.url)}${m.start!=null?'#t='+m.start:''}"></video></div>`;
+  else if (m.kind === 'image') frame = `<div class="frame"><a href="${esc(m.url)}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(m.url)}" alt="${esc(m.caption || 'Photo')}"></a></div>`;
+  else if (m.kind === 'audio') frame = `<div style="padding:12px"><audio controls preload="none" src="${esc(m.url)}"></audio></div>`;
+  else if (m.kind === 'youtube') frame = `<div class="frame"><button class="poster" data-load="${key}" style="background-image:url('https://i.ytimg.com/vi/${encodeURIComponent(m.id)}/hqdefault.jpg')" aria-label="Play on YouTube"></button></div>`;
+  else if (m.kind === 'instagram' || m.kind === 'tiktok') frame = `<div class="frame tall"><button class="poster" data-load="${key}" aria-label="Load ${PLATFORM[m.kind]} post"></button><span class="platform">${PLATFORM[m.kind]}</span></div>`;
+  else frame = '';
+  const link = (m.kind !== 'video' && m.kind !== 'image' && m.kind !== 'audio') ? `<a href="${esc(m.url)}" target="_blank" rel="noopener">${m.kind === 'link' ? esc(m.url.replace(/^https?:\/\//,'').slice(0,40)) : 'Open on ' + PLATFORM[m.kind]}</a>` : '';
+  return `<div class="clip" data-key="${key}">${frame}<div class="meta">${who(m)}${range(m) ? `<span class="range">${range(m)}</span>` : ''}${m.caption ? `<span>${esc(m.caption)}</span>` : ''}${link}</div></div>`;
+}
+
+const MEDIA = {};   // key -> media item, for lazy-loading embeds
+function keyFor(m){ const k = 'm' + Object.keys(MEDIA).length; MEDIA[k] = m; return k; }
+
+document.addEventListener('click', e => {
+  const p = e.target.closest('.poster[data-load]'); if (!p) return;
+  const m = MEDIA[p.dataset.load];
+  const src = m.kind === 'youtube' ? ytEmbed(m, true) : m.embed;
+  p.parentElement.innerHTML = `<iframe src="${esc(src)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy" title="${PLATFORM[m.kind]} clip"></iframe>`;
+});
+
+/* ---------- page ---------- */
+function render(cfg){
+  const s = SHOW, st = region(s.location);
+  document.title = `${s.artist} · ${stubDate(s.date)} — ${cfg.site_title || 'Concert Log'}`;
+  SONGS = s.sets.flatMap(set => set.songs);
+  const filmed = SONGS.filter(x => x.media.length), mine = SONGS.filter(x => x.media.some(m => m.by === 'me'));
+  const fansOnly = filmed.length - mine.length;
+  const dd = (k, v) => v ? `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>` : '';
+  const sl = s.setlist_url || `https://www.setlist.fm/search?query=${encodeURIComponent(s.artist + ' ' + s.venue)}`;
+
+  let h = `<header class="ticket" style="--paper:${paper(st)}">
+    <div class="main">
+      <div class="top"><span>${longDate(s.date)}</span><span>${esc(regionName(st))}</span></div>
+      <h1>${esc(s.artist)}</h1>
+      <div class="where">${esc(s.venue)} <small>· ${esc(s.location)}</small></div>
+      <dl>${dd('Opener', s.opener)}${dd('With', s.with)}${dd('Notes', s.notes)}</dl>
+      <div class="actions">
+        ${SONGS.length ? `<button class="btn primary" id="play" ${filmed.length ? '' : 'disabled title="No footage yet"'}>▶ Play the show</button>` : ''}
+        <a class="btn" href="${esc(sl)}" target="_blank" rel="noopener">${s.setlist_url ? 'Setlist source' : 'Find setlist on setlist.fm'} ↗</a>
+      </div>
+    </div>
+    <div class="side"><span>No.</span><b>${String(s.no).padStart(2,'0')}</b></div>
+  </header>`;
+
+  if (SONGS.length){
+    h += `<section class="coverage" aria-label="Footage coverage">
+      <div class="cov-head"><h2>The night, song by song</h2>
+        <div class="stat"><b>${filmed.length} of ${SONGS.length}</b> songs have footage${fansOnly ? ` · <b>${fansOnly}</b> filled in by fans` : ''}</div></div>
+      <div class="strip">${SONGS.map(x => { const c = x.media.some(m=>m.by==='me') ? 'me' : x.media.length ? 'fan' : '';
+        return `<button class="${c}" data-jump="${x.n}" title="${x.n}. ${esc(x.title)}${x.media.length ? ` · ${x.media.length} clip${x.media.length>1?'s':''}` : ' · no footage yet'}" aria-label="Song ${x.n}: ${esc(x.title)}"></button>`; }).join('')}</div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>My footage</span><span><i style="background:var(--fan)"></i>Fan footage only</span><span><i style="background:var(--bg-3)"></i>Not filmed yet</span></div>
+    </section>`;
+    if (s.provisional) h += `<div class="banner"><b>Provisional setlist</b>${esc(s.provisional)}</div>`;
+    for (const set of s.sets){
+      h += `<section class="set">${s.sets.length > 1 || set.name !== 'Main set' ? `<h3>${esc(set.name)}</h3>` : '<h3>Setlist</h3>'}<ol class="songs">`;
+      for (const x of set.songs){
+        h += `<li class="song${x.media.length ? ' has' : ''}" id="song-${x.n}">
+          <div class="num">${String(x.n).padStart(2,'0')}</div>
+          <div class="head"><h4 class="title">${esc(x.title)}</h4>${x.note ? `<span class="note">${esc(x.note)}</span>` : ''}
+            ${x.media.length ? `<span class="count">${x.media.length} clip${x.media.length>1?'s':''}</span><button class="btn play-from" data-from="${x.n}">▶ Play from here</button>` : ''}</div>
+          ${x.media.length ? `<div class="clips">${x.media.map(m => clipCard(m, keyFor(m))).join('')}</div>` : `<div class="none" style="grid-column:2">No footage yet</div>`}
+        </li>`;
+      }
+      h += `</ol></section>`;
+    }
+  } else {
+    h += `<section class="noset"><h2>No setlist yet</h2>
+      <p>Once the setlist is in, each song becomes a slot for clips.</p>
+      <pre style="white-space:pre-wrap">python3 scripts/setlist.py ${esc(s.id)}</pre></section>`;
+  }
+
+  if (s.extras.length){
+    h += `<section class="extras"><h3>${SONGS.length ? 'Other moments' : 'Photos &amp; clips'}</h3><div class="clips">${s.extras.map(m => clipCard(m, keyFor(m))).join('')}</div></section>`;
+  }
+
+  h += `<details class="howto"><summary>Add footage to this show</summary><div>
+    <p><b>Your own clips:</b> put them in <code>media/${esc(s.id)}/</code> and add the song name after <code>--</code> in the file name. The build puts each clip under its song:</p>
+    <pre>media/${esc(s.id)}/IMG_0412--${esc((SONGS[0]?.title || 'Song Name').replace(/[^\w]+/g,'-'))}.mp4</pre>
+    <p><b>Fan videos:</b> add a link to the song in <code>shows/${esc(s.id)}.json</code>. A full-show upload works too: give a start and end time to cut out just that song.</p>
+    <pre>{ "title": "${esc(SONGS[0]?.title || 'Song Name')}", "media": [
+  { "src": "https://youtu.be/VIDEO_ID", "start": "12:40", "end": "17:05", "credit": "@whoever" }
+] }</pre>
+    <p>Then run <code>python3 scripts/build.py --serve</code> to preview.</p></div></details>`;
+
+  document.getElementById('page').innerHTML = h;
+  if (cfg.repo_url) document.getElementById('foot').innerHTML = `Made with ConcertBuddy — <a href="${esc(cfg.repo_url)}">grab the template and log your own shows</a>.`;
+
+  document.getElementById('play')?.addEventListener('click', () => Theater.open(1));
+  document.getElementById('page').addEventListener('click', e => {
+    const j = e.target.closest('[data-jump]');
+    if (j){ const el = document.getElementById('song-' + j.dataset.jump); el.scrollIntoView({behavior:'smooth', block:'start'}); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+    const f = e.target.closest('[data-from]'); if (f) Theater.open(+f.dataset.from);
+  });
+}
+
+/* ---------- theater: plays the show in setlist order ---------- */
+const Theater = (() => {
+  const $ = id => document.getElementById(id);
+  const el = $('theater'), stage = $('stage');
+  let queue = [], i = 0, timer = null, yt = null, lastFocus = null;
+
+  function build(){
+    const every = $('th-all').checked;
+    queue = [];
+    for (const song of SONGS){
+      const media = song.media;
+      if (!media.length){ queue.push({song, gap:true}); continue; }
+      const picks = every ? media : [media.find(m => PLAYS.has(m.kind) && m.kind !== 'image') || media.find(m => PLAYS.has(m.kind)) || media[0]];
+      picks.forEach(m => queue.push({song, m}));
+    }
+  }
+  function strip(){
+    $('th-strip').innerHTML = queue.map((q, k) => {
+      const c = q.gap ? '' : q.m.by === 'me' ? 'me' : 'fan';
+      return `<button class="${c}${k < i ? ' done' : ''}${k === i ? ' cur' : ''}" data-k="${k}" title="${q.song.n}. ${esc(q.song.title)}${q.gap ? ' (no footage)' : ''}"></button>`;
+    }).join('');
+  }
+  function clear(){
+    clearTimeout(timer); timer = null;
+    if (yt){ try { yt.destroy(); } catch(e){} yt = null; }
+    stage.innerHTML = '';
+  }
+  function countdown(ms){
+    const bar = document.createElement('div'); bar.className = 'timer'; stage.appendChild(bar);
+    bar.animate([{width:'0%'},{width:'100%'}], {duration:ms, fill:'forwards'});
+    timer = setTimeout(next, ms);
+  }
+  function card(song, text){
+    stage.innerHTML = `<div class="card"><div class="n">${String(song.n).padStart(2,'0')}</div><h2>${esc(song.title)}</h2><p>${text}</p></div>`;
+  }
+  function play(){
+    clear();
+    if (i >= queue.length){
+      stage.innerHTML = `<div class="card"><div class="n">♥</div><h2>That's the show</h2><p>${esc(SHOW.artist)} · ${esc(SHOW.venue)} · ${longDate(SHOW.date)}</p></div>`;
+      $('th-title').textContent = ''; $('th-who').textContent = ''; strip(); return;
+    }
+    const q = queue[i], song = q.song;
+    $('th-title').textContent = `${String(song.n).padStart(2,'0')} · ${song.title}`;
+    $('th-who').innerHTML = q.gap ? 'No footage yet' : (q.m.by === 'me' ? 'My footage' : `Fan footage${q.m.credit ? ' · ' + esc(q.m.credit) : ''}`) + (range(q.m) ? ' · ' + range(q.m) : '');
+    strip();
+    if (q.gap){ card(song, 'No footage of this one yet. Skipping ahead…'); countdown(1800); return; }
+    const m = q.m;
+    if (m.kind === 'video' || m.kind === 'audio'){
+      const v = document.createElement(m.kind); v.src = m.url; v.controls = true; v.autoplay = true; v.playsInline = true;
+      if (m.kind === 'audio'){ card(song, 'Audio'); v.style.cssText = 'position:absolute;left:5%;right:5%;bottom:20px;width:90%;height:auto'; }
+      v.addEventListener('loadedmetadata', () => { if (m.start) v.currentTime = m.start; });
+      v.addEventListener('timeupdate', () => { if (m.end != null && v.currentTime >= m.end) next(); });
+      v.addEventListener('ended', next);
+      v.addEventListener('error', () => { card(song, "This clip wouldn't play here. Skipping…"); countdown(2000); });
+      stage.appendChild(v); v.play().catch(()=>{});
+    } else if (m.kind === 'image'){
+      stage.innerHTML = `<img src="${esc(m.url)}" alt="">`; countdown(5000);
+    } else if (m.kind === 'youtube'){
+      const holder = document.createElement('div'); stage.appendChild(holder);
+      loadYT().then(() => {
+        if (queue[i] !== q) return;
+        yt = new YT.Player(holder, {videoId:m.id, width:'100%', height:'100%',
+          playerVars:{autoplay:1, rel:0, playsinline:1, ...(m.start!=null && {start:m.start}), ...(m.end!=null && {end:m.end})},
+          events:{onStateChange:e => { if (e.data === 0) next(); }, onError:() => { card(song, "That video can't be embedded. Skipping…"); countdown(2000); }}});
+      }).catch(() => { stage.innerHTML = `<iframe src="${esc(ytEmbed(m, true))}" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`; });
+    } else if (m.embed){
+      stage.innerHTML = `<iframe src="${esc(m.embed)}" allow="autoplay; encrypted-media; fullscreen" allowfullscreen style="max-width:420px"></iframe>`;
+      $('th-who').innerHTML += ' · press Next when it’s done';
+    } else {
+      card(song, `<a href="${esc(m.url)}" target="_blank" rel="noopener" style="color:#ffb547">Open link ↗</a> · press Next to keep going`);
+    }
+  }
+  let ytReady = null;
+  function loadYT(){
+    if (window.YT && YT.Player) return Promise.resolve();
+    if (!ytReady) ytReady = new Promise((res, rej) => {
+      window.onYouTubeIframeAPIReady = res;
+      const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; s.onerror = rej; document.head.appendChild(s);
+      setTimeout(() => rej(new Error('timeout')), 8000);
+    });
+    return ytReady;
+  }
+  function next(){ if (i < queue.length){ i++; play(); } }
+  function prev(){ if (i > 0){ i--; play(); } }
+  function open(fromSong){
+    lastFocus = document.activeElement;
+    build(); i = Math.max(0, queue.findIndex(q => q.song.n >= fromSong));
+    $('th-eyebrow').textContent = `${SHOW.artist} · ${SHOW.venue} · ${stubDate(SHOW.date)}`;
+    el.hidden = false; document.body.style.overflow = 'hidden'; $('th-next').focus(); play();
+  }
+  function close(){ clear(); el.hidden = true; document.body.style.overflow = ''; lastFocus?.focus(); }
+
+  $('th-next').addEventListener('click', next);
+  $('th-prev').addEventListener('click', prev);
+  $('th-close').addEventListener('click', close);
+  $('th-all').addEventListener('change', () => { const song = queue[i]?.song.n || 1; build(); i = Math.max(0, queue.findIndex(q => q.song.n >= song)); play(); });
+  $('th-strip').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b){ i = +b.dataset.k; play(); } });
+  document.addEventListener('keydown', e => {
+    if (el.hidden) return;
+    if (e.key === 'Escape') close();
+    else if (e.key === 'ArrowRight' && e.target.tagName !== 'VIDEO') next();
+    else if (e.key === 'ArrowLeft' && e.target.tagName !== 'VIDEO') prev();
+  });
+  return {open};
+})();
+</script>
+</body>
+</html>

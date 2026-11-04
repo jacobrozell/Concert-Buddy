@@ -1,0 +1,38 @@
+{
+  "sets": [
+    {
+      "name": "Main set",
+      "songs": [
+        {
+          "title": "First Song",
+          "media": [
+            { "src": "IMG_0412.mov", "caption": "From the rail" }
+          ]
+        },
+        {
+          "title": "Second Song",
+          "note": "Extended jam",
+          "media": [
+            { "src": "https://youtu.be/VIDEO_ID", "start": "1:02:15", "end": "1:06:40", "credit": "@fan_who_posted_it" }
+          ]
+        },
+        { "title": "Third Song" }
+      ]
+    },
+    {
+      "name": "Encore",
+      "songs": [
+        {
+          "title": "Closer",
+          "media": [
+            { "src": "https://www.instagram.com/reel/SHORTCODE/", "credit": "@someone" },
+            { "src": "https://www.tiktok.com/@someone/video/1234567890123456789" }
+          ]
+        }
+      ]
+    }
+  ],
+  "extras": [
+    { "src": "IMG_0399.jpg", "caption": "Line outside before doors" }
+  ]
+}
