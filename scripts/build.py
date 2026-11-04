@@ -28,6 +28,7 @@ from common import (  # noqa: E402
 
 OUT = ROOT / "_site"
 SERVING = False  # set by --serve: media is served straight from media/ instead of being copied
+WAITING = {}     # show id -> clips listed in media.json that can't be served yet (not here, no media_base_url)
 SITE_SRC = ROOT / "site"
 
 VIDEO_EXT = {".mp4", ".m4v", ".mov", ".webm"}
@@ -214,9 +215,21 @@ def build_show(row, cfg, genres, warnings):
     hidden = set(src.get("hidden", []))
     local_files = {f.name: f for f in folder.iterdir()} if folder.is_dir() else {}
     names = sorted({n for n, f in local_files.items() if f.is_file() and not n.startswith(".") and f.suffix.lower() in MEDIA_EXT} | set(manifest))
+
+    # A file can only go on the site if it can be served: it's here to be published with the
+    # site, or it's in cloud storage (media_base_url). Listed-but-absent files wait for an upload.
+    def servable(name):
+        return name in local_files or bool(cfg["media_base_url"])
+
+    waiting = [n for n in names if not servable(n)]
+    if waiting:
+        WAITING[sid] = len(waiting)
+    for st_songs in (so for a in acts for st in a["sets"] for so in st["songs"]):
+        st_songs["media"] = [m for m in st_songs["media"] if not m.get("file") or servable(m["file"])]
+    extras = [m for m in extras if not m.get("file") or servable(m["file"])]
     referenced = {m["file"] for m in all_media() if m.get("file")}
     for name in names:
-        if name in referenced or name in hidden:
+        if name in referenced or name in hidden or not servable(name):
             continue
         item = resolve_media({"src": name}, sid, cfg, "me")
         item["auto"] = True  # found in the folder, not placed by hand
@@ -320,6 +333,7 @@ def build(quiet=False):
     rows = read_concerts()
     genres = read_genres()
     warnings = []
+    WAITING.clear()
 
     if OUT.exists():
         shutil.rmtree(OUT)
@@ -350,6 +364,9 @@ def build(quiet=False):
 
     if quiet:
         return
+    if WAITING:
+        print(f"  {sum(WAITING.values())} clips in media.json files aren't on this machine and there's no media_base_url yet,")
+        print("    so they're left off the site until you upload them (python3 scripts/upload_media.py).")
     with_setlist = [s for s in summaries if s["songs"]]
     acts = [a for s in summaries for a in s["acts"]]
     print(f"Built {len(summaries)} shows, {len(acts)} acts → {OUT.relative_to(ROOT)}/")
