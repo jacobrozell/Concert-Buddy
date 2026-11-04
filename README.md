@@ -509,6 +509,40 @@ The full structure, with every optional field:
 
 ## Adding your own footage
 
+### Sorting a big batch automatically
+
+Your phone saves the time (and usually the place) inside every photo and video, so you don't have to sort clips by hand. Dump everything into `media/inbox/` and run:
+
+```sh
+python3 scripts/import_media.py            # dry run: lists where each file would go
+python3 scripts/import_media.py --apply    # moves them into media/<show-id>/
+```
+
+```
+2026-11-03-thundercat  (15 files)
+   8:38 PM  IMG_3967.MOV          52s
+   8:44 PM  IMG_3968.MOV          53s
+   …
+Not matched (1): left where they are
+  IMG_4569.MOV   2021-08-23 10:15 PM at 39.744,-104.992  (no show in your log on Mon Aug 23, 2021)
+```
+
+- **Which show:** the capture time decides. Anything after midnight and before 5 AM counts toward the previous night. A file whose time has no timezone is tried against every zone, and only matched if exactly one show fits.
+- **Files with no capture time** (some edited or exported clips) fall back to a date in the file name, then to their camera-roll neighbours: `IMG_5343` between two clips from the same show joins that show.
+- **Location check:** a clip whose GPS is far from that show's other clips is flagged.
+- **Not matched** usually means a show missing from `concerts.csv`, or a clip from another night. Nothing is deleted.
+- The capture times are saved in each show folder (`.captured.json`), so clips stay in filming order.
+- Needs `ffprobe`, which comes with ffmpeg (`brew install ffmpeg`).
+
+Then shrink the videos so they fit on GitHub (originals are kept in `originals/`, which is never committed):
+
+```sh
+python3 scripts/import_media.py --convert        # 1080p H.264 MP4
+python3 scripts/import_media.py --convert 720    # smaller still
+```
+
+The script can tell **which show** a clip is from, but not **which song**. Tag songs as below.
+
 ### The quick way: tag the file name
 
 1. Create a folder in `media/` named with the [show id](#show-ids): `media/2026-11-03-thundercat/`
