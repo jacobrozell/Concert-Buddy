@@ -45,6 +45,7 @@ No server, no database, no accounts, no monthly bill. Your log is a CSV file, on
 - Search across artists, venues, openers and notes; filter by state, by the person you go to shows with most, or by shows that have footage
 - A small coverage bar on each stub showing how much of the setlist has footage
 - A red **TONIGHT** stamp on the stub for a show happening today
+- Download links in the footer for the whole log as a CSV and for a blank template
 
 **Show page**
 - **The bill:** every act (openers, co-headliners, headliner) as a tab in the order they played, each with its own setlist and genres
@@ -211,6 +212,7 @@ ConcertBuddy/
 │   ├── README.md                ← naming cheat sheet
 │   └── 2026-11-03-thundercat/   ← your own photos/clips for that show (you add these)
 │       ├── IMG_0412--Them-Changes.mp4
+│       ├── media.json           ← every file with when it was filmed (written by import_media.py)
 │       └── originals/           ← optional: full-size originals, ignored by git
 ├── templates/
 │   ├── concerts_template.csv    ← blank CSV with the right columns
@@ -218,10 +220,13 @@ ConcertBuddy/
 ├── scripts/
 │   ├── build.py                 ← builds the site into _site/
 │   ├── setlist.py               ← fetches or imports setlists
-│   └── common.py                ← shared helpers used by both scripts
+│   ├── import_media.py          ← sorts photos/videos into shows by capture time; shrinks videos
+│   ├── upload_media.py          ← uploads media to Cloudflare R2
+│   └── common.py                ← shared helpers
 ├── site/
 │   ├── index.html               ← the timeline page
 │   ├── show.html                ← the show page and player
+│   ├── tag.html                 ← tag clips with songs (local preview only)
 │   └── assets/
 │       ├── base.css             ← colours, fonts, shared styles
 │       ├── common.js            ← shared helpers (dates, state colours)
@@ -531,7 +536,7 @@ Not matched (1): left where they are
 - **Files with no capture time** (some edited or exported clips) fall back to a date in the file name, then to their camera-roll neighbours: `IMG_5343` between two clips from the same show joins that show.
 - **Location check:** a clip whose GPS is far from that show's other clips is flagged.
 - **Not matched** usually means a show missing from `concerts.csv`, or a clip from another night. Nothing is deleted.
-- The capture times are saved in each show folder (`.captured.json`), so clips stay in filming order.
+- The capture times are saved in each show folder (`media.json`), so clips stay in filming order.
 - Needs `ffprobe`, which comes with ffmpeg (`brew install ffmpeg`).
 
 Then shrink the videos so they fit on GitHub (originals are kept in `originals/`, which is never committed):
@@ -541,7 +546,18 @@ python3 scripts/import_media.py --convert        # 1080p H.264 MP4
 python3 scripts/import_media.py --convert 720    # smaller still
 ```
 
-The script can tell **which show** a clip is from, but not **which song**. Tag songs as below.
+The script can tell **which show** a clip is from, but not **which song**. For that, use the tagging screen.
+
+### Tag clips with songs (the tagging screen)
+
+With the preview running (`python3 scripts/build.py --serve`), open **http://localhost:8000/tag.html**, or click **Tag clips** on a show page. It only works in your local preview, because it saves to your files.
+
+- Pick a show. Its photos and videos are listed **in the order you filmed them**, with the time and length of each and a player, so you can check what's in it.
+- Choose a song for a clip from that night's setlist, grouped by act (openers first).
+- Every clip after it gets a **suggested** song (dashed outline), worked out from the time between clips. A clip within about a minute and a half of the previous one is the same song; otherwise it moves on one song per ~4½ minutes. Fix the first wrong guess and everything after it updates.
+- **Accept suggestions** keeps them all; **Save** writes your choices to `shows/<id>.json` and rebuilds the preview.
+- **Not a song (Other moments)** is for the crowd, the venue, the merch line. **Hide** keeps a clip off the site entirely (accidental pocket videos).
+- Clips you've already tagged by file name show up as tagged, and changing one here simply overrides the name.
 
 ### The quick way: tag the file name
 
@@ -704,19 +720,41 @@ for f in *.HEIC *.heic; do [ -e "$f" ] && sips -s format jpeg "$f" --out "${f%.*
 
 Unlisted videos don't show up in search but can be embedded. Link them like a fan video and add `"by": "me"`. This works well for full sets and long clips, and costs nothing.
 
-### 3. Host your media folder somewhere else
+### 3. Host your media on Cloudflare R2 (for lots of video)
 
-When your media outgrows GitHub, put it in cloud storage and point the site at it. Your clips keep their file-name tags and the site works exactly the same; only where the files come from changes.
+For more than a few dozen clips, keep the files in cloud storage and only the *list* of files in Git. Cloudflare R2 has a free tier (10 GB) and no download fees, which matters for video. The site works exactly the same; only where the files come from changes.
 
-1. Create a storage bucket with public read access. **Cloudflare R2** is a good fit: it has a free tier and no download (egress) fees, which matters for video. Backblaze B2 and Amazon S3 also work.
-2. Upload your `media/` folder to the bucket with **the same layout** (`<bucket>/2026-11-03-thundercat/IMG_0412--Them-Changes.mp4`). Tools like [rclone](https://rclone.org) can sync a folder to any of these: `rclone sync media r2:my-bucket --exclude "README.md" --exclude "**/originals/**"`.
-3. Set the bucket's public address in `config.json`:
-   ```json
-   "media_base_url": "https://media.example.com"
+**One-time setup** (about 10 minutes, in the Cloudflare dashboard):
+
+1. **R2 → Create bucket**, e.g. `concert-media`.
+2. In the bucket's **Settings → Public access**, turn on the **r2.dev development URL** (or connect your own domain). Copy the address, e.g. `https://pub-1a2b3c….r2.dev`.
+3. **R2 → Manage API tokens → Create API token** with **Object Read & Write** permission on that bucket. Copy the **Access Key ID** and **Secret Access Key** (the secret is shown once), plus your **Account ID** from the R2 overview page.
+4. Create a file called `.env` next to `concerts.csv` (it's git-ignored, so it never leaves your computer):
+   ```sh
+   R2_ACCOUNT_ID=your-account-id
+   R2_ACCESS_KEY_ID=your-access-key-id
+   R2_SECRET_ACCESS_KEY=your-secret
+   R2_BUCKET=concert-media
+   R2_PUBLIC_URL=https://pub-1a2b3c….r2.dev
    ```
-4. Add `media/*/` to `.gitignore` so files stop going to GitHub (keep them on your computer, where the build still reads them to match songs).
 
-With `media_base_url` set, the build reads the file names in `media/` on your computer (to match them to songs) but doesn't copy the files into the site; it links to the bucket instead. Because GitHub Actions only sees what's committed, run `python3 scripts/build.py` locally to confirm everything matched, then **list cloud-hosted files explicitly in `shows/<id>.json`** (`{ "src": "IMG_0412--Them-Changes.mp4" }`) so the build on GitHub knows about them too.
+**Then, whenever you add media:**
+
+```sh
+python3 scripts/import_media.py --apply      # sort new files into shows
+python3 scripts/import_media.py --convert    # optional: smaller, plays everywhere
+python3 scripts/upload_media.py              # upload anything not in the bucket yet
+git add media/*/media.json shows/ config.json
+git commit -m "Add footage" && git push
+```
+
+- `upload_media.py` uploads to `<bucket>/<show-id>/<file>` (the same layout as `media/`), skips anything already there with the same size, and never uploads `originals/`, `inbox/` or `media.json`. Add `--dry-run` to see what it would do, or `--show <show-id>` for one show. The first time it runs it sets `media_base_url` in `config.json` to your `R2_PUBLIC_URL`.
+- The `.gitignore` in this repo already keeps media files out of Git and commits only each show's `media.json`, the list of files with when they were filmed. That list is how GitHub's build knows the clips exist without having the files.
+- Your local preview still plays files from your own disk, so you can tag clips before uploading them.
+- Once a file is uploaded, you can delete your local copy to free space; its `media.json` entry keeps it on the site. Keep the `originals/` somewhere safe; they aren't uploaded.
+- **Keeping media in the repo instead** (a small log, no R2)? Delete the four lines starting at `media/**` near the end of `.gitignore`.
+
+Any S3-compatible storage works the same way (Backblaze B2, Amazon S3); `upload_media.py` speaks R2's flavour of the S3 API, and tools like [rclone](https://rclone.org) can sync the folder to the others.
 
 ---
 
@@ -784,7 +822,8 @@ A show with no setlist shows a *No setlist yet* box, plus any media in *Photos &
 4. For each show: reads `shows/<id>.json` if it exists, works out what kind each media item is (file, YouTube, Instagram…), matches files in `media/<id>/` to songs by name, and puts your own media first.
 5. Writes `_site/data/shows/<id>.json` for each show, and `_site/data/concerts.json` with every show's summary (including counts of songs, filmed songs and clips).
 6. Copies `media/` into `_site/media/` (skipped when `media_base_url` is set).
-7. Prints a summary:
+7. Copies `concerts.csv` and the blank template into `_site/` so visitors can download them.
+8. Prints a summary:
 
 ```
 Built 41 shows → _site/
@@ -910,7 +949,8 @@ Wait for the Action to finish, then hard-refresh (`Cmd+Shift+R` / `Ctrl+Shift+R`
 - [ ] **Song stats across shows:** songs you've heard live most often, first and last time you heard each, rarities
 - [ ] **Artist pages:** every time you've seen an artist, side by side
 - [ ] **Fan uploads:** a per-show upload page you can share (e.g. on Reddit) where people pick the song they filmed and upload it to a review inbox. See the [spec](docs/fan-uploads-spec.md).
-- [ ] **Media import helper:** convert, rename by song, and (optionally) upload to cloud storage in one command
+- [x] **Media import:** sort clips into shows by capture time, shrink videos, tag songs on a screen, upload to Cloudflare R2
+- [ ] **Song recognition:** suggest the song from the clip's audio, not just its timing
 - [ ] **Ticket stub images:** attach a photo of the real ticket to each show
 - [ ] **Map view:** venues on a map, sized by number of visits
 

@@ -299,6 +299,7 @@ function render(cfg){
       <div class="actions">
         ${filmed.length ? `<button class="btn primary" data-play="0">▶ Play the show</button>` : ''}
         ${multi ? '' : `<a class="btn" href="${esc(sl.href)}" target="_blank" rel="noopener">${sl.label} ↗</a>`}
+        ${CB.local && (SONGS.some(x => x.media.some(m => m.file)) || s.extras.some(m => m.file) || (s.hidden || []).length) ? `<a class="btn" href="tag.html?id=${encodeURIComponent(s.id)}">Tag clips</a>` : ''}
       </div>
     </div>
     <div class="side"><span>No.</span><b>${String(s.no).padStart(2,'0')}</b></div>

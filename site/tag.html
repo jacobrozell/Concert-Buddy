@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tag clips · {{site_title}}</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;800;900&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/base.css">
+<style>
+/* Owner-only tool (local preview): your clips in filming order, each with a song picker. */
+.crumb{padding-block:22px 10px;font-family:var(--mono);font-size:12.5px;display:flex;gap:18px}
+.crumb a{text-decoration:none;color:var(--muted)} .crumb a:hover{color:var(--fg)}
+h1{font-family:var(--display);font-weight:900;font-size:clamp(40px,6vw,68px);line-height:.9;text-transform:uppercase;margin:8px 0 6px}
+.sub{color:var(--muted);margin:0 0 22px;max-width:70ch}
+.notice{border:1px dashed var(--line);border-radius:8px;padding:22px;color:var(--muted)}
+.notice code{color:var(--fg)}
+
+/* show picker */
+.shows{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.show-card{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--bg-2);text-decoration:none}
+.show-card:hover{border-color:var(--muted)}
+.show-card .d{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.show-card .a{font-family:var(--display);font-weight:800;font-size:24px;line-height:1}
+.show-card .c{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.show-card .c b{color:var(--accent);font-weight:500}
+.show-card.done .c b{color:var(--muted)}
+
+/* toolbar */
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:12px 0;border-bottom:1px solid var(--line);margin-bottom:6px}
+.bar .counts{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.bar .counts b{color:var(--fg);font-weight:500}
+.bar .acts{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--fg);color:var(--bg);font-family:var(--mono);font-size:13px;padding:10px 16px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+.toast.on{opacity:1}
+
+/* clip rows */
+.rows{list-style:none;margin:0;padding:0}
+.row{display:grid;grid-template-columns:92px 220px minmax(0,1fr);gap:16px;padding:16px 0;border-bottom:1px solid var(--line);align-items:start}
+.row .when{font-family:var(--mono);font-size:17px;line-height:1.2}
+.row .when small{display:block;font-size:12px;color:var(--muted);margin-top:4px}
+.row .media{width:220px;height:200px;background:#000;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.row .media video,.row .media img{width:100%;height:100%;object-fit:contain;display:block}
+.row .pick{display:flex;flex-direction:column;gap:8px;min-width:0}
+.row .file{font-family:var(--mono);font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.row select{font:inherit;font-size:15px;background:var(--bg-2);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;max-width:520px;width:100%}
+.row select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row.suggested select{border-style:dashed;color:var(--muted);font-style:italic}
+.row.changed select{border-color:var(--accent)}
+.row.hidden-clip .media{opacity:.35}
+.state{font-family:var(--mono);font-size:11.5px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:3px 8px;background:var(--bg-3);color:var(--fg)}
+.chip.sug{background:transparent;border:1px dashed var(--muted);color:var(--muted)}
+.chip.chg{background:var(--accent);color:#1d1824}
+.chip.ok{background:color-mix(in srgb,var(--fan) 30%,var(--bg-3))}
+.gapline{font-family:var(--mono);font-size:11.5px;color:var(--muted);padding:6px 0 0 108px}
+
+@media (max-width:720px){
+  .row{grid-template-columns:1fr;gap:10px}
+  .row .media{width:100%;height:240px}
+  .gapline{padding-left:0}
+  .bar .acts{margin-left:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="crumb"><a href="./">← All shows</a><span id="crumb-show"></span></nav>
+  <main id="page"><div class="empty">Loading…</div></main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="assets/common.js"></script>
+<script>
+const {esc, longDate, stubDate, getJSON} = CB;
+const id = new URLSearchParams(location.search).get('id');
+const page = document.getElementById('page');
+const SONG_MIN = 4.5;  // rough minutes per song, for guessing
+
+const clockOf = iso => { const m = /T(\d\d):(\d\d)/.exec(iso || ''); if (!m) return '—'; const h = +m[1]; return `${(h % 12) || 12}:${m[2]} ${h < 12 ? 'AM' : 'PM'}`; };
+const dur = s => s ? (s >= 60 ? `${Math.floor(s / 60)}m ${String(Math.round(s % 60)).padStart(2, '0')}s` : `${Math.round(s)}s`) : '';
+function toast(t){ const el = document.getElementById('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2600); }
+
+if (!CB.local){
+  page.innerHTML = `<h1>Tag clips</h1><div class="notice">Tagging works in your local preview, where it can save to your files. On your computer, run <code>python3 scripts/build.py --serve</code> and open <code>http://localhost:8000/tag.html</code>.</div>`;
+} else if (!id){
+  pickShow();
+} else {
+  tagShow();
+}
+
+/* ---------- which show? ---------- */
+async function pickShow(){
+  const data = await getJSON('data/concerts.json');
+  const shows = data.shows.filter(s => s.clips).sort((a, b) => (b.untagged > 0) - (a.untagged > 0) || b.date.localeCompare(a.date));
+  page.innerHTML = `<h1>Tag clips</h1>
+    <p class="sub">Pick a show to match its photos and videos to songs. Clips appear in the order you filmed them, and once you tag one, the ones after it get a suggested song based on the time between them.</p>
+    ${shows.length ? `<div class="shows">${shows.map(s => `<a class="show-card${s.untagged ? '' : ' done'}" href="tag.html?id=${encodeURIComponent(s.id)}">
+        <span class="d">${stubDate(s.date)}</span><span class="a">${esc(s.artist)}</span>
+        <span class="c">${s.clips} clip${s.clips > 1 ? 's' : ''} · ${s.untagged ? `<b>${s.untagged} to tag</b>` : '<b>all placed</b>'}</span></a>`).join('')}</div>`
+      : `<div class="notice">No clips yet. Put photos and videos in <code>media/inbox/</code> and run <code>python3 scripts/import_media.py --apply</code>.</div>`}`;
+}
+
+/* ---------- tag one show ---------- */
+let SHOW, ORDER, ROWS, dirty = false;
+
+async function tagShow(){
+  SHOW = await getJSON(`data/shows/${encodeURIComponent(id)}.json?t=${Date.now()}`);
+  document.title = `Tag clips · ${SHOW.artist}`;
+  document.getElementById('crumb-show').innerHTML = `<a href="show.html?id=${encodeURIComponent(id)}">View show →</a> <a href="tag.html">Other shows</a>`;
+
+  // Every song of the night in stage order, keyed like the show page: "<act>-<song>"
+  ORDER = [];
+  const optgroups = SHOW.acts.filter(a => a.sets.some(st => st.songs.length)).map(a => {
+    const opts = a.sets.flatMap(st => st.songs.map(x => { const key = `${a.n}-${x.n}`; ORDER.push(key);
+      return `<option value="${key}">${String(x.n).padStart(2, '0')} · ${esc(x.title)}${st.name !== 'Main set' ? ` (${esc(st.name)})` : ''}</option>`; })).join('');
+    return `<optgroup label="${esc(a.artist)}${SHOW.acts.length > 1 ? ' · ' + (a.role === 'opener' ? 'opener' : a.role) : ''}">${opts}</optgroup>`;
+  }).join('');
+  const SELECT = `<option value="">— Pick a song —</option>${optgroups}<option value="extra">Not a song (Other moments)</option><option value="hidden">Hide: don't put it on the site</option>`;
+
+  // Every file, wherever it currently sits
+  ROWS = [];
+  const add = (m, value, how) => { if (m.file) ROWS.push({m, value, current: value, how, t: m.taken ? Date.parse(m.taken) : null}); };
+  for (const a of SHOW.acts) for (const st of a.sets) for (const x of st.songs) for (const m of x.media) add(m, `${a.n}-${x.n}`, m.by_name ? 'matched by file name' : 'saved');
+  for (const m of SHOW.extras) add(m, m.auto ? '' : 'extra', m.auto ? '' : 'saved');
+  for (const m of (SHOW.hidden || [])) add(m, 'hidden', 'saved');
+  ROWS.sort((a, b) => (a.t ?? Infinity) - (b.t ?? Infinity) || a.m.file.localeCompare(b.m.file));
+
+  if (!ROWS.length){ page.innerHTML = `<h1>${esc(SHOW.artist)}</h1><div class="notice">No clips for this show yet.</div>`; return; }
+  if (!ORDER.length) toast('This show has no setlist yet, so clips can only go under Other moments');
+
+  page.innerHTML = `<h1>${esc(SHOW.artist)}</h1>
+    <p class="sub">${longDate(SHOW.date)} · ${esc(SHOW.venue)}. Clips are in filming order. Tag one and the clips after it get a suggested song (dashed); <b>Accept suggestions</b> keeps them all, or change any you disagree with.</p>
+    <div class="bar"><span class="counts" id="counts"></span>
+      <span class="acts"><button class="btn" id="accept">Accept suggestions</button><button class="btn primary" id="save" disabled>Save</button></span></div>
+    <ol class="rows">${ROWS.map((r, i) => {
+      const gap = i && r.t && ROWS[i-1].t ? Math.round((r.t - ROWS[i-1].t - (ROWS[i-1].m.seconds || 0) * 1000) / 60000) : 0;
+      return `${gap >= 10 ? `<li class="gapline">… ${gap} minutes …</li>` : ''}<li class="row" data-i="${i}">
+        <div class="when">${r.m.estimated ? '≈ ' : ''}${clockOf(r.m.taken)}<small>${dur(r.m.seconds)}${r.m.kind === 'image' ? 'photo' : ''}</small></div>
+        <div class="media">${r.m.kind === 'image' ? `<img loading="lazy" src="${esc(r.m.url)}" alt="">` : r.m.kind === 'video' ? `<video controls playsinline preload="metadata" src="${esc(r.m.url)}"></video>` : `<a href="${esc(r.m.url)}" target="_blank">open</a>`}</div>
+        <div class="pick"><span class="file">${esc(r.m.file)}</span><select aria-label="Song for ${esc(r.m.file)}">${SELECT}</select><span class="state"></span></div>
+      </li>`; }).join('')}</ol>`;
+
+  page.querySelectorAll('.row select').forEach(sel => sel.addEventListener('change', e => {
+    const r = ROWS[+e.target.closest('.row').dataset.i];
+    r.current = e.target.value; r.touched = true; refresh();
+  }));
+  document.getElementById('accept').addEventListener('click', () => { ROWS.forEach(r => { if (r.suggestion){ r.current = r.suggestion; r.touched = true; } }); refresh(); });
+  document.getElementById('save').addEventListener('click', save);
+  refresh();
+}
+
+// Suggest a song for each untagged clip from the last tagged one before it:
+// within ~1.5 min of its end = same song, otherwise one song per ~4.5 minutes.
+function suggest(){
+  let prev = null;
+  for (const r of ROWS){
+    r.suggestion = '';
+    const eff = r.current;
+    if (eff && eff !== 'extra' && eff !== 'hidden'){ prev = {i: ORDER.indexOf(eff), end: (r.t || 0) + (r.m.seconds || 0) * 1000}; continue; }
+    if (eff || !prev || !r.t || prev.i < 0) continue;
+    const gapMin = (r.t - prev.end) / 60000;
+    const steps = gapMin < 1.5 ? 0 : Math.max(1, Math.round(gapMin / SONG_MIN));
+    r.suggestion = ORDER[Math.min(prev.i + steps, ORDER.length - 1)];
+    prev = {i: ORDER.indexOf(r.suggestion), end: r.t + (r.m.seconds || 0) * 1000};
+  }
+}
+
+function refresh(){
+  suggest();
+  let tagged = 0, sugg = 0, untagged = 0, changed = 0;
+  ROWS.forEach((r, i) => {
+    const li = page.querySelector(`.row[data-i="${i}"]`), sel = li.querySelector('select');
+    const showing = r.current || r.suggestion;
+    sel.value = showing;
+    const isChanged = r.current !== r.value, isSug = !r.current && !!r.suggestion;
+    li.classList.toggle('suggested', isSug); li.classList.toggle('changed', isChanged); li.classList.toggle('hidden-clip', r.current === 'hidden');
+    li.querySelector('.state').innerHTML = isChanged ? '<span class="chip chg">Not saved</span>'
+      : isSug ? '<span class="chip sug">Suggested</span>'
+      : r.current ? `<span class="chip ok">${r.current === 'hidden' ? 'Hidden' : r.current === 'extra' ? 'Other moments' : 'Tagged'}</span>${r.how && r.how !== 'saved' ? ` ${esc(r.how)}` : ''}`
+      : '';
+    if (isChanged) changed++;
+    if (isSug) sugg++; else if (r.current) tagged++; else untagged++;
+  });
+  document.getElementById('counts').innerHTML = `<b>${tagged}</b> placed · <b>${sugg}</b> suggested · <b>${untagged}</b> to tag${changed ? ` · <b>${changed}</b> unsaved` : ''}`;
+  document.getElementById('save').disabled = !changed;
+  document.getElementById('accept').disabled = !sugg;
+  dirty = changed > 0;
+}
+
+async function save(){
+  const assign = {};
+  ROWS.forEach(r => { if (r.current !== r.value) assign[r.m.file] = r.current; });
+  const btn = document.getElementById('save'); btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const res = await fetch(`api/shows/${encodeURIComponent(id)}/tags`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({assign})});
+    const out = await res.json();
+    if (!out.ok) throw new Error(out.error || res.status);
+    dirty = false;
+    const n = Object.keys(assign).length;
+    await tagShow();
+    toast(`Saved ${n} clip${n > 1 ? 's' : ''} to shows/${id}.json`);
+  } catch (e){
+    btn.disabled = false; btn.textContent = 'Save';
+    toast(`Couldn't save: ${e.message}. Is build.py --serve still running?`);
+  }
+}
+
+window.addEventListener('beforeunload', e => { if (dirty){ e.preventDefault(); e.returnValue = ''; } });
+</script>
+</body>
+</html>

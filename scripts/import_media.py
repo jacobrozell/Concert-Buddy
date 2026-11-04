@@ -9,6 +9,8 @@ capture time (and location) your phone saved inside each file.
 Optional, after sorting:
     python3 scripts/import_media.py --convert 1080   # shrink videos to H.264 MP4 (plays everywhere,
                                                      # ~5-10x smaller); originals kept in originals/
+    python3 scripts/import_media.py --index          # refresh media/<show-id>/media.json for files you
+                                                     # put straight into show folders
 
 How a file is matched to a show:
   - The capture time is read from the file (videos: ffprobe; JPEG photos: EXIF).
@@ -35,13 +37,12 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import MEDIA_DIR, read_concerts  # noqa: E402
+from common import MANIFEST, MEDIA_DIR, read_concerts, read_manifest, write_manifest  # noqa: E402
 
 INBOX = MEDIA_DIR / "inbox"
 VIDEO_EXT = {".mp4", ".m4v", ".mov", ".webm"}
 PHOTO_EXT = {".jpg", ".jpeg", ".png", ".heic", ".webp"}
 NIGHT_ROLLOVER_HOURS = 5
-CAPTURE_LOG = ".captured.json"  # per show folder: file -> capture time, for ordering clips
 
 
 # ---------- reading capture info ----------
@@ -185,11 +186,26 @@ def plan():
             hits = sorted({d for d in dates if d in shows_by_date})
             if len(hits) == 1:
                 item["show"], item["how"] = shows_by_date[hits[0]][0], "capture time (timezone guessed)"
+                item["utc"] = base  # the stored time is UTC; the local zone is settled below
             else:
                 item["warn"] = "capture time has no timezone and fits " + ("no show" if not hits else f"{len(hits)} shows")
         elif date_from_name(p.name) in shows_by_date:
             item["show"], item["how"] = shows_by_date[date_from_name(p.name)][0], "date in file name"
         items.append(item)
+
+    # Times saved in UTC: borrow the zone from the same show's other clips, else assume
+    # the zone that puts the clip closest to 9 PM local.
+    for it in items:
+        if "utc" not in it:
+            continue
+        zones = [o.utcoffset() for o in (x["time"] for x in items if x["show"] and x["show"]["id"] == it["show"]["id"] and "utc" not in x and x["time"]) if o]
+        if zones:
+            off = statistics.mode(zones)
+        else:
+            want = dt.date.fromisoformat(it["show"]["date"])
+            fits = [dt.timedelta(hours=h) for h in range(-12, 15) if night_of(it["utc"] + dt.timedelta(hours=h)) == want]
+            off = min(fits, key=lambda o: abs(((it["utc"] + o).hour - 21) % 24))
+        it["time"] = (it["utc"] + off).replace(tzinfo=dt.timezone(off))
 
     # Camera-roll neighbours: IMG_5343 between IMG_5342 and IMG_5344 of the same show.
     numbered = {}
@@ -244,6 +260,57 @@ def describe(items):
             print(f"  {it['path'].name:44} {when}{where}  ({it['warn']})")
 
 
+def entry(path, it=None):
+    e = {}
+    if it and it.get("time"):
+        e["taken"] = it["time"].isoformat()
+    if it and it.get("duration"):
+        e["seconds"] = round(it["duration"], 1)
+    e["bytes"] = path.stat().st_size
+    return e
+
+
+def index():
+    """Rebuild media.json for every show folder from the files that are there.
+    Entries for files that are gone (e.g. moved to cloud storage) are kept."""
+    shows = {r["id"] for r in read_concerts()}
+    for folder in sorted(p for p in MEDIA_DIR.iterdir() if p.is_dir() and p.name in shows):
+        entries = read_manifest(folder.name)
+        added = 0
+        for f in sorted(folder.iterdir()):
+            ext = f.suffix.lower()
+            if not f.is_file() or f.name.startswith(".") or ext not in VIDEO_EXT | PHOTO_EXT:
+                continue
+            old = entries.get(f.name, {})
+            if old.get("bytes") == f.stat().st_size and (old.get("taken") or ext not in VIDEO_EXT | {".jpg", ".jpeg"}):
+                continue
+            t, has_tz, gps, dur = (probe_video(f) if ext in VIDEO_EXT else (*read_exif(f), 0.0) if ext in (".jpg", ".jpeg") else (None, False, None, 0.0))
+            it = {"time": t if (t is None or has_tz) else t.replace(tzinfo=None), "duration": dur}  # UTC-only times stay zone-less until fixed below
+            entries[f.name] = {**old, **entry(f, it)}
+            added += 1
+        # Times without a zone are UTC (see probe_video): use the zone of this show's other files.
+        zones = [parse_time(e["taken"])[0].utcoffset() for e in entries.values() if parse_time(e.get("taken"))[1]]
+        if zones:
+            off = statistics.mode(zones)
+            for e in entries.values():
+                t, has_tz = parse_time(e.get("taken"))
+                if t and not has_tz:
+                    e["taken"] = (t + off).replace(tzinfo=dt.timezone(off)).isoformat()
+        # No capture time at all (some photos): borrow the time of the camera-roll file just before it.
+        numbered = {}
+        for name, e in entries.items():
+            m = re.fullmatch(r"(IMG|DSC|PXL|MVI)_?(\d{3,})", Path(name).stem, re.I)
+            if m:
+                numbered[(m.group(1).upper(), int(m.group(2)))] = e
+        for (prefix, n), e in numbered.items():
+            if not e.get("taken") or e.get("estimated"):
+                prev = next((numbered[(prefix, k)] for k in range(n - 1, n - 20, -1) if numbered.get((prefix, k), {}).get("taken") and not numbered[(prefix, k)].get("estimated")), None)
+                if prev:
+                    e["taken"], e["estimated"] = prev["taken"], True
+        write_manifest(folder.name, entries)
+        print(f"  {folder.name}: {len(entries)} files ({added} updated)")
+
+
 def apply(items):
     moved = 0
     for it in items:
@@ -257,13 +324,22 @@ def apply(items):
             dest = dest_dir / f"{it['path'].stem}-{n}{it['path'].suffix}"
             n += 1
         shutil.move(str(it["path"]), dest)
-        log_path = dest_dir / CAPTURE_LOG
-        log = json.loads(log_path.read_text()) if log_path.exists() else {}
-        if it["time"]:
-            log[dest.name] = it["time"].isoformat()
-        log_path.write_text(json.dumps(dict(sorted(log.items(), key=lambda kv: kv[1])), indent=1) + "\n")
+        entries = read_manifest(it["show"]["id"])
+        entries[dest.name] = entry(dest, it)
+        write_manifest(it["show"]["id"], entries)
         moved += 1
     print(f"\nMoved {moved} file(s) into their show folders.")
+
+
+def rename_references(sid, old, new):
+    """Point shows/<id>.json at the converted file's new name."""
+    from common import load_show, save_show
+    show = load_show(sid)
+    if not show or old == new:
+        return
+    text = json.dumps(show)
+    if json.dumps(old) in text:
+        save_show(sid, json.loads(text.replace(json.dumps(old), json.dumps(new))))
 
 
 def convert(height):
@@ -290,12 +366,11 @@ def convert(height):
         if out.name.endswith("-small.mp4"):
             out = out.rename(p)
         after += out.stat().st_size
-        log_path = p.parent / CAPTURE_LOG
-        if log_path.exists():
-            log = json.loads(log_path.read_text())
-            if p.name in log and out.name != p.name:
-                log[out.name] = log.pop(p.name)
-                log_path.write_text(json.dumps(log, indent=1) + "\n")
+        entries = read_manifest(p.parent.name)
+        old = entries.pop(p.name, {})
+        entries[out.name] = {**old, "bytes": out.stat().st_size}
+        write_manifest(p.parent.name, entries)
+        rename_references(p.parent.name, p.name, out.name)
         print(f" {out.stat().st_size // 1048576} MB")
     print(f"\n{before / 1048576:.0f} MB → {after / 1048576:.0f} MB. Originals are in each show's originals/ folder (not committed).")
 
@@ -305,9 +380,12 @@ if __name__ == "__main__":
     ap.add_argument("--apply", action="store_true", help="move the files (default is a dry run)")
     ap.add_argument("--convert", type=int, metavar="HEIGHT", nargs="?", const=1080,
                     help="shrink videos already in show folders to H.264 MP4 (default 1080)")
+    ap.add_argument("--index", action="store_true", help="refresh media.json in every show folder")
     args = ap.parse_args()
     if args.convert:
         convert(args.convert)
+    elif args.index:
+        index()
     else:
         items = plan()
         if not items:

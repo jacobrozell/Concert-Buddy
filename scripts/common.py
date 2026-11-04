@@ -88,6 +88,32 @@ def clean_set_name(name, index=0):
     return name
 
 
+MANIFEST = "media.json"  # per show folder: every media file with its capture time, length and size
+
+
+def read_manifest(sid):
+    """media/<id>/media.json -> {file name: {"taken": iso, "seconds": float, "bytes": int}}.
+    It lists files even after they've been moved to cloud storage, so the build
+    (and GitHub Actions, which never sees the files) still knows they exist."""
+    p = MEDIA_DIR / sid / MANIFEST
+    if not p.exists():
+        legacy = MEDIA_DIR / sid / ".captured.json"  # older format: {file: iso time}
+        if legacy.exists():
+            return {k: {"taken": v} for k, v in json.loads(legacy.read_text(encoding="utf-8")).items()}
+        return {}
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
+def write_manifest(sid, entries):
+    folder = MEDIA_DIR / sid
+    folder.mkdir(parents=True, exist_ok=True)
+    ordered = dict(sorted(entries.items(), key=lambda kv: (kv[1].get("taken") or "~", kv[0])))
+    (folder / MANIFEST).write_text(json.dumps(ordered, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    legacy = folder / ".captured.json"
+    if legacy.exists():
+        legacy.unlink()
+
+
 def split_artists(text):
     """'The Shins / Silversun Pickups' -> ['The Shins', 'Silversun Pickups']."""
     return [a.strip() for a in re.split(r"\s+/\s+", text or "") if a.strip()]

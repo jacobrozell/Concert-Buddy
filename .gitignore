@@ -8,3 +8,11 @@ __pycache__/
 # Keep originals here; commit trimmed .mp4 clips or host them elsewhere (see README).
 media/**/originals/
 media/inbox/
+
+# Media lives in Cloudflare R2 (scripts/upload_media.py), so the photos and videos
+# themselves stay out of Git; only each show's list of files (media.json) is committed.
+# Keeping media in the repo instead? Delete the four lines below.
+media/**
+!media/*/
+!media/*/media.json
+!media/README.md

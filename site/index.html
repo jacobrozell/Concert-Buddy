@@ -212,8 +212,11 @@ function init(){
     document.getElementById('chart-title').textContent = g ? 'Shows by genre' : 'Shows per year'; });
   filt.compRe = compRe;
 
-  if (CFG.repo_url) document.getElementById('foot').innerHTML +=
+  const foot = document.getElementById('foot');
+  foot.innerHTML += ` <a href="concerts.csv" download>Download this log (CSV)</a> · <a href="concerts_template.csv" download>blank template</a>.`;
+  if (CFG.repo_url) foot.innerHTML +=
     ` Made with ConcertBuddy — <a href="${esc(CFG.repo_url)}">grab the template and log your own shows</a>.`;
+  if (CB.local) foot.innerHTML = `<a href="tag.html">Tag clips with songs</a> (local preview only) · ` + foot.innerHTML;
 }
 
 function setGenre(g){

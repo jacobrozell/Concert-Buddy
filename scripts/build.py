@@ -18,14 +18,16 @@ import socketserver
 import sys
 from functools import partial
 from pathlib import Path
-from urllib.parse import parse_qs, quote, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
-    MEDIA_DIR, ROOT, bill, clean_set_name, load_show, read_concerts, read_config, read_genres, show_acts, slugify,
+    MEDIA_DIR, ROOT, bill, clean_set_name, save_show, load_show, read_concerts, read_config, read_genres, read_manifest, show_acts,
+    slugify,
 )
 
 OUT = ROOT / "_site"
+SERVING = False  # set by --serve: media is served straight from media/ instead of being copied
 SITE_SRC = ROOT / "site"
 
 VIDEO_EXT = {".mp4", ".m4v", ".mov", ".webm"}
@@ -104,7 +106,9 @@ def resolve_media(item, sid, cfg, default_by):
         kind = "video" if ext in VIDEO_EXT else "image" if ext in IMAGE_EXT else "audio" if ext in AUDIO_EXT else "link"
         base = cfg["media_base_url"].rstrip("/")
         rel = f"{quote(sid)}/{quote(src)}"
-        out.update(kind=kind, file=src, url=f"{base}/{rel}" if base else f"media/{rel}")
+        # In the local preview, play files from your own disk even when they also live in the cloud.
+        local = not base or (SERVING and (MEDIA_DIR / sid / src).exists())
+        out.update(kind=kind, file=src, url=f"media/{rel}" if local else f"{base}/{rel}")
 
     if start is not None:
         out["start"] = start
@@ -203,31 +207,55 @@ def build_show(row, cfg, genres, warnings):
     def all_media():
         return [*extras, *(m for so in all_songs() for m in so["media"])]
 
-    # Files dropped into media/<id>/ that aren't already referenced by name.
-    referenced = {m["file"] for m in all_media() if m.get("file")}
+    # Your own files: whatever is in media/<id>/ plus anything listed in media/<id>/media.json
+    # (files that now live only in cloud storage are still listed there).
     folder = MEDIA_DIR / sid
-    if folder.is_dir():
-        for f in sorted(folder.iterdir()):
-            if f.name.startswith(".") or f.suffix.lower() not in MEDIA_EXT or f.name in referenced:
-                continue
-            item = resolve_media({"src": f.name}, sid, cfg, "me")
-            song = song_from_filename(f.name, acts)
-            if song:
-                song["media"].append(item)
-            else:
-                if "--" in f.stem and all_songs():
-                    warnings.append(f"{sid}: '{f.name}' didn't match a song on the setlist, so it went under Other moments")
-                extras.append(item)
-            if f.suffix.lower() == ".heic":
-                warnings.append(f"{sid}: '{f.name}' is HEIC, which only Safari shows. Export it as JPEG.")
-            if f.stat().st_size > 95 * 1024 * 1024 and not cfg["media_base_url"]:
-                warnings.append(f"{sid}: '{f.name}' is over 95 MB; GitHub rejects files over 100 MB. See README › Big videos.")
+    manifest = read_manifest(sid)
+    hidden = set(src.get("hidden", []))
+    local_files = {f.name: f for f in folder.iterdir()} if folder.is_dir() else {}
+    names = sorted({n for n, f in local_files.items() if f.is_file() and not n.startswith(".") and f.suffix.lower() in MEDIA_EXT} | set(manifest))
+    referenced = {m["file"] for m in all_media() if m.get("file")}
+    for name in names:
+        if name in referenced or name in hidden:
+            continue
+        item = resolve_media({"src": name}, sid, cfg, "me")
+        item["auto"] = True  # found in the folder, not placed by hand
+        song = song_from_filename(name, acts)
+        if song:
+            item["by_name"] = True
+            song["media"].append(item)
+        else:
+            if "--" in Path(name).stem and all_songs():
+                warnings.append(f"{sid}: '{name}' didn't match a song on the setlist, so it went under Other moments")
+            extras.append(item)
+        f = local_files.get(name)
+        if f and f.suffix.lower() == ".heic":
+            warnings.append(f"{sid}: '{name}' is HEIC, which only Safari shows. Export it as JPEG.")
+        if f and f.stat().st_size > 95 * 1024 * 1024 and not cfg["media_base_url"]:
+            warnings.append(f"{sid}: '{name}' is over 95 MB; GitHub rejects files over 100 MB. See README › Big videos.")
     for m in all_media():
-        if m.get("file") and not (folder / m["file"]).exists() and not cfg["media_base_url"]:
+        if m.get("file") and m["file"] not in local_files and m["file"] not in manifest and not cfg["media_base_url"]:
             warnings.append(f"{sid}: shows/{sid}.json mentions '{m['file']}' but it isn't in media/{sid}/")
+    all_media_now = all_media()
+    for m in all_media_now:  # when it was filmed, for ordering and display
+        info = manifest.get(m.get("file"), {})
+        if info.get("taken"):
+            m["taken"] = info["taken"]
+        if info.get("seconds"):
+            m["seconds"] = info["seconds"]
+        if info.get("estimated"):
+            m["estimated"] = True
+    extras = [m for m in extras if m.get("file") not in hidden]
+    hidden_items = []
+    if SERVING:  # the tagging screen needs to see hidden files too
+        for name in sorted(hidden):
+            h = resolve_media({"src": name}, sid, cfg, "me")
+            h.update({k: v for k, v in manifest.get(name, {}).items() if k in ("taken", "seconds")})
+            hidden_items.append(h)
+    extras.sort(key=lambda m: m.get("taken") or "~")
 
     for so in all_songs():
-        so["media"].sort(key=lambda m: m["by"] != "me")  # your own footage first
+        so["media"].sort(key=lambda m: (m["by"] != "me", m.get("taken") or "~"))  # your own footage first, then filming order
 
     # The show's genres are its headlining acts' genres, main genre first.
     show_genres = []
@@ -249,6 +277,8 @@ def build_show(row, cfg, genres, warnings):
         "acts": acts,
         "extras": extras,
     }
+    if SERVING:
+        show["hidden"] = hidden_items
     summary = {k: show[k] for k in ("id", "artist", "date", "venue", "location", "opener", "with", "notes", "genres")}
     summary.update(
         acts=[{"artist": a["artist"], "role": a["role"], "songs": sum(len(st["songs"]) for st in a["sets"])} for a in acts],
@@ -256,6 +286,7 @@ def build_show(row, cfg, genres, warnings):
         filmed=sum(1 for so in songs if so["media"]),
         mine=sum(1 for so in songs if any(m["by"] == "me" for m in so["media"])),
         clips=sum(len(so["media"]) for so in songs) + len(extras),
+        untagged=sum(1 for m in extras if m.get("auto")),
         provisional=any(a["provisional"] for a in acts),
     )
     return show, summary
@@ -284,7 +315,7 @@ def fill_page_meta(cfg, summaries):
         page.write_text(text, encoding="utf-8")
 
 
-def build():
+def build(quiet=False):
     cfg = read_config()
     rows = read_concerts()
     genres = read_genres()
@@ -308,10 +339,17 @@ def build():
 
     fill_page_meta(cfg, summaries)
 
-    if MEDIA_DIR.is_dir() and not cfg["media_base_url"]:
-        shutil.copytree(MEDIA_DIR, OUT / "media", ignore=shutil.ignore_patterns(".*", "README*"))
+    if MEDIA_DIR.is_dir() and not cfg["media_base_url"] and not SERVING:
+        shutil.copytree(MEDIA_DIR, OUT / "media", ignore=shutil.ignore_patterns(".*", "README*", "*.json", "originals", "inbox"))
     (OUT / ".nojekyll").write_text("")
+    # Downloadable copies: this log, and a blank template to start your own
+    shutil.copy(ROOT / "concerts.csv", OUT / "concerts.csv")
+    tpl = ROOT / "templates" / "concerts_template.csv"
+    if tpl.exists():
+        shutil.copy(tpl, OUT / "concerts_template.csv")
 
+    if quiet:
+        return
     with_setlist = [s for s in summaries if s["songs"]]
     acts = [a for s in summaries for a in s["acts"]]
     print(f"Built {len(summaries)} shows, {len(acts)} acts → {OUT.relative_to(ROOT)}/")
@@ -332,11 +370,140 @@ def acts_with_genres(summaries):
     return [a["artist"] for s in summaries for a in s["acts"] if genres.get(slugify(a["artist"]))]
 
 
+class PreviewHandler(http.server.SimpleHTTPRequestHandler):
+    """Serves _site/, plus media/ straight from your disk (with the byte-range
+    support Safari needs to play video), plus the tagging screen's save endpoint."""
+
+    def translate_path(self, path):
+        p = unquote(urlparse(path).path)
+        if p.startswith("/media/"):
+            target = (MEDIA_DIR / p[len("/media/"):]).resolve()
+            if MEDIA_DIR.resolve() in target.parents:
+                return str(target)
+        return super().translate_path(path)
+
+    def send_head(self):
+        rng = self.headers.get("Range")
+        path = self.translate_path(self.path)
+        if not rng or not os.path.isfile(path):
+            return super().send_head()
+        size = os.path.getsize(path)
+        m = re.match(r"bytes=(\d*)-(\d*)", rng)
+        start, end = (int(m.group(1)) if m.group(1) else None, int(m.group(2)) if m.group(2) else None) if m else (None, None)
+        if start is None:  # suffix range: last N bytes
+            start, end = max(0, size - (end or 0)), size - 1
+        end = min(end if end is not None else size - 1, size - 1)
+        if start > end:
+            self.send_error(416)
+            return None
+        f = open(path, "rb")
+        f.seek(start)
+        self.send_response(206)
+        self.send_header("Content-Type", self.guess_type(path))
+        self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+        self.send_header("Content-Length", str(end - start + 1))
+        self.send_header("Accept-Ranges", "bytes")
+        self.end_headers()
+        self._remaining = end - start + 1
+        return f
+
+    def copyfile(self, source, outputfile):
+        remaining = getattr(self, "_remaining", None)
+        if remaining is None:
+            return super().copyfile(source, outputfile)
+        try:
+            while remaining > 0:
+                chunk = source.read(min(1 << 20, remaining))
+                if not chunk:
+                    break
+                outputfile.write(chunk)
+                remaining -= len(chunk)
+        except (BrokenPipeError, ConnectionResetError):
+            pass  # the browser stopped reading (normal while scrubbing video)
+        finally:
+            self._remaining = None
+
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+
+    def do_POST(self):
+        m = re.fullmatch(r"/api/shows/([\w.-]+)/tags", urlparse(self.path).path)
+        if not m:
+            return self.send_error(404)
+        try:
+            body = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}")
+            save_tags(m.group(1), body.get("assign", {}))
+            build(quiet=True)
+            payload, code = {"ok": True}, 200
+        except (ValueError, KeyError) as e:
+            payload, code = {"ok": False, "error": str(e)}, 400
+        data = json.dumps(payload).encode()
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def log_message(self, fmt, *args):
+        if args and str(args[1])[:1] in "45":
+            super().log_message(fmt, *args)
+
+
+def save_tags(sid, assign):
+    """Apply the tagging screen's choices to shows/<id>.json.
+    assign: {file name: "<act n>-<song n>" | "extra" | "hidden" | ""}  ("" = untag)."""
+    rows = {r["id"]: r for r in read_concerts()}
+    if sid not in rows:
+        raise ValueError(f"no show {sid}")
+    row, src = rows[sid], load_show(sid) or {}
+    acts_src = {slugify(a.get("artist", "")): a for a in show_acts(src, row)}
+    stage = bill(row, src.get("order"))
+    names = set(assign)
+
+    def is_one_of(m):
+        name = m if isinstance(m, str) else (m.get("src") or m.get("file") or m.get("url") or "")
+        return name in names
+
+    for a in acts_src.values():
+        for st in a.get("sets", []):
+            for so in st.get("songs", []):
+                if so.get("media"):
+                    so["media"] = [m for m in so["media"] if not is_one_of(m)]
+                    if not so["media"]:
+                        del so["media"]
+    extras = [m for m in src.get("extras", []) if not is_one_of(m)]
+    hidden = [h for h in src.get("hidden", []) if h not in names]
+
+    for name, target in assign.items():
+        if target == "extra":
+            extras.append({"src": name})
+        elif target == "hidden":
+            hidden.append(name)
+        elif target:
+            act_n, song_n = (int(x) for x in target.split("-"))
+            act = acts_src.get(slugify(stage[act_n - 1]["artist"]))
+            songs = [so for st in (act or {}).get("sets", []) for so in st.get("songs", [])]
+            if not act or not 1 <= song_n <= len(songs):
+                raise ValueError(f"no song {target} in {sid}")
+            songs[song_n - 1].setdefault("media", []).append({"src": name})
+
+    out = {k: v for k, v in src.items() if k not in ("sets", "source", "provisional", "acts", "extras", "hidden")}
+    out["acts"] = [acts_src[slugify(a["artist"])] for a in stage if slugify(a["artist"]) in acts_src]
+    out["acts"] += [a for k, a in acts_src.items() if k not in {slugify(x["artist"]) for x in stage}]
+    if extras:
+        out["extras"] = extras
+    if hidden:
+        out["hidden"] = sorted(set(hidden))
+    save_show(sid, out)
+
+
 def serve(port):
-    handler = partial(http.server.SimpleHTTPRequestHandler, directory=str(OUT))
-    socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("", port), handler) as httpd:
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
+    socketserver.ThreadingTCPServer.daemon_threads = True
+    with socketserver.ThreadingTCPServer(("", port), partial(PreviewHandler, directory=str(OUT))) as httpd:
         print(f"Previewing at http://localhost:{port}  (Ctrl+C to stop)")
+        print(f"Tag your clips with songs at http://localhost:{port}/tag.html")
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
@@ -348,6 +515,8 @@ if __name__ == "__main__":
     ap.add_argument("--serve", action="store_true", help="preview the built site locally")
     ap.add_argument("--port", type=int, default=8000)
     args = ap.parse_args()
+    if args.serve:
+        SERVING = True
     build()
     if args.serve:
         serve(args.port)
