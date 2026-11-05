@@ -7,8 +7,8 @@
 #   tools/shazam/build.sh                                                  # later: remembers both
 #
 # Shazam only answers when the signing certificate and the bundle ID belong to the
-# SAME developer team, and that bundle ID has ShazamKit turned on (README › Song
-# tagging with Shazam). If your Mac has certificates for more than one team (say,
+# SAME developer team, and that bundle ID has ShazamKit turned on (docs/shazam.md).
+# If your Mac has certificates for more than one team (say,
 # a work account too), pick yours with --sign and part of its name or team ID.
 # The bundle ID and certificate are remembered in tools/shazam/bundle-id and
 # tools/shazam/sign-identity (neither is committed).
@@ -26,7 +26,7 @@ done
 BUNDLE_ID="${BUNDLE_ID:-${CB_SHAZAM_BUNDLE_ID:-$(cat bundle-id 2>/dev/null || true)}}"
 if [ -z "$BUNDLE_ID" ]; then
   echo "Usage: tools/shazam/build.sh com.yourname.concertbuddy.shazam [--sign \"Your Name\"]" >&2
-  echo "  (a bundle ID you've registered with ShazamKit turned on; see README › Song tagging with Shazam)" >&2
+  echo "  (a bundle ID you've registered with ShazamKit turned on; see docs/shazam.md)" >&2
   exit 2
 fi
 

@@ -131,6 +131,10 @@ function bars(rows, {label, href, count = r => r.count, note = () => '', max = 1
 
 function render(S, C){
   const cfg = C.config, T = S.totals, shows = C.shows;
+  if (!shows.length){
+    document.getElementById('page').innerHTML = `<div class="empty">No shows yet, so no stats. Add some to <code>concerts.csv</code> and they'll show up here.</div>`;
+    return;
+  }
   const byId = Object.fromEntries(shows.map(s => [s.id, s]));
   const y0 = shows.map(s => s.date).sort()[0]?.slice(0, 4);
   document.title = `Stats · ${cfg.site_title || 'Concert Log'}`;

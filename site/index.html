@@ -127,7 +127,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   <header class="hero">
     <div>
       <div class="eyebrow" id="eyebrow">&nbsp;</div>
-      <h1><span class="count" id="total">—</span> shows<br>and counting</h1>
+      <h1><span class="count" id="total">—</span> <span id="shows-word">shows</span><br>and counting</h1>
       <p class="lede" id="lede"></p>
       <div class="facts" id="facts"></div>
     </div>
@@ -160,6 +160,7 @@ const filt = {q:'', state:null, genre:'', comp:false, filmed:false, order:'desc'
 
 getJSON('data/concerts.json').then(data => {
   CFG = data.config; SHOWS = data.shows;
+  if (!SHOWS.length) return emptyLog();
   SHOWS.sort((a,b) => a.date.localeCompare(b.date));
   SHOWS.forEach((s,i) => { s.no = i+1; s.st = region(s.location); s.y = +s.date.slice(0,4); s.tilt = (((i*37)%7)-3)*0.45; });
   init(); render();
@@ -167,12 +168,25 @@ getJSON('data/concerts.json').then(data => {
   document.getElementById('timeline').innerHTML = `<div class="empty">Couldn't load data/concerts.json. Run <code>python3 scripts/build.py --serve</code> and open the page from there.<br>${esc(err.message)}</div>`;
 });
 
+// A brand-new log (scripts/start_fresh.py leaves concerts.csv with just its headers).
+function emptyLog(){
+  document.title = CFG.site_title || 'Concert Log';
+  document.getElementById('eyebrow').textContent = CFG.owner || ' ';
+  document.getElementById('total').textContent = '0';
+  document.getElementById('lede').textContent = CFG.tagline || '';
+  document.querySelector('.chart').hidden = true;
+  document.querySelector('.controls').hidden = true;
+  document.getElementById('timeline').innerHTML = `<div class="empty">No shows yet. Add one row per show to <code>concerts.csv</code>
+    (artist, date as YYYY-MM-DD, venue, city), push, and it appears here as a ticket stub.${CFG.repo_url ? ` The <a href="${esc(CFG.repo_url)}#readme">README</a> walks through it.` : ''}</div>`;
+}
+
 function init(){
   document.title = CFG.site_title || 'Concert Log';
   const y0 = Math.min(...SHOWS.map(s=>s.y)), y1 = Math.max(...SHOWS.map(s=>s.y));
   document.getElementById('eyebrow').textContent = [CFG.owner, `live music since ${y0}`].filter(Boolean).join(' · ');
   document.getElementById('lede').textContent = CFG.tagline || '';
   document.getElementById('total').textContent = SHOWS.length;
+  document.getElementById('shows-word').textContent = SHOWS.length === 1 ? 'show' : 'shows';
 
   const count = k => { const m = {}; SHOWS.forEach(s => { const v = k(s); if (v) m[v] = (m[v]||0)+1; }); return Object.entries(m).sort((a,b)=>b[1]-a[1]); };
   const topA = count(s=>s.artist)[0], topV = count(s=>s.venue)[0], cities = new Set(SHOWS.map(s=>s.location)).size;

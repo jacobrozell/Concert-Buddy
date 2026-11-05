@@ -5,7 +5,7 @@ __pycache__/
 .env
 
 # Raw phone videos are usually too big for GitHub (100 MB per file limit).
-# Keep originals here; commit trimmed .mp4 clips or host them elsewhere (see README).
+# Keep originals here; commit trimmed .mp4 clips or host them elsewhere (see docs/hosting-media.md).
 media/**/originals/
 media/inbox/
 

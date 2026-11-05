@@ -2,7 +2,7 @@
 """Upload your photos and videos to a Cloudflare R2 bucket, so they don't have
 to live in the Git repo (GitHub allows 100 MB per file and ~1 GB per site).
 
-One-time setup: see README › "Hosting media on Cloudflare R2". Your keys go in a
+One-time setup: see docs/hosting-media.md. Your keys go in a
 file called .env next to concerts.csv (it's git-ignored, never committed):
 
     R2_ACCOUNT_ID=…            # Cloudflare dashboard › R2 › Account details

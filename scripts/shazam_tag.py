@@ -2,7 +2,7 @@
 """Let Shazam work out which song is playing in each clip, and tag it.
 
 One-time setup (a Mac with Xcode, macOS 14+, and an Apple developer account):
-see README › "Song tagging with Shazam", then build the helper:
+see docs/shazam.md, then build the helper:
 
     tools/shazam/build.sh com.yourname.concertbuddy.shazam
 
@@ -125,7 +125,7 @@ def main():
     if todo:
         if not BIN.exists():
             raise SystemExit(f"\nThe Shazam helper isn't built yet ({BIN.relative_to(ROOT)}).\n"
-                             "On your Mac: tools/shazam/build.sh com.yourname.concertbuddy.shazam  (README › Song tagging with Shazam)")
+                             "On your Mac: tools/shazam/build.sh com.yourname.concertbuddy.shazam  (docs/shazam.md)")
         deadline = time.time() + args.time_limit if args.time_limit else None
         done = 0
         for n, (path, out) in enumerate(listen(todo, deadline), 1):

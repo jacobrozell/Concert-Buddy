@@ -245,7 +245,7 @@ def build_show(row, cfg, genres, warnings):
         if f and f.suffix.lower() == ".heic":
             warnings.append(f"{sid}: '{name}' is HEIC, which only Safari shows. Export it as JPEG.")
         if f and f.stat().st_size > 95 * 1024 * 1024 and not cfg["media_base_url"]:
-            warnings.append(f"{sid}: '{name}' is over 95 MB; GitHub rejects files over 100 MB. See README › Big videos.")
+            warnings.append(f"{sid}: '{name}' is over 95 MB; GitHub rejects files over 100 MB. See docs/hosting-media.md.")
     for m in all_media():
         if m.get("file") and m["file"] not in local_files and m["file"] not in manifest and not cfg["media_base_url"]:
             warnings.append(f"{sid}: shows/{sid}.json mentions '{m['file']}' but it isn't in media/{sid}/")

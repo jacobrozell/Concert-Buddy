@@ -192,7 +192,7 @@ for path in files {
                         FileHandle.standardError.write("""
                             cb-shazam: Shazam returned an error: \(error)
                               If it mentions authorization or a developer token, ShazamKit isn't enabled for this
-                              tool's bundle ID yet. See README › Song tagging with Shazam.\n
+                              tool's bundle ID yet. See docs/shazam.md in ConcertBuddy.\n
                             """.data(using: .utf8)!)
                     }
                 }
