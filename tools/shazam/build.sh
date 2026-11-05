@@ -78,12 +78,19 @@ cat > Info.plist <<PLIST
 </plist>
 PLIST
 
-echo "Compiling…"
+echo "Compiling..."
 xcrun swiftc -O -swift-version 5 -target "$(uname -m)-apple-macos14" main.swift -o cb-shazam \
   -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker Info.plist
 
-echo "Signing as $IDENTITY (team $(team_of "$IDENTITY")) for $BUNDLE_ID…"
+echo "Signing as ${IDENTITY} (team $(team_of "$IDENTITY")) for ${BUNDLE_ID}..."
 codesign --force --sign "$IDENTITY" --identifier "$BUNDLE_ID" cb-shazam
+# Shazam goes by these two: the identifier must be the bundle ID, the team the one that owns it
+SIGNED="$(codesign -dv cb-shazam 2>&1)"
+grep -E '^(Identifier|TeamIdentifier)=' <<< "$SIGNED" | sed 's/^/  /' || true
+if ! grep -qx "Identifier=${BUNDLE_ID}" <<< "$SIGNED"; then
+  echo "Signing didn't take (identifier isn't ${BUNDLE_ID}); Shazam will refuse it." >&2
+  exit 1
+fi
 
 echo "Built tools/shazam/cb-shazam. Try it on one clip:"
 echo "  tools/shazam/cb-shazam media/<show-id>/IMG_1234.MOV"
