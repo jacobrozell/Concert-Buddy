@@ -531,12 +531,29 @@ def encoder_choice(pref="auto"):
     return "apple" if "h264_videotoolbox" in encoders else "x264"
 
 
+_KEEP_TIMING = None
+
+
+def keep_timing():
+    """Keep each frame's original timing. iPhone clips say 120 fps in the container but are
+    really ~30/60 fps, and without this ffmpeg pads them out with duplicate frames (4x the
+    frames, twice the size). The option was renamed in ffmpeg 5."""
+    global _KEEP_TIMING
+    if _KEEP_TIMING is None:
+        out = subprocess.run(["ffmpeg", "-version"], capture_output=True, text=True).stdout
+        m = re.search(r"ffmpeg version n?(\d+)\.", out)
+        _KEEP_TIMING = ["-fps_mode", "vfr"] if m and int(m.group(1)) >= 5 else ["-vsync", "vfr"]
+    return _KEEP_TIMING
+
+
 def encode(src, out, height, encoder):
     # Short side becomes `height` (never upscaled); sizes kept even, which H.264 needs.
     scale = f"scale='if(gt(iw,ih),-2,trunc(min({height},iw)/2)*2)':'if(gt(iw,ih),trunc(min({height},ih)/2)*2,-2)'"
     video = (["-c:v", "h264_videotoolbox", "-b:v", "3500k" if height >= 1080 else "1800k", "-maxrate", "6M", "-bufsize", "8M"]
              if encoder == "apple" else ["-c:v", "libx264", "-crf", "26", "-preset", "veryfast"])
-    cmd = ["ffmpeg", "-loglevel", "error", "-y", "-i", str(src), "-vf", scale, *video, "-pix_fmt", "yuv420p",
+    # The first video and first audio track: iPhones add a spatial-audio track ffmpeg can't decode.
+    cmd = ["ffmpeg", "-loglevel", "error", "-y", "-i", str(src), "-map", "0:v:0", "-map", "0:a:0?", "-vf", scale,
+           *keep_timing(), *video, "-pix_fmt", "yuv420p",
            "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", "-map_metadata", "-1", str(out)]
     ok = subprocess.run(cmd).returncode == 0 and out.exists() and out.stat().st_size > 0
     if not ok and out.exists():
