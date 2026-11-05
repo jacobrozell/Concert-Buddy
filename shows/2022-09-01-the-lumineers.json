@@ -1,0 +1,137 @@
+{
+ "acts": [
+  {
+   "artist": "James Bay",
+   "sets": [
+    {
+     "name": "Main set",
+     "songs": [
+      {
+       "title": "Best Fake Smile"
+      },
+      {
+       "title": "Endless Summer Nights"
+      },
+      {
+       "title": "Give Me the Reason"
+      },
+      {
+       "title": "If You Ever Want to Be in Love"
+      },
+      {
+       "title": "Us"
+      },
+      {
+       "title": "Let It Go"
+      },
+      {
+       "title": "One Life"
+      },
+      {
+       "title": "Wanderlust"
+      },
+      {
+       "title": "Craving"
+      },
+      {
+       "title": "Hold Back the River"
+      }
+     ]
+    }
+   ],
+   "source": "https://www.jambase.com/show/the-lumineers-bridgestone-arena-20220901"
+  },
+  {
+   "artist": "The Lumineers",
+   "sets": [
+    {
+     "name": "Main set",
+     "songs": [
+      {
+       "title": "BRIGHTSIDE"
+      },
+      {
+       "title": "Cleopatra"
+      },
+      {
+       "title": "Ho Hey"
+      },
+      {
+       "title": "Angela"
+      },
+      {
+       "title": "A.M. RADIO"
+      },
+      {
+       "title": "Dead Sea"
+      },
+      {
+       "title": "Flowers in Your Hair"
+      },
+      {
+       "title": "WHERE WE ARE"
+      },
+      {
+       "title": "My Cell"
+      },
+      {
+       "title": "Slow It Down"
+      },
+      {
+       "title": "Charlie Boy"
+      },
+      {
+       "title": "NEVER REALLY MINE"
+      },
+      {
+       "title": "Gloria"
+      },
+      {
+       "title": "Sleep on the Floor"
+      },
+      {
+       "title": "Ophelia"
+      },
+      {
+       "title": "Leader of the Landslide",
+       "note": "with a bit of \"You Can't Always Get What You Want\" (The Rolling Stones)"
+      },
+      {
+       "title": "BIRTHDAY"
+      },
+      {
+       "title": "ROLLERCOASTER"
+      },
+      {
+       "title": "Gale Song"
+      },
+      {
+       "title": "Big Parade"
+      }
+     ]
+    },
+    {
+     "name": "Encore",
+     "songs": [
+      {
+       "title": "Donna"
+      },
+      {
+       "title": "Submarines"
+      },
+      {
+       "title": "REMINGTON"
+      },
+      {
+       "title": "REPRISE"
+      },
+      {
+       "title": "Stubborn Love"
+      }
+     ]
+    }
+   ],
+   "source": "https://www.jambase.com/show/the-lumineers-bridgestone-arena-20220901"
+  }
+ ]
+}
