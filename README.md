@@ -8,9 +8,32 @@ No server, no database, no accounts, no monthly bill. Your log is a CSV file plu
 
 ---
 
-## Start your own
+## What you need
 
-You need a GitHub account, `git`, and Python 3.9 or newer (`python3 --version`; macOS and Linux have it).
+**To have a site** (all free):
+
+| | What it's for | How to get it |
+|---|---|---|
+| **A GitHub account** | Holds your log and publishes the site with GitHub Pages | [github.com/signup](https://github.com/signup). Pages is free for **public** repos; a private repo needs a paid plan ([GitHub Pro](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site)) |
+| **git** | Copies the repo to your computer and sends your changes back | Mac: `xcode-select --install`. Windows: [git-scm.com](https://git-scm.com/downloads). Most Linux: already there |
+| **Python 3.9 or newer** | Runs the scripts that build the site. Nothing to `pip install` | Mac and Linux: already there (`python3 --version`). Windows: [python.org](https://www.python.org/downloads/) |
+| **A spreadsheet app or text editor** | Editing `concerts.csv`, your list of shows | Numbers, Excel, Google Sheets (export as CSV), or any text editor |
+
+That's enough for a timeline of every show you've been to. Everything below is optional, and only needed for the feature next to it.
+
+**To add more:**
+
+| Feature | You also need | Notes |
+|---|---|---|
+| Setlists filled in automatically | A free [setlist.fm API key](https://www.setlist.fm/settings/api) | Without one, you can still paste setlists in by hand ([Setlists](docs/setlists.md)) |
+| Your phone videos sorted into shows and shrunk | [ffmpeg](https://ffmpeg.org/download.html) | Mac: `brew install ffmpeg` ([Homebrew](https://brew.sh)). Linux: `sudo apt install ffmpeg` |
+| Shazam naming the song in each clip | A Mac with macOS 14 or later, Xcode, and an Apple developer account that can register app IDs (the [Apple Developer Program](https://developer.apple.com/programs/)) | Shazam mostly recognises studio recordings, so expect it to name a minority of live clips ([Shazam](docs/shazam.md)) |
+| Your videos playing on the public site | A [Cloudflare](https://dash.cloudflare.com/sign-up) account with R2 | R2's free tier covers 10 GB of storage a month, with free downloads ([pricing](https://developers.cloudflare.com/r2/pricing/)). A few GB of photos can live in GitHub instead ([Hosting](docs/hosting-media.md)) |
+| Other fans' clips | Nothing | Links to YouTube, Instagram and TikTok go straight into the show's file ([Fan videos](docs/fan-videos.md)) |
+
+---
+
+## Start your own
 
 **1. Make your copy.** On this repo's GitHub page, click **Use this template → Create a new repository**. The name you pick becomes part of your address: `https://<you>.github.io/<repo-name>/`. Then:
 
