@@ -60,6 +60,8 @@ h1{font-family:var(--display);font-weight:900;font-size:clamp(40px,6vw,68px);lin
 .heard b{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:var(--fan);margin-right:4px}
 .heard i{font-style:normal;font-family:var(--mono);font-size:11.5px}
 .heard em{font-style:normal;color:var(--accent)}
+.heard.wrong{opacity:.65}
+.heard.wrong b{color:var(--muted)}
 .chip.ok{background:color-mix(in srgb,var(--fan) 30%,var(--bg-3))}
 .gapline{font-family:var(--mono);font-size:11.5px;color:var(--muted);padding:6px 0 0 108px}
 
@@ -162,7 +164,10 @@ async function tagShow(){
 function heardLine(z){
   if (!z) return '';
   if (!z.title) return `<span class="heard">Shazam didn't recognise this one</span>`;
-  return `<span class="heard"><b>Shazam:</b> ${esc(z.title)} — ${esc(z.artist)}${z.windows > 1 ? ` <i>(${z.votes} of ${z.windows} listens)</i>` : ''}${z.key ? '' : ' · <em>not on the setlist</em>'}</span>`;
+  const n = z.windows > 1 ? ` <i>(${z.votes} of ${z.windows} listens)</i>` : '';
+  if (z.verdict === 'unrelated')  // nobody on the bill: almost always a wrong guess, so it's never suggested
+    return `<span class="heard wrong"><b>Shazam guessed:</b> ${esc(z.title)} — ${esc(z.artist)}${n} · nobody on the bill, probably wrong</span>`;
+  return `<span class="heard"><b>Shazam:</b> ${esc(z.title)} — ${esc(z.artist)}${n}${z.key ? '' : ` · <em>by ${esc(z.act)} but not on the setlist</em>`}</span>`;
 }
 
 // Suggest a song for each untagged clip: the one Shazam recognised if it's on the setlist,

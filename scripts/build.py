@@ -22,7 +22,7 @@ from urllib.parse import parse_qs, quote, unquote, urlparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
-    MEDIA_DIR, ROOT, bill, clean_set_name, find_song, save_show, load_show, read_concerts, read_config, read_genres, read_manifest,
+    MEDIA_DIR, ROOT, bill, clean_set_name, judge_heard, save_show, load_show, read_concerts, read_config, read_genres, read_manifest,
     show_acts, slugify, song_key, split_artists,
 )
 
@@ -269,9 +269,10 @@ def build_show(row, cfg, genres, warnings):
             if not top:
                 m["shazam"] = {"title": ""}
                 continue
-            act, song = find_song(top["title"], top.get("artist", ""), acts)
+            verdict, act, song = judge_heard(top["title"], top.get("artist", ""), acts)
             m["shazam"] = {"title": top["title"], "artist": top.get("artist", ""), "votes": top.get("votes", 1),
-                           "windows": res.get("windows", 1), "key": f"{act['n']}-{song['n']}" if song else ""}
+                           "windows": res.get("windows", 1), "verdict": verdict, "act": act["artist"] if act else "",
+                           "key": f"{act['n']}-{song['n']}" if song else ""}
     hidden_items = []
     if SERVING:  # the tagging screen needs to see hidden files too
         for name in sorted(hidden):

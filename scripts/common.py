@@ -205,6 +205,21 @@ def find_song(title, artist, acts):
     return (best[1], best[2]) if best else (None, None)
 
 
+def judge_heard(title, artist, acts):
+    """What to make of a song Shazam named in a clip from this show:
+      ("match", act, song)   it's on the setlist (a cover counts: exact title, whoever Shazam credits)
+      ("offlist", act, None) it's by someone on the bill, but not on their setlist (worth adding?)
+      ("unrelated", None, None) nobody on the bill: almost always Shazam guessing wrong on crowd noise
+                             or the PA's walk-on music, so it's never suggested, only shown for you to check."""
+    act, song = find_song(title, artist, acts)
+    if song:
+        return "match", act, song
+    for a in acts:
+        if artist and any(same_artist(name, a["artist"]) for name in re.split(r"\s*(?:,|&|\bfeat\.?|\bft\.?|\bwith\b|\bx\b)\s*", artist) if name):
+            return "offlist", a, None
+    return "unrelated", None, None
+
+
 def read_genres():
     """artists.csv -> {artist slug: [genre, ...]} (first genre is the main one)."""
     path = ROOT / "artists.csv"

@@ -29,12 +29,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import build  # noqa: E402
-from common import MEDIA_DIR, ROOT, find_song, read_concerts, read_config, read_genres  # noqa: E402
+from common import MEDIA_DIR, ROOT, judge_heard, read_concerts, read_config, read_genres  # noqa: E402
 
 BIN = Path(os.environ.get("CB_SHAZAM", ROOT / "tools" / "shazam" / "cb-shazam"))
 CACHE = MEDIA_DIR / ".shazam.json"
 LISTEN_EXT = {".mov", ".mp4", ".m4v", ".webm", ".m4a", ".mp3", ".wav", ".aac"}
 BATCH = 8
+MIN_SECONDS = 4  # Shazam needs at least 3 s of audio; shorter clips are left for you to tag
 
 
 def read_cache():
@@ -64,8 +65,11 @@ def heard_for(cache, sid, name):
 
 
 def untagged(show):
-    """Clips the build found in the folder but nobody has placed under a song (or hidden)."""
-    return [m["file"] for m in show["extras"] if m.get("auto") and m.get("file") and Path(m["file"]).suffix.lower() in LISTEN_EXT]
+    """Clips the build found in the folder but nobody has placed under a song (or hidden):
+    (long enough for Shazam, too short)."""
+    clips = [m for m in show["extras"] if m.get("auto") and m.get("file") and Path(m["file"]).suffix.lower() in LISTEN_EXT]
+    short = [m["file"] for m in clips if m.get("seconds") is not None and m["seconds"] < MIN_SECONDS]
+    return [m["file"] for m in clips if m["file"] not in short], short
 
 
 def listen(paths, deadline):
@@ -99,10 +103,12 @@ def main():
     cache = read_cache()
 
     # 1. Which clips still need a song, and which of those Shazam hasn't heard yet
-    shows, todo = {}, []
+    shows, todo, too_short = {}, [], 0
     for row in rows:
         show, _ = build.build_show(row, cfg, genres, [])
-        names = [n for n in untagged(show) if (MEDIA_DIR / row["id"] / n).is_file()]
+        names, short = untagged(show)
+        too_short += len(short)
+        names = [n for n in names if (MEDIA_DIR / row["id"] / n).is_file()]
         if not names:
             continue
         shows[row["id"]] = (row, show, names)
@@ -112,7 +118,8 @@ def main():
                 todo.append(MEDIA_DIR / row["id"] / n)
 
     total = sum(len(v[2]) for v in shows.values())
-    print(f"{total} untagged clip(s) in {len(shows)} show(s); {len(todo)} for Shazam to listen to.")
+    print(f"{total} untagged clip(s) in {len(shows)} show(s); {len(todo)} for Shazam to listen to."
+          + (f" ({too_short} more are under {MIN_SECONDS} s, too short for Shazam: tag those yourself.)" if too_short else ""))
 
     # 2. Listen
     if todo:
@@ -136,8 +143,11 @@ def main():
         if done < len(todo):
             print(f"Stopped with {len(todo) - done} still to listen to; run again to continue.")
 
-    # 3. Match what was heard to each show's setlist
-    applied = on_list = off_list = nothing = 0
+    # 3. Match what was heard to each show's setlist. Only songs on the setlist are tagged;
+    #    songs by an act on the bill that aren't on its setlist are listed (the setlist may be
+    #    missing them); anything by somebody not on the bill is set aside as a wrong guess.
+    applied = on_list = off_list = wrong = nothing = 0
+    offlist, unrelated = [], []
     for sid, (row, show, names) in shows.items():
         assign, lines = {}, []
         for name in names:
@@ -148,16 +158,21 @@ def main():
             if not top:
                 nothing += 1
                 continue
-            act, song = find_song(top["title"], top["artist"], show["acts"])
+            verdict, act, song = judge_heard(top["title"], top["artist"], show["acts"])
             votes = f"{top['votes']}/{res.get('windows', 1)}"
-            if song:
+            heard = f"\"{top['title']}\" — {top['artist']} ({votes})"
+            if verdict == "match":
                 on_list += 1
                 assign[name] = f"{act['n']}-{song['n']}"
                 who = f"{act['artist']} · " if len(show["acts"]) > 1 else ""
-                lines.append(f"  {name:<28} → {who}{song['n']:>2}. {song['title']}   (Shazam: {top['title']} — {top['artist']}, {votes})")
-            else:
+                lines.append(f"  {name:<28} → {who}{song['n']:>2}. {song['title']}   (Shazam: {heard})")
+            elif verdict == "offlist":
                 off_list += 1
-                lines.append(f"  {name:<28} ? Shazam heard \"{top['title']}\" — {top['artist']} ({votes}), which isn't on the setlist")
+                offlist.append(f"  {sid}  {name}: {heard}, by {act['artist']}"
+                               + ("" if any(st["songs"] for st in act["sets"]) else ", who has no setlist yet"))
+            else:
+                wrong += 1
+                unrelated.append(f"  {sid}  {name}: {heard}")
         if lines:
             print(f"\n{sid}")
             print("\n".join(lines))
@@ -165,8 +180,14 @@ def main():
             build.save_tags(sid, assign)
             applied += len(assign)
 
-    print(f"\n{on_list} clip(s) matched a song on the setlist, {off_list} heard a song that isn't on it, "
-          f"{nothing} Shazam didn't recognise.")
+    if offlist:
+        print("\nBy someone on the bill, but not on their setlist (left untagged; the setlist may be missing it):")
+        print("\n".join(offlist))
+    if unrelated:
+        print("\nNot anyone on the bill, so probably a wrong guess (crowd noise, walk-on music). Left for you to tag:")
+        print("\n".join(unrelated))
+    print(f"\n{on_list} clip(s) matched a song on the setlist, {off_list} heard an off-setlist song by an act on the bill, "
+          f"{wrong} heard someone not on the bill, {nothing} Shazam didn't recognise.")
     if args.apply:
         print(f"Tagged {applied} clip(s) in shows/*.json. Check them at http://localhost:8000/tag.html (build.py --serve).")
     elif on_list:
