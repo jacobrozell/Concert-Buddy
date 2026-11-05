@@ -28,6 +28,7 @@ import hmac
 import json
 import mimetypes
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -91,9 +92,12 @@ class R2:
                 return r.read()
         except urllib.error.HTTPError as e:
             detail = e.read().decode(errors="ignore")
-            code = ET.fromstring(detail).findtext("Code") if detail.startswith("<") else detail[:200]
+            xml = ET.fromstring(detail) if detail.startswith("<") else None
+            code = xml.findtext("Code") if xml is not None else detail[:200]
+            if xml is not None and xml.findtext("Message"):
+                code += f": {xml.findtext('Message')}"
             hint = {"InvalidAccessKeyId": "check R2_ACCESS_KEY_ID", "SignatureDoesNotMatch": "check R2_SECRET_ACCESS_KEY",
-                    "NoSuchBucket": "check R2_BUCKET", "AccessDenied": "the API token needs Object Read & Write on this bucket"}.get(code, "")
+                    "NoSuchBucket": "check R2_BUCKET", "AccessDenied": "the API token needs Object Read & Write on this bucket"}.get(code.split(":")[0], "")
             raise SystemExit(f"R2 said {e.code} {code}{f' ({hint})' if hint else ''}")
 
     def list(self):
@@ -132,11 +136,21 @@ def load_env():
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
                 k, v = line.split("=", 1)
+                v = re.sub(r"\s+#.*$", "", v)  # a comment after the value
                 os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
     need = ["R2_ACCOUNT_ID", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "R2_BUCKET"]
     missing = [k for k in need if not os.environ.get(k)]
     if missing:
         raise SystemExit(f"Missing {', '.join(missing)}. Put them in a .env file next to concerts.csv (see the top of this script).")
+    # Catch the usual copy-paste mix-ups before asking R2 (lengths only; values are never printed)
+    shape = {"R2_ACCOUNT_ID": (32, "the Account ID on the R2 overview page"),
+             "R2_ACCESS_KEY_ID": (32, "the Access Key ID from the API token page (not the Token value above it)"),
+             "R2_SECRET_ACCESS_KEY": (64, "the Secret Access Key from the API token page")}
+    for k, (n, where) in shape.items():
+        v = os.environ[k]
+        if not re.fullmatch(r"[0-9a-f]{%d}" % n, v):
+            raise SystemExit(f"{k} in .env doesn't look right: it's {len(v)} characters, and should be {n} characters of 0-9/a-f. "
+                             f"It should be {where}.")
 
 
 def local_files(only=None):
