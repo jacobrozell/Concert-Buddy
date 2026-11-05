@@ -1,9 +1,9 @@
 // cb-shazam: asks Shazam which song is playing in each concert clip.
 //
-//   cb-shazam [--window 12] [--max-windows 4] [--pause 0.3] FILE...
+//   cb-shazam [--window 10] [--max-windows 4] [--pause 0.3] FILE...
 //
 // For every file it listens to a few short windows spread across the clip (Shazam
-// identifies from ~3–12 seconds of audio) and prints one JSON line:
+// identifies from 3–12 seconds of audio; it listens to 10) and prints one JSON line:
 //   {"file": "...", "seconds": 84.2, "windows": [{"at": 0, "title": "...", "artist": "...", "shazamID": "..."}, ...]}
 // A window Shazam doesn't recognise has no title; a failure has "error".
 // It stops early once two windows agree. Built and signed by build.sh; run by
@@ -41,7 +41,7 @@ enum ListenError: Error, CustomStringConvertible {
 }
 
 // ---------- arguments ----------
-var windowLength = 12.0
+var windowLength = 10.0   // Shazam's catalog takes 3–12 s; decoding can overshoot by a few samples, so stay under
 var maxWindows = 4
 var pause = 0.3
 var files: [String] = []
@@ -49,7 +49,7 @@ var argv = Array(CommandLine.arguments.dropFirst())
 while !argv.isEmpty {
     let a = argv.removeFirst()
     switch a {
-    case "--window": windowLength = Double(argv.removeFirst()) ?? windowLength
+    case "--window": windowLength = min(11.5, max(3.5, Double(argv.removeFirst()) ?? windowLength))
     case "--max-windows": maxWindows = Int(argv.removeFirst()) ?? maxWindows
     case "--pause": pause = Double(argv.removeFirst()) ?? pause
     case "-h", "--help":
@@ -112,12 +112,12 @@ for path in files {
         clip.seconds = try await asset.load(.duration).seconds
         let tracks = try await asset.loadTracks(withMediaType: .audio)
         guard let track = tracks.first else { throw ListenError.noAudio }
-        if clip.seconds < 3 { throw ListenError.unreadable("under 3 seconds") }
+        if clip.seconds < 3.2 { throw ListenError.unreadable("under 3 seconds") }
         var agree: [String: Int] = [:]
         for at in starts(duration: clip.seconds) {
             var w = Window(at: (at * 10).rounded() / 10)
             do {
-                let sig = try signature(asset, track: track, start: at, length: min(windowLength, clip.seconds - at))
+                let sig = try signature(asset, track: track, start: at, length: min(windowLength, clip.seconds - at - 0.05))
                 switch await session.result(from: sig) {
                 case .match(let match):
                     if let item = match.mediaItems.first {

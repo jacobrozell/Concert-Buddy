@@ -607,8 +607,8 @@ On a Mac, Apple's ShazamKit can listen to each clip and name the song, so most o
    ```bash
    tools/shazam/build.sh com.yourname.concertbuddy.shazam
    ```
-   That compiles `tools/shazam/main.swift` into `tools/shazam/cb-shazam`, embeds the bundle ID, and signs it with your first *Apple Development* certificate (set `CB_SHAZAM_SIGN_IDENTITY` to pick another). The ID is remembered, so later builds are just `tools/shazam/build.sh`.
-4. Try it on one clip: `tools/shazam/cb-shazam media/<show-id>/IMG_1234.MOV`. It prints one line of JSON with what it heard. If every window has an `error` mentioning authorization or a token, ShazamKit isn't enabled for that bundle ID yet (it can take a few minutes after you tick the box). If Apple won't serve a plain command-line tool at all, wrap the same `main.swift` in a minimal macOS app target in Xcode with that bundle ID, and point `CB_SHAZAM` at the binary inside the built `.app`.
+   That compiles `tools/shazam/main.swift` into `tools/shazam/cb-shazam`, embeds the bundle ID, and signs it. **The certificate must come from the same developer team as the bundle ID.** If your Mac has certificates for more than one team (a work account, say), the script lists them with their team IDs and asks you to pick: `tools/shazam/build.sh com.yourname.concertbuddy.shazam --sign "Your Name"` (or `--sign` and the team ID). Both choices are remembered, so later builds are just `tools/shazam/build.sh`.
+4. Try it on one clip: `tools/shazam/cb-shazam media/<show-id>/IMG_1234.MOV`. It prints one line of JSON with what it heard. If every window has an `error` saying *check that you have enabled the ShazamKit App Service for this app identifier* (HTTP 401), either it was signed with another team's certificate (rebuild with `--sign`), or ShazamKit was only just ticked for that bundle ID (give it a few minutes). If Apple won't serve a plain command-line tool at all, wrap the same `main.swift` in a minimal macOS app target in Xcode with that bundle ID, and point `CB_SHAZAM` at the binary inside the built `.app`.
 
 **Run it:**
 
@@ -619,7 +619,7 @@ python3 scripts/shazam_tag.py --show 2023-04-22-shakey-graves --apply
 python3 scripts/shazam_tag.py --retry               # listen again to clips it didn't recognise
 ```
 
-- It listens to up to four 12-second windows spread through each clip and stops as soon as two agree. A few hundred clips take a while; stop any time (Ctrl+C or `--time-limit 600`) and run it again to carry on.
+- It listens to up to four 10-second windows spread through each clip and stops as soon as two agree. A few hundred clips take a while; stop any time (Ctrl+C or `--time-limit 600`) and run it again to carry on.
 - What it heard is saved in `media/.shazam.json` (not committed), so re-runs only listen to new clips.
 - Matching to the setlist ignores case, punctuation, *(Live)*, *- Remastered 2009*, *(feat. …)* and the like. Covers match on the title even though Shazam names the original artist ("Where Is My Mind?" by Pixies lands on Shakey Graves's cover).
 - **It never touches a clip you've tagged**, hidden or put under Other moments. With `--apply`, review the result in the tagging screen.

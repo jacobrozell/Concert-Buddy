@@ -21,3 +21,4 @@ media/**
 tools/shazam/cb-shazam
 tools/shazam/Info.plist
 tools/shazam/bundle-id
+tools/shazam/sign-identity
