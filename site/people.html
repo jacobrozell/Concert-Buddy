@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Who you went with · {{site_title}}</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;800;900&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/base.css">
+<style>
+/* Owner-only tool (local preview): fill in who you went with, for every show at once. Saves to concerts.csv. */
+.crumb{padding-block:22px 10px;font-family:var(--mono);font-size:12.5px;display:flex;gap:18px}
+.crumb a{text-decoration:none;color:var(--muted)} .crumb a:hover{color:var(--fg)}
+h1{font-family:var(--display);font-weight:900;font-size:clamp(40px,6vw,68px);line-height:.9;text-transform:uppercase;margin:8px 0 6px}
+.sub{color:var(--muted);margin:0 0 18px;max-width:70ch}
+.notice{border:1px dashed var(--line);border-radius:8px;padding:22px;color:var(--muted)}
+.notice code{color:var(--fg)}
+
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:12px 0;border-bottom:1px solid var(--line)}
+.bar .counts{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.bar .counts b{color:var(--fg);font-weight:500}
+.bar label{font-family:var(--mono);font-size:12.5px;color:var(--muted);display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.bar .btn.primary{margin-left:auto}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--fg);color:var(--bg);font-family:var(--mono);font-size:13px;padding:10px 16px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+.toast.on{opacity:1}
+
+.rows{list-style:none;margin:0;padding:0}
+.row{display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1.3fr);gap:6px 18px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.row .d{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.row .a{font-weight:600;font-size:15px;text-decoration:none;color:var(--fg);display:block;overflow-wrap:anywhere}
+.row .a:hover{text-decoration:underline}
+.row .v{font-size:12.5px;color:var(--muted)}
+.row .edit{display:flex;flex-direction:column;gap:6px;min-width:0}
+.row input{font:inherit;font-size:15px;background:var(--bg-2);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 11px;width:100%}
+.row input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.row.changed input{border-color:var(--accent)}
+.quick{display:flex;flex-wrap:wrap;gap:5px}
+.quick button{font-family:var(--mono);font-size:11px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:3px 9px;cursor:pointer}
+.quick button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.quick button:hover{border-color:var(--fg);color:var(--fg)}
+@media (max-width:720px){ .row{grid-template-columns:1fr} .bar .btn.primary{margin-left:0} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="crumb"><a href="./">← All shows</a></nav>
+  <main id="page"><div class="empty">Loading…</div></main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="assets/common.js"></script>
+<script>
+const {esc, stubDate, getJSON} = CB;
+const page = document.getElementById('page');
+let ROWS = [], dirty = false;
+function toast(t){ const el = document.getElementById('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2600); }
+const tidy = v => CB.isSolo(v) ? 'Solo' : CB.people(v).join(' / ');
+
+if (!CB.local){
+  page.innerHTML = `<h1>Who you went with</h1><div class="notice">This works in your local preview, where it can save to <code>concerts.csv</code>. Run <code>python3 scripts/build.py --serve</code> and open <code>http://localhost:8000/people.html</code>.</div>`;
+} else load();
+
+async function load(){
+  const data = await getJSON(`data/concerts.json?t=${Date.now()}`);
+  const counts = {}; data.shows.forEach(s => CB.people(s.with).forEach(p => counts[p] = (counts[p] || 0) + 1));
+  const top = Object.keys(counts).sort((a, b) => counts[b] - counts[a] || a.localeCompare(b));
+  ROWS = data.shows.slice().sort((a, b) => b.date.localeCompare(a.date)).map(s => ({s, saved: s.with, value: s.with}));
+  page.innerHTML = `<h1>Who you went with</h1>
+    <p class="sub">Type names separated by “ / ”, or tap a name to add or remove it. <b>Solo</b> means you went on your own; leave it empty if you don't remember. Saving writes the <code>companions</code> column of <code>concerts.csv</code>.</p>
+    <div class="bar"><span class="counts" id="counts"></span>
+      <label><input type="checkbox" id="only-empty"> Only shows not logged yet</label>
+      <button class="btn primary" id="save" disabled>Save</button></div>
+    <datalist id="known">${top.map(p => `<option value="${esc(p)}">`).join('')}</datalist>
+    <ol class="rows">${ROWS.map((r, i) => `<li class="row" data-i="${i}">
+      <span class="d">${stubDate(r.s.date)}</span>
+      <span><a class="a" href="show.html?id=${encodeURIComponent(r.s.id)}">${esc(r.s.artist)}</a><span class="v">${esc(r.s.venue)}</span></span>
+      <span class="edit"><input list="known" value="${esc(r.value)}" placeholder="Not logged" aria-label="Who you went with to ${esc(r.s.artist)}" autocomplete="off">
+        <span class="quick">${top.slice(0, 5).map(p => `<button type="button" data-p="${esc(p)}">${esc(p)}</button>`).join('')}<button type="button" data-p="Solo">Solo</button></span></span>
+    </li>`).join('')}</ol>`;
+
+  page.addEventListener('input', e => { const li = e.target.closest('.row'); if (li && e.target.matches('input')) { ROWS[li.dataset.i].value = e.target.value; refresh(); } });
+  page.addEventListener('click', e => {
+    const b = e.target.closest('[data-p]'); if (!b) return;
+    const li = b.closest('.row'), r = ROWS[li.dataset.i], p = b.dataset.p;
+    if (p === 'Solo') r.value = CB.isSolo(r.value) ? '' : 'Solo';
+    else { const names = CB.people(r.value); const i = names.findIndex(x => x.toLowerCase() === p.toLowerCase());
+      if (i >= 0) names.splice(i, 1); else names.push(p); r.value = names.join(' / '); }
+    const input = li.querySelector('input'); input.value = r.value; input.focus(); input.setSelectionRange(r.value.length, r.value.length); refresh();
+  });
+  document.getElementById('only-empty').addEventListener('change', refresh);
+  document.getElementById('save').addEventListener('click', save);
+  refresh();
+}
+
+function refresh(){
+  const onlyEmpty = document.getElementById('only-empty').checked;
+  let changed = 0, logged = 0;
+  ROWS.forEach((r, i) => {
+    const li = page.querySelector(`.row[data-i="${i}"]`), isChanged = tidy(r.value) !== tidy(r.saved);
+    li.classList.toggle('changed', isChanged); if (isChanged) changed++;
+    if (r.value.trim()) logged++;
+    li.hidden = onlyEmpty && !!r.saved.trim() && !isChanged;
+    const names = CB.people(r.value).map(x => x.toLowerCase());
+    li.querySelectorAll('[data-p]').forEach(b => b.setAttribute('aria-pressed', b.dataset.p === 'Solo' ? CB.isSolo(r.value) : names.includes(b.dataset.p.toLowerCase())));
+  });
+  document.getElementById('counts').innerHTML = `<b>${logged}</b> of ${ROWS.length} logged${changed ? ` · <b>${changed}</b> unsaved` : ''}`;
+  document.getElementById('save').disabled = !changed;
+  dirty = changed > 0;
+}
+
+async function save(){
+  const updates = {};
+  ROWS.forEach(r => { if (tidy(r.value) !== tidy(r.saved)) updates[r.s.id] = tidy(r.value); });
+  const btn = document.getElementById('save'); btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const res = await fetch('api/companions', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({with: updates})});
+    const out = await res.json(); if (!out.ok) throw new Error(out.error || res.status);
+    ROWS.forEach(r => { if (r.s.id in updates) { r.saved = r.value = updates[r.s.id]; page.querySelector(`.row[data-i="${ROWS.indexOf(r)}"] input`).value = r.value; } });
+    btn.textContent = 'Save'; refresh();
+    const n = Object.keys(updates).length; toast(`Saved ${n} show${n > 1 ? 's' : ''} to concerts.csv`);
+  } catch (e){ btn.textContent = 'Save'; btn.disabled = false; toast(`Couldn't save: ${e.message}. Is build.py --serve still running?`); }
+}
+window.addEventListener('beforeunload', e => { if (dirty){ e.preventDefault(); e.returnValue = ''; } });
+</script>
+</body>
+</html>

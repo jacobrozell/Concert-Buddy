@@ -31,8 +31,13 @@ window.CB = (() => {
   };
   const getJSON = async url => { const r = await fetch(url, {cache:'no-cache'}); if (!r.ok) throw new Error(`${url}: ${r.status}`); return r.json(); };
 
+  // Who you went with, from the companions column: 'Justin / Zach' -> ['Justin','Zach']; 'Solo' -> [] (same rules as build.py).
+  const SOLO = ['solo', 'alone', 'just me', 'by myself', 'myself'];
+  const isSolo = w => SOLO.includes(String(w || '').trim().toLowerCase());
+  const people = w => isSolo(w) ? [] : String(w || '').split(/\s*\/\s*|\s*,\s*|\s+&\s+|\s+and\s+/).map(x => x.trim()).filter(Boolean);
+
   // True when previewing with `build.py --serve`; owner-only hints show only then.
   const local = ['localhost', '127.0.0.1', '[::1]', ''].includes(location.hostname);
 
-  return {esc, region, regionName, paper, date, stubDate, longDate, today, clock, getJSON, local};
+  return {esc, region, regionName, paper, date, stubDate, longDate, today, clock, getJSON, local, isSolo, people};
 })();

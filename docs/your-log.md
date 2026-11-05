@@ -12,7 +12,7 @@ The first line must be the header row. Column order doesn't matter, and extra co
 | `date` | **yes** | `2026-11-03` | Must be `YYYY-MM-DD`. The build stops with a clear message if it isn't. If you only know the year, pick a placeholder date and say so in `notes`. |
 | `venue` | | `Avondale Brewing Company` | |
 | `location` | | `Birmingham, AL` | City and region. **Everything after the last comma** is treated as the region: it picks the stub colour and the state filter. US state codes (`AL`, `TN`…) show their full names; anything else (`UK`, `Ontario`) is shown as written. Wrap the value in double quotes because it contains a comma. |
-| `companions` | | `Samantha` | Who you went with, in any format. Searchable, and used by the `highlight_companion` filter. |
+| `companions` | | `Samantha` | Who you went with. Separate people with ` / ` (or commas). Write `Solo` if you went on your own; leave it empty if you don't remember (it shows as *not logged*). Feeds the *With …* filter, the stats, and the people logging page. |
 | `opener` | | `The Shins / Silversun Pickups` | Openers and support acts, **biggest name first** (main support, then the first act on). Every opener becomes its own act on the show page, with its own setlist and footage slots. See [Acts](#acts-openers-and-co-headliners). |
 | `setlist_url` | | `https://www.setlist.fm/setlist/jack-white/2022/…-73b36ec1.html` | A setlist.fm link. `setlist.py` uses the id at the end of it to fetch the exact setlist, and the show page links to it. Any other URL works as a plain link. |
 | `media_links` | | `https://youtu.be/abc https://youtu.be/def` | Links for the show as a whole (a full-show upload, a photo album). Separate with spaces or `\|`. These appear under "Other moments". To attach a link to a *song*, use `shows/<id>.json` instead. |
@@ -33,7 +33,7 @@ The first line must be the header row. Column order doesn't matter, and extra co
 | `site_title` | `"Jacob's Concert Log"` | Browser tab title. |
 | `owner` | `"Jacob Rozell"` | Shown above the headline: *Jacob Rozell · live music since 2016*. The year is worked out from your earliest show. Leave empty to show only the year. |
 | `tagline` | `"Every concert I've been to…"` | The sentence under the headline. |
-| `highlight_companion` | `"Samantha"` | Adds a *With Samantha* count to the stats and a filter chip. Matching is case-insensitive and partial, so `"Sam"` also matches `"Samantha"` and `"Sam & Holly"`. Leave empty to hide both. |
+| `highlight_companion` | `"Samantha"` | Adds a *With Samantha* count to the top of the timeline (click it to filter). The name has to match how it's written in `companions` (case doesn't matter). Leave empty to hide it. |
 | `media_base_url` | `""` or `"https://media.example.com"` | Where your own media files are served from. Empty (the default) means the files in `media/` are published with the site. Set a URL to host them somewhere else; see [Big videos](hosting-media.md#big-videos-and-storage-limits). |
 | `repo_url` | `"https://github.com/you/repo"` | Adds a *"grab the template and log your own shows"* link in the footer. Leave empty to hide it. |
 | `site_url` | `"https://you.github.io/repo/"` | Your site's public address, used for the preview card when someone shares a link (iMessage, Slack, Reddit…). Leave empty and the GitHub build works it out from your repo name. **If you forked this repo, empty it or change it**, or your previews will point at mine. |

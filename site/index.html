@@ -61,6 +61,9 @@ h1 .count{color:var(--accent)}
 
 .facts a{color:inherit;text-decoration:none}
 .facts a:hover b{text-decoration:underline}
+.fact-btn{all:unset;cursor:pointer}
+.fact-btn:hover b,.fact-btn[aria-pressed="true"] b{color:var(--accent)}
+.fact-btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .facts a.all b{color:var(--accent);font-weight:500}
 
 /* ---------- memories: shows from this time of year, years ago ---------- */
@@ -159,7 +162,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 <script>
 const {esc, region, regionName, paper, stubDate, longDate, today, getJSON} = CB;
 let SHOWS = [], CFG = {};
-const filt = {q:'', state:null, genre:'', comp:false, filmed:false, order:'desc'};
+const filt = {q:'', state:null, genre:'', with:'', filmed:false, order:'desc'};  // with: a name, '__solo' or '__none'
 
 getJSON('data/concerts.json').then(data => {
   CFG = data.config; SHOWS = data.shows;
@@ -194,7 +197,11 @@ function init(){
   const count = k => { const m = {}; SHOWS.forEach(s => { const v = k(s); if (v) m[v] = (m[v]||0)+1; }); return Object.entries(m).sort((a,b)=>b[1]-a[1]); };
   const topA = count(s=>s.artist)[0], topV = count(s=>s.venue)[0], cities = new Set(SHOWS.map(s=>s.location)).size;
   const genreCounts = (() => { const m = {}; SHOWS.forEach(s => s.genres.forEach(g => m[g] = (m[g]||0)+1)); return Object.entries(m).sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0])); })();
-  const comp = CFG.highlight_companion, compRe = comp ? new RegExp(comp.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i') : null;
+  // everyone in the companions column, most shows first
+  const withCounts = (() => { const m = {}; SHOWS.forEach(s => CB.people(s.with).forEach(p => m[p] = (m[p]||0)+1));
+    return Object.entries(m).sort((a,b) => b[1]-a[1] || a[0].localeCompare(b[0])); })();
+  const solo = SHOWS.filter(s => CB.isSolo(s.with)).length, unlogged = SHOWS.filter(s => !s.with.trim()).length;
+  const comp = CFG.highlight_companion, compN = comp ? SHOWS.filter(s => CB.people(s.with).some(p => p.toLowerCase() === comp.toLowerCase())).length : 0;
   const filmed = SHOWS.filter(s=>s.clips>0).length;
   const slug = t => t.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   document.getElementById('facts').innerHTML =
@@ -202,12 +209,13 @@ function init(){
      <div><span>Home venue</span> <b>${esc(topV[0])} ×${topV[1]}</b></div>
      <div><span>Cities</span> <b>${cities}</b></div>
      ${genreCounts.length ? `<div><span>Top genre</span> <b>${esc(genreCounts[0][0])} ×${genreCounts[0][1]}</b></div>` : ''}
-     ${comp ? `<div><span>With ${esc(comp)}</span> <b>${SHOWS.filter(s=>compRe.test(s.with)).length}</b></div>` : ''}
+     ${comp && compN ? `<button type="button" class="fact-btn" data-with="${esc(comp)}"><span>With ${esc(comp)}</span> <b>${compN}</b></button>` : ''}
      ${filmed ? `<div><span>Shows with footage</span> <b>${filmed}</b></div>` : ''}
      <a class="all" href="stats.html"><b>All the stats →</b></a>`;
   memories();
-  const q0 = new URLSearchParams(location.search).get('q');   // stats page links here with ?q=Venue
-  if (q0){ filt.q = q0.trim().toLowerCase(); document.getElementById('q').value = q0; }
+  const params = new URLSearchParams(location.search);   // the stats page links here with ?q=Venue or ?with=Name
+  if (params.get('q')){ filt.q = params.get('q').trim().toLowerCase(); document.getElementById('q').value = params.get('q'); }
+  if (params.get('with')) filt.with = params.get('with');
 
   // chart
   const per = {}; SHOWS.forEach(s => per[s.y] = (per[s.y]||0)+1);
@@ -226,17 +234,21 @@ function init(){
   const present = [...new Set(SHOWS.map(s=>s.st))];
   let h = present.map(k => `<button class="chip" data-state="${esc(k)}" aria-pressed="false"><span class="dot" style="background:${paper(k)}"></span>${esc(regionName(k))}</button>`).join('');
   if (genreCounts.length) h += `<select class="genre-select" id="genre" aria-label="Genre"><option value="">All genres</option>${genreCounts.map(([g,n]) => `<option value="${esc(g)}">${esc(g)} (${n})</option>`).join('')}</select>`;
-  if (comp) h += `<button class="chip" id="comp" aria-pressed="false">With ${esc(comp)}</button>`;
+  if (withCounts.length || solo) h += `<select class="genre-select" id="with" aria-label="Who you went with"><option value="">With anyone</option>
+    ${withCounts.map(([p,n]) => `<option value="${esc(p)}">With ${esc(p)} (${n})</option>`).join('')}
+    <option value="__solo">Solo (${solo})</option><option value="__none">Not logged (${unlogged})</option></select>`;
   if (filmed) h += `<button class="chip" id="filmed" aria-pressed="false">Has footage</button>`;
   const c = document.getElementById('chips'); c.innerHTML = h;
   c.addEventListener('click', e => { const btn = e.target.closest('.chip'); if (!btn) return;
-    if (btn.id === 'comp'){ filt.comp = !filt.comp; btn.setAttribute('aria-pressed', filt.comp); }
-    else if (btn.id === 'filmed'){ filt.filmed = !filt.filmed; btn.setAttribute('aria-pressed', filt.filmed); }
+    if (btn.id === 'filmed'){ filt.filmed = !filt.filmed; btn.setAttribute('aria-pressed', filt.filmed); }
     else { const k = btn.dataset.state; filt.state = filt.state===k ? null : k;
       c.querySelectorAll('[data-state]').forEach(x => x.setAttribute('aria-pressed', x.dataset.state===filt.state)); }
     render(); });
   document.getElementById('q').addEventListener('input', e => { filt.q = e.target.value.trim().toLowerCase(); render(); });
   document.getElementById('genre')?.addEventListener('change', e => setGenre(e.target.value));
+  document.getElementById('with')?.addEventListener('change', e => setWith(e.target.value));
+  document.getElementById('facts').addEventListener('click', e => { const b = e.target.closest('[data-with]'); if (b) setWith(filt.with === b.dataset.with ? '' : b.dataset.with); });
+  if (filt.with) setWith(filt.with, false);
 
   // genre chart: one bar per genre (a show can count under more than one); click to filter
   const gmax = genreCounts.length ? genreCounts[0][1] : 1;
@@ -249,13 +261,12 @@ function init(){
     document.querySelectorAll('#chart-view button').forEach(x => x.setAttribute('aria-pressed', x === b));
     document.getElementById('by-year').hidden = g; document.getElementById('by-genre').hidden = !g;
     document.getElementById('chart-title').textContent = g ? 'Shows by genre' : 'Shows per year'; });
-  filt.compRe = compRe;
 
   const foot = document.getElementById('foot');
   foot.innerHTML += ` <a href="concerts.csv" download>Download this log (CSV)</a> · <a href="concerts_template.csv" download>blank template</a>.`;
   if (CFG.repo_url) foot.innerHTML +=
     ` Made with ConcertBuddy — <a href="${esc(CFG.repo_url)}">grab the template and log your own shows</a>.`;
-  if (CB.local) foot.innerHTML = `<a href="tag.html">Tag clips with songs</a> (local preview only) · ` + foot.innerHTML;
+  if (CB.local) foot.innerHTML = `<a href="tag.html">Tag clips with songs</a> · <a href="people.html">Log who you went with</a> (local preview only) · ` + foot.innerHTML;
 }
 
 // Shows whose anniversary falls in the week before or two weeks after today, in past years.
@@ -278,6 +289,21 @@ function memories(){
     <span class="when">${when(x)}</span><span class="a">${esc(x.s.artist)}</span>
     <span class="v">${esc(x.s.venue)} · ${esc(x.s.location)}${x.s.with ? ` · with ${esc(x.s.with)}` : ''}</span></a>`).join('');
   document.getElementById('memories').hidden = false;
+}
+
+function setWith(w, rerender = true){
+  filt.with = w;
+  const sel = document.getElementById('with');
+  if (sel){ if (w && ![...sel.options].some(o => o.value === w)) sel.add(new Option(`With ${w} (0)`, w)); sel.value = w; sel.classList.toggle('on', !!w); }
+  document.querySelectorAll('.facts [data-with]').forEach(b => b.setAttribute('aria-pressed', b.dataset.with === w));
+  if (rerender) render();
+}
+
+function withMatches(s){
+  if (!filt.with) return true;
+  if (filt.with === '__solo') return CB.isSolo(s.with);
+  if (filt.with === '__none') return !s.with.trim();
+  return CB.people(s.with).some(p => p.toLowerCase() === filt.with.toLowerCase());
 }
 
 function setGenre(g){
@@ -314,7 +340,7 @@ function stub(s){
 function render(){
   const list = SHOWS.filter(s => {
     if (filt.state && s.st !== filt.state) return false;
-    if (filt.comp && !filt.compRe.test(s.with)) return false;
+    if (!withMatches(s)) return false;
     if (filt.filmed && !s.clips) return false;
     if (filt.genre && !s.genres.includes(filt.genre)) return false;
     if (filt.q && !(`${s.artist} ${s.venue} ${s.location} ${s.opener} ${s.with} ${s.notes} ${s.genres.join(' ')}`.toLowerCase().includes(filt.q))) return false;
@@ -323,7 +349,7 @@ function render(){
   const el = document.getElementById('timeline');
   if (!list.length){ el.innerHTML = '<div class="empty">No shows match. Try a different search or clear the filters.</div>'; return; }
   const by = {}; list.forEach(s => (by[s.y] = by[s.y] || []).push(s));
-  const filtered = filt.q || filt.state || filt.genre || filt.comp || filt.filmed, asc = filt.order === 'asc';
+  const filtered = filt.q || filt.state || filt.genre || filt.with || filt.filmed, asc = filt.order === 'asc';
   const years = Object.keys(by).map(Number).sort((a,b) => asc ? a-b : b-a);
   let h = '', prev = null;
   years.forEach(y => {

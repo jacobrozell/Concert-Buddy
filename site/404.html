@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Not found · {{site_title}}</title>
+<meta name="robots" content="noindex">
+<!-- GitHub Pages serves this for any address that doesn't exist, from any folder depth,
+     so links and styles go through the site's own address (filled in by build.py). -->
+<base href="{{site_url}}">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800;900&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/base.css">
+<style>
+main{min-height:80vh;display:flex;flex-direction:column;justify-content:center;gap:14px;padding-block:40px}
+.stub{display:inline-grid;grid-template-columns:auto 54px;align-self:flex-start;background:#f3a597;color:var(--ink);border-radius:6px;transform:rotate(-2deg);box-shadow:0 8px 18px -10px rgba(0,0,0,.6)}
+.stub .m{padding:14px 18px}
+.stub .t{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.stub .a{font-family:var(--display);font-weight:900;font-size:clamp(44px,10vw,84px);line-height:.9;text-transform:uppercase}
+.stub .s{border-left:2px dashed color-mix(in srgb,var(--ink) 32%,transparent);writing-mode:vertical-rl;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--ink-soft)}
+p{color:var(--muted);max-width:52ch;margin:10px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap"><main>
+  <div class="stub" aria-hidden="true"><div class="m"><div class="t">Admit one · sold out</div><div class="a">No show<br>here</div></div><div class="s">NO. 404</div></div>
+  <p>That page doesn't exist. The show may have moved if its date or artist changed.</p>
+  <div><a class="btn primary" href="./">See all shows</a></div>
+</main></div>
+</body>
+</html>

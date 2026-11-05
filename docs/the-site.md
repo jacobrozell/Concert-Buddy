@@ -6,12 +6,13 @@
 
 `index.html` is the home page.
 
-- **Headline and stats.** Total shows; *Most seen* (the artist you've seen most, by the `artist` column); *Home venue* (most visits); *Cities* (distinct `location` values); *With …* (if `highlight_companion` is set); *Shows with footage* (once there is any).
+- **Headline and stats.** Total shows; *Most seen* (the artist you've seen most, by the `artist` column); *Home venue* (most visits); *Cities* (distinct `location` values); *With …* (if `highlight_companion` is set; click it to filter); *Shows with footage* (once there is any).
 - **Shows-per-year chart.** Click a bar to jump to that year. Years with no shows appear as empty bars, and on the timeline a line like *"2019–2020 · no shows"* marks the gap.
 - **Sort.** *Newest first* / *Oldest first*.
 - **Memories.** Shows from this time of year in past years (see [Stats, artist pages and memories](#stats-artist-pages-and-memories)).
 - **Search.** Matches artist, venue, location, opener, who you went with and notes as you type. `./?q=Bridgestone` opens the page already searched.
-- **Filters.** One chip per state or region (the dot shows its stub colour), *With …*, and *Has footage* (appears once any show has media). Click a chip again to turn it off.
+- **Filters.** One chip per state or region (the dot shows its stub colour), a genre menu, a *With …* menu (everyone in the `companions` column with how many shows, plus *Solo* and *Not logged*), and *Has footage* (appears once any show has media). Click a chip again to turn it off. `./?with=Alex` opens the page already filtered.
+- **Logging who you went with** (local preview only): each show page has an **Edit** button next to *With*, and `http://localhost:8000/people.html` lists every show with a box and one-tap buttons for the people you go with most, so you can fill in the whole log at once. Both save to the `companions` column of `concerts.csv`; commit and push as usual.
 - **Stubs.** Date, artist, venue, opener, and the show number in date order. Shows with a setlist say how long it was (*17-song setlist*); once a show has footage, that becomes a bar of ticks (filled = song has footage) and a count like *4/16 filmed*. A show dated today gets a **TONIGHT** stamp. Click a stub to open its show page.
 
 ---
@@ -41,8 +42,7 @@ A show with no setlist shows a *No setlist yet* box, plus any media in *Photos &
 
 - **Which clip plays for each song:** by default, the single best one. That's the first video, YouTube clip or audio file (your own before fans'), then a photo if there's none of those, then anything else.
 - **Every clip** (the checkbox at the bottom right) plays all the media for each song in turn instead.
-- **Songs with no footage** show a title card for about two seconds, then it moves on.
-- **An act with no footage at all** gets a single card for its whole set instead of one per song.
+- **Songs with no footage** show a title card for about two seconds, then it moves on, and **an act with no footage at all** gets a single card for its whole set. When less than half of the filmed sets have footage, these cards are skipped so the player goes straight from clip to clip; the **Songs nobody filmed** checkbox brings them back.
 - **Photos** stay up for 5 seconds.
 - **Videos and YouTube** move on when the clip ends, or when the `end` time is reached.
 - **Instagram, TikTok and other links** wait for you to press **Next**.

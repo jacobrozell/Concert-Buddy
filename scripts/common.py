@@ -114,6 +114,48 @@ def write_manifest(sid, entries):
         legacy.unlink()
 
 
+SOLO_WORDS = {"solo", "alone", "just me", "by myself", "myself"}
+
+
+def is_solo(text):
+    """The companions column says you went on your own ("Solo")."""
+    return (text or "").strip().lower() in SOLO_WORDS
+
+
+def companions_of(text):
+    """'Justin / Zach' / 'Justin, Zach' / 'Justin & Zach' -> ['Justin', 'Zach']. 'Solo' -> []."""
+    if is_solo(text):
+        return []
+    return [c.strip() for c in re.split(r"\s*/\s*|\s*,\s*|\s+&\s+|\s+and\s+", text or "") if c.strip()]
+
+
+def set_show_field(updates, field):
+    """Change one column of concerts.csv for some shows: updates = {show id: new value}.
+    Every other row, column and the column order stay exactly as they were."""
+    with open(CSV_PATH, newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        fields, rows = reader.fieldnames, list(reader)
+    if field not in fields:
+        raise ValueError(f"concerts.csv has no {field!r} column")
+    done = set()
+    for r in rows:
+        if not (r.get("artist") or "").strip() or not (r.get("date") or "").strip():
+            continue
+        sid = show_id({k.strip(): (v or "").strip() for k, v in r.items() if k})
+        if sid in updates:
+            r[field] = " ".join(str(updates[sid]).split())  # one line, no stray spaces
+            done.add(sid)
+    unknown = set(updates) - done
+    if unknown:
+        raise ValueError(f"no show {', '.join(sorted(unknown))} in concerts.csv")
+    tmp = CSV_PATH.with_suffix(".csv.tmp")
+    with open(tmp, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=fields, lineterminator="\n")
+        w.writeheader()
+        w.writerows(rows)
+    tmp.replace(CSV_PATH)
+
+
 def split_artists(text):
     """'The Shins / Silversun Pickups' -> ['The Shins', 'Silversun Pickups']."""
     return [a.strip() for a in re.split(r"\s+/\s+", text or "") if a.strip()]

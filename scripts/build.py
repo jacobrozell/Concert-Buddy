@@ -23,7 +23,7 @@ from urllib.parse import parse_qs, quote, unquote, urlparse
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
     MEDIA_DIR, ROOT, bill, clean_set_name, judge_heard, save_show, load_show, read_concerts, read_config, read_genres, read_manifest,
-    show_acts, slugify, song_key, split_artists,
+    companions_of, is_solo, set_show_field, show_acts, slugify, song_key, split_artists,
 )
 
 OUT = ROOT / "_site"
@@ -330,16 +330,13 @@ def shazam_heard():
 
 # ---------- stats + memories ----------
 
-def companions_of(text):
-    return [c for part in split_artists(text) for c in re.split(r"\s*,\s*|\s+&\s+|\s+and\s+", part) if c]
-
-
 def compute_stats(built):
     """Everything the stats and artist pages show, worked out from all the built shows.
     Also marks each act with how many times you've seen that artist, and each song with
     how many times you've heard it live (and which time this was), for the show page."""
     built = sorted(built, key=lambda b: b[0]["date"])
     artists, venues, cities, people = {}, {}, {}, {}
+    solo, unlogged = [], []
     song_refs = []
     weekdays, months = [0] * 7, [0] * 12
     footage = clips = 0
@@ -354,6 +351,10 @@ def compute_stats(built):
         cities.setdefault(show["location"], []).append(show["id"])
         for p in companions_of(show["with"]):
             people.setdefault(p, []).append(show["id"])
+        if is_solo(show["with"]):
+            solo.append(show["id"])
+        elif not show["with"].strip():
+            unlogged.append(show["id"])
         media = [*show["extras"], *(m for a in show["acts"] for st in a["sets"] for so in st["songs"] for m in so["media"])]
         clips += len(media)
         footage += sum(m.get("seconds") or 0 for m in media if m.get("kind") == "video")
@@ -432,6 +433,7 @@ def compute_stats(built):
             "distinct_songs": sum(len(ar["songs"]) for ar in artists.values()),
             "clips": clips, "footage_seconds": round(footage), "filmed_shows": sum(1 for _, s in built if s["clips"]),
             "provisional_shows": sum(1 for _, s in built if s["provisional"]),
+            "solo": len(solo), "with_unlogged": len(unlogged),
         },
         "top_songs": top_songs[:40],
         "artists": artist_list,
@@ -586,12 +588,19 @@ class PreviewHandler(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
 
     def do_POST(self):
-        m = re.fullmatch(r"/api/shows/([\w.-]+)/tags", urlparse(self.path).path)
-        if not m:
+        path = urlparse(self.path).path
+        m = re.fullmatch(r"/api/shows/([\w.-]+)/tags", path)
+        if not m and path != "/api/companions":
             return self.send_error(404)
         try:
             body = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}")
-            save_tags(m.group(1), body.get("assign", {}))
+            if m:
+                save_tags(m.group(1), body.get("assign", {}))
+            else:  # who you went with: {"with": {show id: "Alex / Sam" | "Solo" | ""}} -> concerts.csv
+                updates = body.get("with") or {}
+                if not isinstance(updates, dict) or not all(isinstance(v, str) for v in updates.values()):
+                    raise ValueError("expected {\"with\": {show id: text}}")
+                set_show_field(updates, "companions")
             build(quiet=True)
             payload, code = {"ok": True}, 200
         except (ValueError, KeyError) as e:

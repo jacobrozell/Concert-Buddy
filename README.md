@@ -76,6 +76,7 @@ The **Actions** tab shows the build; when it's green (about a minute), your site
 | Fill in setlists from setlist.fm | `python3 scripts/setlist.py --all` | [Setlists](docs/setlists.md) |
 | Sort a folder of phone videos into shows and shrink them | `python3 scripts/import_media.py --from ~/Desktop/Export --apply --convert` | [Your photos and videos](docs/your-footage.md) |
 | Tag each clip with its song | `python3 scripts/build.py --serve`, then open `/tag.html` | [Tagging screen](docs/your-footage.md#tag-clips-with-songs-the-tagging-screen) |
+| Log who you went with to each show | `python3 scripts/build.py --serve`, then open `/people.html` | [The site](docs/the-site.md) |
 | Let Shazam name the songs (Mac) | `python3 scripts/shazam_tag.py --apply` | [Shazam](docs/shazam.md) |
 | Put your videos online (free up to 10 GB) | `python3 scripts/upload_media.py` | [Hosting](docs/hosting-media.md) |
 | Add other fans' YouTube / TikTok clips | edit `shows/<id>.json` | [Fan videos](docs/fan-videos.md) |

@@ -87,6 +87,12 @@
 .song .live:hover{border-color:var(--accent);color:var(--accent)}
 .genres a{color:var(--accent);text-decoration:none} .genres a:hover{text-decoration:underline}
 .ticket dd a{color:inherit}
+.edit-with{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;border:1px solid color-mix(in srgb,var(--ink) 35%,transparent);background:transparent;color:var(--ink);border-radius:999px;padding:2px 8px;margin-left:6px;cursor:pointer}
+.with-form{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:2px}
+.with-form input{font:inherit;font-size:14px;padding:5px 9px;border-radius:6px;border:1px solid color-mix(in srgb,var(--ink) 35%,transparent);background:rgba(255,255,255,.55);color:var(--ink);min-width:200px}
+.with-form button{font-family:var(--mono);font-size:11px;border:1px solid color-mix(in srgb,var(--ink) 35%,transparent);background:transparent;color:var(--ink);border-radius:999px;padding:5px 10px;cursor:pointer}
+.with-form button[type=submit]{background:var(--ink);color:var(--paper)}
+.with-form .hint{flex-basis:100%;font-size:12px;color:var(--ink-soft)}
 .song .play-from{margin-left:auto;font-size:11.5px;padding:6px 11px}
 .clips{grid-column:2;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:10px}
 
@@ -180,7 +186,8 @@
 .th-strip button.done{opacity:.55}
 .th-strip button.cur{background:#ece6f3;opacity:1}
 .th-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.th-controls label{font-family:var(--mono);font-size:12px;color:#9a90a8;display:inline-flex;gap:6px;align-items:center;margin-left:auto}
+.th-controls label{font-family:var(--mono);font-size:12px;color:#9a90a8;display:inline-flex;gap:6px;align-items:center}
+.th-controls label:first-of-type{margin-left:auto}
 
 @media (max-width:640px){
   .ticket{grid-template-columns:minmax(0,1fr) 54px}
@@ -218,7 +225,8 @@
     <div class="th-controls">
       <button class="btn" id="th-prev">◀ Prev</button>
       <button class="btn primary" id="th-next">Next ▶</button>
-      <label><input type="checkbox" id="th-all"> Every clip, not just the best one per song</label>
+      <label><input type="checkbox" id="th-gaps"> Songs nobody filmed</label>
+      <label class="th-all"><input type="checkbox" id="th-all"> Every clip, not just the best one per song</label>
     </div>
   </div>
 </div>
@@ -227,17 +235,20 @@
 <script>
 const {esc, region, regionName, paper, longDate, stubDate, clock, getJSON} = CB;
 const id = new URLSearchParams(location.search).get('id');
-let SHOW, SONGS = [];
+let SHOW, SONGS = [], KNOWN_PEOPLE = [];
 
 Promise.all([getJSON('data/concerts.json'), id ? getJSON(`data/shows/${encodeURIComponent(id)}.json`) : Promise.reject(new Error('No show id in the link.'))])
   .then(([index, show]) => {
     SHOW = show;
     const all = index.shows.slice().sort((a,b) => a.date.localeCompare(b.date));
     SHOW.no = all.findIndex(s => s.id === SHOW.id) + 1;
+    const counts = {}; all.forEach(s => CB.people(s.with).forEach(p => counts[p] = (counts[p] || 0) + 1));
+    KNOWN_PEOPLE = Object.keys(counts).sort((a, b) => counts[b] - counts[a] || a.localeCompare(b));
     render(index.config);
   })
   .catch(err => {
-    document.getElementById('page').innerHTML = `<div class="empty">Couldn't find that show. <a href="./">Back to all shows</a><br>${esc(err.message)}</div>`;
+    document.getElementById('page').innerHTML = `<div class="empty"><b style="font-family:var(--display);font-size:34px;text-transform:uppercase;color:var(--fg)">No such show</b><br>
+      This show isn't in the log, or its date or artist changed. <a href="./">See all shows</a>.<br><small style="opacity:.6">${esc(err.message)}</small></div>`;
   });
 
 /* ---------- media helpers ---------- */
@@ -296,6 +307,38 @@ const ord = n => { const s = ['th','st','nd','rd'], v = n % 100; return n + (s[(
 const artistHref = a => `artist.html?a=${encodeURIComponent(a.slug || '')}`;
 const seenText = a => `${ord(a.seen_nth)} of ${a.seen} times`;
 const filmedIn = a => songsOf(a).filter(x => x.media.length).length;
+// Who you went with: each name filters the timeline to the shows you went to with them.
+function withHTML(w){
+  const names = CB.people(w);
+  let h = CB.isSolo(w) ? 'Solo' : names.length ? names.map(p => `<a href="./?with=${encodeURIComponent(p)}">${esc(p)}</a>`).join(' / ') : '<i>not logged</i>';
+  if (CB.local) h += ` <button type="button" class="edit-with" data-edit-with>Edit</button>`;
+  return h;
+}
+
+// Local preview only: change who you went with; saves to concerts.csv through build.py --serve.
+function editWith(){
+  const dd = document.getElementById('with-dd');
+  dd.innerHTML = `<form class="with-form" id="with-form">
+      <input name="w" list="known-people" value="${esc(SHOW.with)}" placeholder="e.g. Alex / Sam" aria-label="Who you went with" autocomplete="off">
+      <datalist id="known-people">${KNOWN_PEOPLE.map(p => `<option value="${esc(p)}">`).join('')}</datalist>
+      <button type="button" data-solo>Solo</button><button type="submit">Save</button><button type="button" data-cancel>Cancel</button>
+      <span class="hint">Separate names with “ / ”. Leave empty for not logged.</span></form>`;
+  const f = document.getElementById('with-form'), input = f.elements.w;
+  input.focus();
+  f.querySelector('[data-solo]').onclick = () => { input.value = 'Solo'; };
+  f.querySelector('[data-cancel]').onclick = () => { dd.innerHTML = withHTML(SHOW.with); };
+  f.onsubmit = async e => {
+    e.preventDefault();
+    const value = input.value.trim().split(/\s*\/\s*/).filter(Boolean).join(' / ');
+    try {
+      const res = await fetch('api/companions', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({with: {[SHOW.id]: value}})});
+      const out = await res.json(); if (!out.ok) throw new Error(out.error || res.status);
+      SHOW.with = value; dd.innerHTML = withHTML(value);
+    } catch (err){ f.querySelector('.hint').textContent = `Couldn't save: ${err.message}. Is build.py --serve running?`; }
+  };
+}
+document.addEventListener('click', e => { if (e.target.closest('[data-edit-with]')) editWith(); });
+
 function setlistLink(url, fallbackQuery){
   if (!url) return {href:`https://www.setlist.fm/search?query=${encodeURIComponent(fallbackQuery)}`, label:'Find the setlist on setlist.fm'};
   const host = new URL(url).hostname.replace(/^www\./,'');
@@ -324,7 +367,7 @@ function render(cfg){
       <div class="top"><span>${longDate(s.date)}</span><span>${esc(regionName(st))}</span></div>
       <h1>${esc(s.artist)}</h1>
       <div class="where">${esc(s.venue)} <small>${esc(s.location)}</small></div>
-      <dl>${multi ? '' : dd('Opener', s.opener)}${dd('Genre', s.genres.join(' · '))}${dd('With', s.with)}${dd('Notes', s.notes)}${head.seen > 1 ? `<div><dt>Seen</dt><dd><a href="${artistHref(head)}">${seenText(head)} →</a></dd></div>` : ''}</dl>
+      <dl>${multi ? '' : dd('Opener', s.opener)}${dd('Genre', s.genres.join(' · '))}${s.with || CB.local ? `<div><dt>With</dt><dd id="with-dd">${withHTML(s.with)}</dd></div>` : ''}${dd('Notes', s.notes)}${head.seen > 1 ? `<div><dt>Seen</dt><dd><a href="${artistHref(head)}">${seenText(head)} →</a></dd></div>` : ''}</dl>
       <div class="actions">
         ${filmed.length ? `<button class="btn primary" data-play="0">▶ Play the show</button>` : ''}
         ${multi ? '' : `<a class="btn" href="${esc(sl.href)}" target="_blank" rel="noopener">${sl.label} ↗</a>`}
@@ -445,16 +488,17 @@ const Theater = (() => {
 
   // Whole night in stage order. An act with no footage at all gets one title card
   // instead of a card per song; within a filmed set, unfilmed songs get a short card.
+  // When most of the night wasn't filmed, those cards are skipped (the checkbox brings them back).
   function build(){
-    const every = $('th-all').checked;
+    const every = $('th-all').checked, gaps = $('th-gaps').checked;
     queue = [];
     for (const act of ACTS){
       const songs = songsOf(act);
       if (!songs.length) continue;
-      if (!filmedIn(act)){ queue.push({act, pos: songs[0].idx, actcard: true}); continue; }
+      if (!filmedIn(act)){ if (gaps) queue.push({act, pos: songs[0].idx, actcard: true}); continue; }
       for (const song of songs){
         const media = song.media;
-        if (!media.length){ queue.push({act, song, pos: song.idx, gap: true}); continue; }
+        if (!media.length){ if (gaps) queue.push({act, song, pos: song.idx, gap: true}); continue; }
         const picks = every ? media : [media.find(m => PLAYS.has(m.kind) && m.kind !== 'image') || media.find(m => PLAYS.has(m.kind)) || media[0]];
         picks.forEach(m => queue.push({act, song, pos: song.idx, m}));
       }
@@ -537,7 +581,9 @@ const Theater = (() => {
   }
   function next(){ if (i < queue.length){ i++; play(); } }
   function prev(){ if (i > 0){ i--; play(); } }
+  let gapsChosen = false;  // once you tick or untick "Songs nobody filmed", that choice sticks
   function open(fromPos){
+    if (!gapsChosen){ const inFilmed = ACTS.filter(filmedIn).flatMap(songsOf); $('th-gaps').checked = inFilmed.filter(x => x.media.length).length * 2 >= inFilmed.length; }
     lastFocus = document.activeElement;
     build(); i = Math.max(0, queue.findIndex(q => q.pos >= fromPos));
     el.hidden = false; document.body.style.overflow = 'hidden'; $('th-next').focus(); play();
@@ -547,6 +593,7 @@ const Theater = (() => {
   $('th-next').addEventListener('click', next);
   $('th-prev').addEventListener('click', prev);
   $('th-close').addEventListener('click', close);
+  $('th-gaps').addEventListener('change', () => { gapsChosen = true; const pos = queue[i]?.pos || 0; build(); i = Math.max(0, queue.findIndex(q => q.pos >= pos)); play(); });
   $('th-all').addEventListener('change', () => { const pos = queue[i]?.pos || 0; build(); i = Math.max(0, queue.findIndex(q => q.pos >= pos)); play(); });
   $('th-strip').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b){ i = +b.dataset.k; play(); } });
   document.addEventListener('keydown', e => {
