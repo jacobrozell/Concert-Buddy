@@ -25,7 +25,10 @@
 /* Layout: a hero with a shows-per-year chart, then a wall of ticket stubs grouped by year. */
 
 /* ---------- hero ---------- */
-.hero{position:relative;padding-block:56px 36px;background:radial-gradient(ellipse 60% 70% at 18% 0%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 70%);display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;align-items:end}
+.hero{position:relative;isolation:isolate;padding-block:56px 36px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;align-items:end}
+/* the warm glow runs to the edges of the window, not just the content column */
+.hero::before{content:"";position:absolute;z-index:-1;top:0;bottom:-40px;left:calc(50% - 50vw);right:calc(50% - 50vw);pointer-events:none;
+  background:radial-gradient(ellipse min(900px,90vw) 520px at max(20%,calc(50vw - 380px)) 0%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 70%)}
 h1{font-family:var(--display);font-weight:900;font-size:clamp(56px,9vw,124px);line-height:.84;margin:10px 0 0;text-transform:uppercase;letter-spacing:-.01em;text-wrap:balance}
 h1 .count{color:var(--accent)}
 .lede{max-width:44ch;color:var(--muted);margin:18px 0 0;font-size:16px}

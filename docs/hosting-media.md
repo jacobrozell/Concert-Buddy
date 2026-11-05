@@ -95,3 +95,30 @@ git commit -m "Add footage" && git push
 - **Keeping media in the repo instead** (a small log, no R2)? Delete the four lines starting at `media/**` near the end of `.gitignore`.
 
 Any S3-compatible storage works the same way (Backblaze B2, Amazon S3); `upload_media.py` speaks R2's flavour of the S3 API, and tools like [rclone](https://rclone.org) can sync the folder to the others.
+
+---
+
+## Stop easy downloads
+
+Anything a browser can play, someone determined can save (developer tools, download apps, screen recording). What you *can* do is remove the easy ways, so your clips are watched on your site and not lifted from it.
+
+**Already on:** the site's players have no download button, right-click doesn't offer "Save video/image as…", and photos open in a viewer on the page instead of as a bare file in a new tab.
+
+**The bucket's address is still open,** though: anyone who finds a clip's `pub-….r2.dev` address can open or download it, and other sites can embed it. To close that, put a small **Cloudflare Worker** (`tools/media-worker/worker.js`) in front of the bucket and switch the public address off. The Worker hands a file only to your site's video, audio and photo players; opening the address in a tab, downloading it, or embedding it elsewhere gets *Not available*. It runs on Cloudflare's free Workers plan (100,000 requests a day; a video is a handful of requests), and reading R2 through it has no download fees.
+
+**Set it up** (about 10 minutes, all in the Cloudflare dashboard):
+
+1. **Create the Worker.** *Workers & Pages › Create › Create Worker*. Name it (e.g. `concert-media`), click **Deploy**, then **Edit code**. Replace everything with the contents of `tools/media-worker/worker.js` and click **Deploy**.
+2. **Give it the bucket.** The Worker's **Settings › Bindings › Add › R2 bucket**: variable name `MEDIA`, bucket = your media bucket. Save.
+3. **Tell it your site's address.** **Settings › Variables and Secrets › Add**: name `ALLOWED_ORIGINS`, type *Text*, value your site plus the local preview, separated by commas:
+   ```
+   https://<you>.github.io/,http://localhost:8000/,http://127.0.0.1:8000/
+   ```
+   (Only the part up to the first `/` after the domain matters; the repo name isn't needed.) Deploy again if asked.
+4. **Point the site at the Worker.** Copy its address from the Worker's page (`https://concert-media.<your-subdomain>.workers.dev`). In `.env`, set `R2_PUBLIC_URL` to it, then run `python3 scripts/upload_media.py`; it updates `media_base_url` in `config.json`. (Or edit `media_base_url` yourself.) Commit and push.
+5. **Check it,** after the site has rebuilt: a show page plays its clips, and pasting a clip's address (right-click is off, so take one from `data/shows/<id>.json`) into a new tab says *Not available*.
+6. **Close the old door.** Bucket **Settings › Public access › r2.dev subdomain › Disallow**. From now on the Worker is the only way in.
+
+Prefer the command line? `tools/media-worker/wrangler.toml` deploys the same Worker with `npx wrangler deploy` (fill in your bucket name and site first).
+
+What it doesn't stop: someone who copies the requests out of their browser's developer tools, or a tool that fakes your site's headers. That takes deliberate effort, which is the point.

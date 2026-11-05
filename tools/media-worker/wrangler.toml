@@ -1,0 +1,13 @@
+# Optional: deploy the media gate from the command line instead of the dashboard.
+#   cd tools/media-worker && npx wrangler deploy
+# (First time: npx wrangler login.) Edit the bucket name and your site's address below.
+name = "concert-media"
+main = "worker.js"
+compatibility_date = "2026-06-01"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "your-bucket-name"
+
+[vars]
+ALLOWED_ORIGINS = "https://you.github.io/,http://localhost:8000/,http://127.0.0.1:8000/"

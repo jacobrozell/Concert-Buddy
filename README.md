@@ -79,6 +79,7 @@ The **Actions** tab shows the build; when it's green (about a minute), your site
 | Let Shazam name the songs (Mac) | `python3 scripts/shazam_tag.py --apply` | [Shazam](docs/shazam.md) |
 | Put your videos online (free up to 10 GB) | `python3 scripts/upload_media.py` | [Hosting](docs/hosting-media.md) |
 | Add other fans' YouTube / TikTok clips | edit `shows/<id>.json` | [Fan videos](docs/fan-videos.md) |
+| Stop people downloading your videos directly | a free Cloudflare Worker in front of the bucket | [Stop easy downloads](docs/hosting-media.md#stop-easy-downloads) |
 
 After any change: commit and push, and the site rebuilds.
 

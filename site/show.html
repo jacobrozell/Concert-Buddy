@@ -96,6 +96,12 @@
 .clip .frame>a{display:block;width:100%;height:100%}
 .clip video,.clip iframe,.clip .frame img{width:100%;height:100%;object-fit:contain;border:0;display:block;background:#000}
 .clip audio{width:100%}
+.clip .photo{all:unset;cursor:zoom-in;display:block;width:100%;height:100%}
+.clip .photo:focus-visible{outline:2px solid var(--accent);outline-offset:-4px}
+.clip img,.stage img,#lightbox img{-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none}
+#lightbox{position:fixed;inset:0;z-index:60;background:rgba(8,6,12,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;cursor:zoom-out}
+#lightbox img{max-width:100%;max-height:calc(100% - 40px);object-fit:contain;border-radius:6px}
+#lightbox .cap{font-size:14px;color:#ece6f3}
 .clip .poster{all:unset;cursor:pointer;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000 center/cover no-repeat}
 .clip .poster::after{content:"";width:58px;height:58px;border-radius:50%;background:rgba(0,0,0,.62) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8 5v14l11-7z' fill='white'/%3E%3C/svg%3E") 55% 50%/26px no-repeat;box-shadow:0 0 0 2px rgba(255,255,255,.8)}
 .clip .poster:focus-visible{outline:2px solid var(--accent);outline-offset:-4px}
@@ -201,6 +207,8 @@
   <footer class="site" id="foot"></footer>
 </div>
 
+<div id="lightbox" hidden tabindex="-1" role="dialog" aria-label="Photo"><img alt=""><span class="cap"></span></div>
+
 <div class="theater" id="theater" hidden role="dialog" aria-modal="true" aria-label="Play the show">
   <div class="th-top"><span class="eyebrow" id="th-eyebrow"></span><button class="btn x" id="th-close">Close ✕</button></div>
   <div class="stage" id="stage"></div>
@@ -245,9 +253,10 @@ const PLATFORM = {youtube:'YouTube', instagram:'Instagram', tiktok:'TikTok'};
 
 function clipCard(m, key){
   let frame;
-  if (m.kind === 'video') frame = `<div class="frame"><video controls playsinline preload="metadata" src="${esc(m.url)}${m.start!=null?'#t='+m.start:''}"></video></div>`;
-  else if (m.kind === 'image') frame = `<div class="frame"><a href="${esc(m.url)}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(m.url)}" alt="${esc(m.caption || 'Photo')}"></a></div>`;
-  else if (m.kind === 'audio') frame = `<div style="padding:12px"><audio controls preload="none" src="${esc(m.url)}"></audio></div>`;
+  // Your own media: no download button, no right-click "Save as", photos open in a viewer here (not as a raw file)
+  if (m.kind === 'video') frame = `<div class="frame"><video controls controlslist="nodownload" playsinline preload="metadata" src="${esc(m.url)}${m.start!=null?'#t='+m.start:''}"></video></div>`;
+  else if (m.kind === 'image') frame = `<div class="frame"><button class="photo" data-photo="${key}" aria-label="View photo"><img loading="lazy" draggable="false" src="${esc(m.url)}" alt="${esc(m.caption || 'Photo')}"></button></div>`;
+  else if (m.kind === 'audio') frame = `<div style="padding:12px"><audio controls controlslist="nodownload" preload="none" src="${esc(m.url)}"></audio></div>`;
   else if (m.kind === 'youtube') frame = `<div class="frame"><button class="poster" data-load="${key}" style="background-image:url('https://i.ytimg.com/vi/${encodeURIComponent(m.id)}/hqdefault.jpg')" aria-label="Play on YouTube"></button></div>`;
   else if (m.kind === 'instagram' || m.kind === 'tiktok') frame = `<div class="frame tall"><button class="poster" data-load="${key}" aria-label="Load ${PLATFORM[m.kind]} post"></button><span class="platform">${PLATFORM[m.kind]}</span></div>`;
   else frame = '';
@@ -257,6 +266,19 @@ function clipCard(m, key){
 
 const MEDIA = {};   // key -> media item, for lazy-loading embeds
 function keyFor(m){ const k = 'm' + Object.keys(MEDIA).length; MEDIA[k] = m; return k; }
+
+// No "Save image/video as…" on your own photos and clips (embedded YouTube/TikTok keep theirs).
+document.addEventListener('contextmenu', e => { if (e.target.closest('video, audio, .clip img, .stage img, #lightbox')) e.preventDefault(); });
+
+// Photos open full-screen here rather than as a bare file in a new tab.
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-photo]'); if (!b) return;
+  const m = MEDIA[b.dataset.photo], lb = document.getElementById('lightbox');
+  lb.querySelector('img').src = m.url; lb.querySelector('img').alt = m.caption || 'Photo';
+  lb.querySelector('.cap').textContent = m.caption || ''; lb.hidden = false; lb.focus();
+});
+document.getElementById('lightbox').addEventListener('click', e => { e.currentTarget.hidden = true; });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('lightbox').hidden = true; });
 
 document.addEventListener('click', e => {
   const p = e.target.closest('.poster[data-load]'); if (!p) return;
@@ -479,7 +501,7 @@ const Theater = (() => {
     if (q.gap){ card(song, 'No footage of this one yet. Skipping ahead…'); countdown(1800); return; }
     const m = q.m;
     if (m.kind === 'video' || m.kind === 'audio'){
-      const v = document.createElement(m.kind); v.src = m.url; v.controls = true; v.autoplay = true; v.playsInline = true;
+      const v = document.createElement(m.kind); v.src = m.url; v.controls = true; v.setAttribute('controlslist', 'nodownload'); v.autoplay = true; v.playsInline = true;
       if (m.kind === 'audio'){ card(song, 'Audio'); v.style.cssText = 'position:absolute;left:5%;right:5%;bottom:20px;width:90%;height:auto'; }
       v.addEventListener('loadedmetadata', () => { if (m.start) v.currentTime = m.start; });
       v.addEventListener('timeupdate', () => { if (m.end != null && v.currentTime >= m.end) next(); });
@@ -487,7 +509,7 @@ const Theater = (() => {
       v.addEventListener('error', () => { card(song, "This clip wouldn't play here. Skipping…"); countdown(2000); });
       stage.appendChild(v); v.play().catch(()=>{});
     } else if (m.kind === 'image'){
-      stage.innerHTML = `<img src="${esc(m.url)}" alt="">`; countdown(5000);
+      stage.innerHTML = `<img src="${esc(m.url)}" alt="" draggable="false">`; countdown(5000);
     } else if (m.kind === 'youtube'){
       const holder = document.createElement('div'); stage.appendChild(holder);
       loadYT().then(() => {
