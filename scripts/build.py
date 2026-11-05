@@ -22,8 +22,8 @@ from urllib.parse import parse_qs, quote, unquote, urlparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
-    MEDIA_DIR, ROOT, bill, clean_set_name, save_show, load_show, read_concerts, read_config, read_genres, read_manifest, show_acts,
-    slugify,
+    MEDIA_DIR, ROOT, bill, clean_set_name, find_song, save_show, load_show, read_concerts, read_config, read_genres, read_manifest,
+    show_acts, slugify, song_key, split_artists,
 )
 
 OUT = ROOT / "_site"
@@ -259,6 +259,19 @@ def build_show(row, cfg, genres, warnings):
         if info.get("estimated"):
             m["estimated"] = True
     extras = [m for m in extras if m.get("file") not in hidden]
+    if SERVING:  # what Shazam heard in each clip (scripts/shazam_tag.py), for the tagging screen
+        heard = shazam_heard().get(sid, {})
+        for m in all_media_now:
+            res = heard.get(m.get("file"))
+            if res is None:
+                continue
+            top = (res.get("heard") or [None])[0]
+            if not top:
+                m["shazam"] = {"title": ""}
+                continue
+            act, song = find_song(top["title"], top.get("artist", ""), acts)
+            m["shazam"] = {"title": top["title"], "artist": top.get("artist", ""), "votes": top.get("votes", 1),
+                           "windows": res.get("windows", 1), "key": f"{act['n']}-{song['n']}" if song else ""}
     hidden_items = []
     if SERVING:  # the tagging screen needs to see hidden files too
         for name in sorted(hidden):
@@ -305,6 +318,132 @@ def build_show(row, cfg, genres, warnings):
     return show, summary
 
 
+def shazam_heard():
+    """media/.shazam.json, written by scripts/shazam_tag.py: {show id: {file: {"heard": [...]}}}."""
+    p = MEDIA_DIR / ".shazam.json"
+    try:
+        return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+    except ValueError:
+        return {}
+
+
+# ---------- stats + memories ----------
+
+def companions_of(text):
+    return [c for part in split_artists(text) for c in re.split(r"\s*,\s*|\s+&\s+|\s+and\s+", part) if c]
+
+
+def compute_stats(built):
+    """Everything the stats and artist pages show, worked out from all the built shows.
+    Also marks each act with how many times you've seen that artist, and each song with
+    how many times you've heard it live (and which time this was), for the show page."""
+    built = sorted(built, key=lambda b: b[0]["date"])
+    artists, venues, cities, people = {}, {}, {}, {}
+    song_refs = []
+    weekdays, months = [0] * 7, [0] * 12
+    footage = clips = 0
+    import datetime as dt
+
+    for show, summary in built:
+        d = dt.date.fromisoformat(show["date"])
+        weekdays[(d.weekday() + 1) % 7] += 1  # Sunday first, like the JS Date
+        months[d.month - 1] += 1
+        v = venues.setdefault((show["venue"], show["location"]), {"venue": show["venue"], "location": show["location"], "shows": []})
+        v["shows"].append(show["id"])
+        cities.setdefault(show["location"], []).append(show["id"])
+        for p in companions_of(show["with"]):
+            people.setdefault(p, []).append(show["id"])
+        media = [*show["extras"], *(m for a in show["acts"] for st in a["sets"] for so in st["songs"] for m in so["media"])]
+        clips += len(media)
+        footage += sum(m.get("seconds") or 0 for m in media if m.get("kind") == "video")
+        for a in show["acts"]:
+            slug = slugify(a["artist"])
+            ar = artists.setdefault(slug, {"slug": slug, "name": a["artist"], "genres": a["genres"], "shows": [], "songs": {}})
+            songs = [so for st in a["sets"] for so in st["songs"]]
+            ar["shows"].append({"id": show["id"], "date": show["date"], "venue": show["venue"], "location": show["location"],
+                                "role": a["role"], "act": a["n"], "headliner": show["artist"], "songs": len(songs),
+                                "filmed": sum(1 for so in songs if so["media"]), "provisional": bool(a["provisional"])})
+            a["slug"], a["seen"], a["seen_nth"] = slug, None, len(ar["shows"])
+            for so in songs:
+                k = song_key(so["title"]) or so["title"].lower()
+                e = ar["songs"].setdefault(k, {"title": so["title"], "times": []})
+                e["times"].append({"id": show["id"], "date": show["date"], "act": a["n"], "song": so["n"],
+                                   "filmed": bool(so["media"]), "provisional": bool(a["provisional"])})
+                song_refs.append((so, e, len(e["times"])))
+    for show, _ in built:
+        for a in show["acts"]:
+            a["seen"] = len(artists[a["slug"]]["shows"])
+    for so, e, nth in song_refs:
+        so["live"] = {"count": len(e["times"]), "nth": nth}
+
+    def span(ids, by_id):
+        dates = [by_id[i]["date"] for i in ids]
+        return {"count": len(ids), "first": min(dates), "last": max(dates), "ids": ids}
+
+    by_id = {s["id"]: s for s, _ in built}
+    artist_list = []
+    for ar in artists.values():
+        songs = sorted(({"title": e["title"], "count": len(e["times"]), "confirmed": sum(not t["provisional"] for t in e["times"]),
+                         "times": e["times"]} for e in ar["songs"].values()),
+                       key=lambda x: (-x["count"], x["title"].lower()))
+        artist_list.append({"slug": ar["slug"], "name": ar["name"], "genres": ar["genres"], "count": len(ar["shows"]),
+                            "first": ar["shows"][0]["date"], "last": ar["shows"][-1]["date"],
+                            "headlined": sum(1 for s in ar["shows"] if s["role"] != "opener"), "shows": ar["shows"], "songs": songs})
+    artist_list.sort(key=lambda a: (-a["count"], -sum(s["songs"] for s in a["shows"]), a["name"].lower()))
+
+    top_songs = sorted(({"artist": a["name"], "slug": a["slug"], **s} for a in artist_list for s in a["songs"] if s["count"] > 1),
+                       key=lambda s: s["times"][-1]["date"], reverse=True)       # most recently heard first...
+    top_songs.sort(key=lambda s: (-s["count"], -s["confirmed"]))                  # ...within the same count
+
+    # a few facts worth a sentence
+    facts = []
+    if built:
+        first, last = built[0][0], built[-1][0]
+        facts.append({"label": "First show", "value": first["artist"], "detail": first["date"], "id": first["id"]})
+        years = {}
+        for s, _ in built:
+            years.setdefault(s["date"][:4], []).append(s["id"])
+        y, ids = max(years.items(), key=lambda kv: (len(kv[1]), kv[0]))
+        facts.append({"label": "Busiest year", "value": f"{y}", "detail": f"{len(ids)} shows"})
+        gaps = [((dt.date.fromisoformat(b[0]["date"]) - dt.date.fromisoformat(a[0]["date"])).days, a[0], b[0]) for a, b in zip(built, built[1:])]
+        if gaps:
+            g, a, b = max(gaps, key=lambda x: x[0])
+            mon = lambda s: dt.date.fromisoformat(s["date"]).strftime("%b %Y")
+            facts.append({"label": "Longest wait between shows", "value": f"{g // 365} yr {g % 365 // 30} mo" if g >= 365 else f"{g} days",
+                          "detail": f"{a['artist']}, {mon(a)} → {b['artist']}, {mon(b)}", "id": b["id"]})
+        def total_songs(s):
+            return sum(len(st["songs"]) for a in s["acts"] for st in a["sets"])
+        big = max(built, key=lambda b: (total_songs(b[0]), b[0]["date"]))[0]
+        if total_songs(big):
+            facts.append({"label": "Most songs in one night", "value": str(total_songs(big)), "detail": f"{big['artist']}, {big['date']}", "id": big["id"]})
+        bills = max(built, key=lambda b: (len(b[0]["acts"]), b[0]["date"]))[0]
+        if len(bills["acts"]) > 2:
+            facts.append({"label": "Biggest bill", "value": f"{len(bills['acts'])} acts", "detail": f"{bills['artist']}, {bills['date']}", "id": bills["id"]})
+        filmed = max(built, key=lambda b: (b[1]["clips"], b[0]["date"]))
+        if filmed[1]["clips"]:
+            facts.append({"label": "Most filmed night", "value": f"{filmed[1]['clips']} clips", "detail": f"{filmed[0]['artist']}, {filmed[0]['date']}", "id": filmed[0]["id"]})
+
+    states = {(loc.split(",")[-1].strip()) for loc in cities if loc}
+    return {
+        "totals": {
+            "shows": len(built), "artists": len(artists), "venues": len(venues), "cities": len(cities), "states": len(states),
+            "songs": sum(len(e["times"]) for ar in artists.values() for e in ar["songs"].values()),
+            "distinct_songs": sum(len(ar["songs"]) for ar in artists.values()),
+            "clips": clips, "footage_seconds": round(footage), "filmed_shows": sum(1 for _, s in built if s["clips"]),
+            "provisional_shows": sum(1 for _, s in built if s["provisional"]),
+        },
+        "top_songs": top_songs[:40],
+        "artists": artist_list,
+        "venues": sorted(({"venue": v["venue"], "location": v["location"], **span(v["shows"], by_id)} for v in venues.values()),
+                         key=lambda v: (-v["count"], v["first"])),
+        "cities": sorted(({"location": c, **span(ids, by_id)} for c, ids in cities.items()), key=lambda c: (-c["count"], c["first"])),
+        "companions": sorted(({"name": p, **span(ids, by_id)} for p, ids in people.items()), key=lambda c: (-c["count"], c["first"])),
+        "weekdays": weekdays,
+        "months": months,
+        "facts": facts,
+    }
+
+
 def site_url(cfg):
     """Public address of the site, for link previews. config.json wins; on GitHub Actions
     it's worked out from the repo name, so forks get correct previews with no setup."""
@@ -340,11 +479,12 @@ def build(quiet=False):
     shutil.copytree(SITE_SRC, OUT)
     (OUT / "data" / "shows").mkdir(parents=True)
 
-    summaries = []
-    for row in rows:
-        show, summary = build_show(row, cfg, genres, warnings)
-        summaries.append(summary)
-        (OUT / "data" / "shows" / f"{row['id']}.json").write_text(json.dumps(show, ensure_ascii=False), encoding="utf-8")
+    built = [build_show(row, cfg, genres, warnings) for row in rows]
+    summaries = [summary for _, summary in built]
+    stats = compute_stats(built)  # also adds times-seen / times-heard to each show's acts and songs
+    for show, _ in built:
+        (OUT / "data" / "shows" / f"{show['id']}.json").write_text(json.dumps(show, ensure_ascii=False), encoding="utf-8")
+    (OUT / "data" / "stats.json").write_text(json.dumps(stats, ensure_ascii=False), encoding="utf-8")
 
     site_cfg = {k: cfg[k] for k in ("site_title", "owner", "tagline", "highlight_companion", "repo_url")}
     (OUT / "data" / "concerts.json").write_text(

@@ -16,3 +16,8 @@ media/**
 !media/*/
 !media/*/media.json
 !media/README.md
+
+# The Shazam helper is built and signed on your own Mac (tools/shazam/build.sh)
+tools/shazam/cb-shazam
+tools/shazam/Info.plist
+tools/shazam/bundle-id

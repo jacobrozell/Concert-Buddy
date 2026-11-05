@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>{{site_title}}</title>
+<meta name="description" content="{{description}}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{site_title}}">
+<meta property="og:title" content="{{site_title}}">
+<meta property="og:description" content="{{description}}">
+<meta property="og:image" content="{{site_url}}assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#16121c">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;800;900&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/base.css">
+<style>
+/* One artist: every time you saw them, and every song you've heard them play. */
+.crumb{padding-block:22px 0;font-family:var(--mono);font-size:12.5px;display:flex;gap:18px}
+.crumb a{text-decoration:none;color:var(--muted)} .crumb a:hover{color:var(--fg)}
+.hero{padding-block:30px 4px}
+h1{font-family:var(--display);font-weight:900;font-size:clamp(52px,9vw,112px);line-height:.86;margin:10px 0 0;text-transform:uppercase;overflow-wrap:anywhere;text-wrap:balance}
+.line{display:flex;flex-wrap:wrap;gap:8px 26px;margin-top:20px;font-family:var(--mono);font-size:13px;color:var(--muted)}
+.line b{color:var(--fg);font-weight:500}
+
+section.block{margin-top:48px}
+.block>h2{font-family:var(--display);font-weight:800;font-size:32px;text-transform:uppercase;line-height:1;margin:0 0 14px}
+.block>.sub{color:var(--muted);margin:-8px 0 16px;font-size:14px}
+
+/* every time: small ticket stubs */
+.nights{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.night{--paper:#f3a597;position:relative;display:flex;flex-direction:column;gap:5px;background:var(--paper);color:var(--ink);border-radius:6px;padding:14px 16px 13px;text-decoration:none;
+  box-shadow:0 1px 0 rgba(0,0,0,.25),0 8px 18px -10px rgba(0,0,0,.6);transition:transform .2s ease}
+.night:hover,.night:focus-visible{transform:translateY(-3px)}
+.night .top{display:flex;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.night .v{font-family:var(--display);font-weight:800;font-size:24px;line-height:1;text-transform:uppercase;overflow-wrap:anywhere}
+.night .l{font-size:13px;color:var(--ink-soft)}
+.night .m{font-family:var(--mono);font-size:11px;color:var(--ink-soft);border-top:1px dashed color-mix(in srgb,var(--ink) 30%,transparent);padding:7px 46px 0 0;margin-top:3px}
+.night .nth{position:absolute;right:12px;bottom:10px;font-family:var(--display);font-weight:900;font-size:34px;line-height:1;color:color-mix(in srgb,var(--ink) 22%,transparent)}
+
+/* songs heard */
+.filter{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
+.search{flex:1 1 240px;min-width:0;background:var(--bg-2);border:1px solid var(--line);color:var(--fg);border-radius:999px;padding:9px 16px;font:inherit;font-size:14px;max-width:360px}
+.tally{list-style:none;margin:0;padding:0;columns:2 340px;column-gap:40px}
+.tally li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--line);break-inside:avoid}
+.tally .t{font-size:16px;font-weight:500;overflow-wrap:anywhere}
+.tally .x{font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tally li.rep .x{color:var(--accent)}
+.tally .times{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:4px}
+.tally .times a{font-family:var(--mono);font-size:10.5px;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:1px 7px;color:var(--muted)}
+.tally .times a:hover{color:var(--fg);border-color:var(--fg)}
+.tally .times a.prov{border-style:dashed}
+.tally .times a.film{border-color:var(--accent);color:var(--accent)}
+.note{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:12px}
+.others{display:flex;flex-wrap:wrap;gap:8px}
+.others a{font-size:14px;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px}
+.others a:hover{border-color:var(--fg)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="crumb"><a href="./">← All shows</a><a href="stats.html">Stats</a></nav>
+  <main id="page"><div class="empty">Loading…</div></main>
+  <footer class="site" id="foot"></footer>
+</div>
+
+<script src="assets/common.js"></script>
+<script>
+const {esc, region, paper, stubDate, longDate, getJSON} = CB;
+const slug = new URLSearchParams(location.search).get('a') || '';
+const ROLE = {opener: 'Opening', 'co-headliner': 'Co-headlining', headliner: 'Headlining'};
+const ord = n => { const s = ['th','st','nd','rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
+const showHref = (id, act) => `show.html?id=${encodeURIComponent(id)}${act ? `#act-${act}` : ''}`;
+
+Promise.all([getJSON('data/stats.json'), getJSON('data/concerts.json')]).then(([S, C]) => render(S, C)).catch(err => {
+  document.getElementById('page').innerHTML = `<div class="empty">Couldn't load the data. Run <code>python3 scripts/build.py --serve</code> and open the page from there.<br>${esc(err.message)}</div>`;
+});
+
+function render(S, C){
+  const cfg = C.config, a = S.artists.find(x => x.slug === slug);
+  const page = document.getElementById('page');
+  if (cfg.repo_url) document.getElementById('foot').innerHTML = `Made with ConcertBuddy — <a href="${esc(cfg.repo_url)}">grab the template and log your own shows</a>.`;
+  if (!a){ page.innerHTML = `<div class="empty">No artist called “${esc(slug)}” in this log. <a href="stats.html">See everyone</a>.</div>`; return; }
+  document.title = `${a.name} · ${cfg.site_title || 'Concert Log'}`;
+  const byId = Object.fromEntries(C.shows.map(s => [s.id, s]));
+  const heard = a.songs.reduce((n, s) => n + s.count, 0);
+  const yrs = a.first.slice(0, 4) === a.last.slice(0, 4) ? a.first.slice(0, 4) : `${a.first.slice(0, 4)}–${a.last.slice(0, 4)}`;
+
+  let h = `<header class="hero"><div class="eyebrow">${esc(a.genres.join(' · ') || 'Live')}</div><h1>${esc(a.name)}</h1>
+    <div class="line"><span>Seen <b>${a.count === 1 ? 'once' : a.count === 2 ? 'twice' : a.count + ' times'}</b></span><span><b>${yrs}</b></span>
+      ${heard ? `<span><b>${heard}</b> songs heard${a.songs.length !== heard ? ` · <b>${a.songs.length}</b> different` : ''}</span>` : ''}
+      ${a.headlined && a.headlined < a.count ? `<span>Headlining <b>${a.headlined}</b> · opening <b>${a.count - a.headlined}</b></span>` : ''}</div></header>`;
+
+  h += `<section class="block"><h2>${a.count > 1 ? 'Every time' : 'The night'}</h2><div class="nights">${a.shows.map((s, i) => {
+    const show = byId[s.id] || {}, st = region(s.location);
+    const bits = [s.songs ? `${s.songs} song${s.songs === 1 ? '' : 's'}` : 'no setlist yet', s.filmed ? `${s.filmed} filmed` : '', s.provisional ? 'provisional setlist' : ''].filter(Boolean).join(' · ');
+    return `<a class="night" href="${showHref(s.id, s.act)}" style="--paper:${paper(st)}">
+      <div class="top"><span>${stubDate(s.date)}</span><span>${ROLE[s.role] || ''}</span></div>
+      <div class="v">${esc(s.venue)}</div><div class="l">${esc(s.location)}${s.role === 'opener' ? ` · opening for ${esc(s.headliner)}` : ''}</div>
+      <div class="m">${bits}${show.with ? ` · with ${esc(show.with)}` : ''}</div>
+      ${a.count > 1 ? `<span class="nth" aria-hidden="true">${ord(i + 1)}</span>` : ''}</a>`; }).join('')}</div></section>`;
+
+  if (a.songs.length){
+    const reps = a.songs.filter(s => s.count > 1).length;
+    h += `<section class="block"><h2>Songs you've heard</h2>
+      ${a.count > 1 ? `<p class="sub">${reps ? `${reps} you've heard more than once.` : 'Never the same song twice.'} Most-heard first.</p>` : ''}
+      ${a.songs.length > 16 ? `<div class="filter"><input class="search" id="q" type="search" placeholder="Find a song…" aria-label="Find a song"></div>` : ''}
+      <ol class="tally" id="tally">${a.songs.map(s => `<li class="${s.count > 1 ? 'rep' : ''}" data-t="${esc(s.title.toLowerCase())}"><span class="t">${esc(s.title)}</span><span class="x">${s.count > 1 ? '×' + s.count : ''}</span>
+        ${a.count > 1 || s.times.some(t => t.filmed) ? `<span class="times">${s.times.map(t => `<a class="${t.provisional ? 'prov' : ''}${t.filmed ? ' film' : ''}" href="${showHref(t.id, t.act)}" title="${esc(longDate(t.date))}${t.filmed ? ' · you filmed it' : ''}${t.provisional ? ' · provisional setlist' : ''}">'${t.date.slice(2, 4)}${t.filmed ? ' ▶' : ''}</a>`).join('')}</span>` : ''}</li>`).join('')}</ol>
+      ${a.songs.some(s => s.confirmed < s.count) ? `<p class="note">Dashed years come from provisional setlists (copied from a nearby night on the tour), so a song or two may not have been played that night.</p>` : ''}
+    </section>`;
+  }
+
+  // who else was on those bills
+  const others = new Map();
+  for (const s of a.shows) for (const act of (byId[s.id]?.acts || [])){
+    const o = S.artists.find(x => x.name === act.artist);
+    if (o && o.slug !== a.slug) others.set(o.slug, o); }
+  if (others.size) h += `<section class="block"><h2>On the bill with them</h2><div class="others">${[...others.values()].map(o =>
+      `<a href="artist.html?a=${encodeURIComponent(o.slug)}">${esc(o.name)}</a>`).join('')}</div></section>`;
+
+  page.innerHTML = h;
+  document.getElementById('q')?.addEventListener('input', e => { const q = e.target.value.trim().toLowerCase();
+    document.querySelectorAll('#tally li').forEach(li => li.hidden = q && !li.dataset.t.includes(q)); });
+}
+</script>
+</body>
+</html>

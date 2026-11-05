@@ -151,6 +151,60 @@ def show_acts(show, row):
     return []
 
 
+def song_key(title, strip_brackets=False):
+    """A song title reduced to what identifies it, so the same song matches across
+    setlists and Shazam: 'Them Changes (Live)' / 'them changes' -> 'them changes',
+    'Sgt. Pepper's ... (Reprise)' keeps its '(reprise)'. With strip_brackets, every
+    bracketed part goes ('Earth Angel (Will You Be Mine)' -> 'earth angel')."""
+    t = unicodedata.normalize("NFKD", str(title)).encode("ascii", "ignore").decode().lower()
+    if strip_brackets:
+        t = re.sub(r"[\(\[][^)\]]*[\)\]]", " ", t)
+    else:  # recording details, not part of the song's name
+        t = re.sub(r"[\(\[][^)\]]*\b(feat|ft|with|live|remaster(ed)?|version|edit|mix|demo|acoustic|mono|stereo|bonus|from)\b[^)\]]*[\)\]]", " ", t)
+    m = re.search(r"\s+-\s+(.*)$", t)  # 'Song - Reprise / Remastered 2009' -> 'Song reprise'
+    if m:
+        keep = [p for p in re.split(r"\s*/\s*", m.group(1))
+                if not re.search(r"\b(live|remaster(ed)?|version|edit|mix|single|radio|acoustic|mono|stereo|demo|bonus|session)\b|\b(19|20)\d\d\b", p)]
+        t = t[:m.start()] + (" " + " ".join(keep) if keep else "")
+    t = t.replace("&", " and ")
+    t = re.sub(r"[^a-z0-9]+", " ", t).strip()
+    return re.sub(r"^the ", "", t)
+
+
+def same_artist(a, b):
+    """'Aaron West and The Roaring Twenties' ~ 'Aaron West'; 'SMINO' ~ 'Smino';
+    'The Beatles' ~ 'Black Jacket Symphony — Beatles' (a tribute act)."""
+    a, b = (re.sub(r"^the-", "", slugify(x)) for x in (a, b))
+    return bool(a and b) and (f"-{a}-" in f"-{b}-" or f"-{b}-" in f"-{a}-")  # whole words only: Train ≠ Trainwreck
+
+
+def find_song(title, artist, acts):
+    """Which song on a show's bill is this? acts: built acts ({n, artist, role, sets: [{songs: [{n, title}]}]}).
+    Returns (act, song) or (None, None). Exact titles win; a near-miss spelling only counts
+    when the artist matches too (Shazam names the original artist for covers, so a cover
+    still matches on its exact title)."""
+    from difflib import SequenceMatcher
+    rank = {"headliner": 0, "co-headliner": 1, "opener": 2}
+    forms = {song_key(title), song_key(title, True)} - {""}
+    best = None
+    for act in acts:
+        artist_ok = same_artist(artist, act["artist"]) if artist else False
+        for st in act["sets"]:
+            for so in st["songs"]:
+                theirs = {song_key(so["title"]), song_key(so["title"], True)} - {""}
+                if forms & theirs:
+                    score = 3
+                elif artist_ok and max((SequenceMatcher(None, x, y).ratio() for x in forms for y in theirs), default=0) >= 0.86:
+                    score = 1
+                else:
+                    continue
+                score += 2 if artist_ok else 0
+                key = (score, -rank.get(act.get("role"), 3))
+                if best is None or key > best[0]:
+                    best = (key, act, so)
+    return (best[1], best[2]) if best else (None, None)
+
+
 def read_genres():
     """artists.csv -> {artist slug: [genre, ...]} (first genre is the main one)."""
     path = ROOT / "artists.csv"

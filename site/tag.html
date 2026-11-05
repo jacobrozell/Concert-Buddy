@@ -55,6 +55,11 @@ h1{font-family:var(--display);font-weight:900;font-size:clamp(40px,6vw,68px);lin
 .chip{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:3px 8px;background:var(--bg-3);color:var(--fg)}
 .chip.sug{background:transparent;border:1px dashed var(--muted);color:var(--muted)}
 .chip.chg{background:var(--accent);color:#1d1824}
+.chip.sug.shz{border-style:solid;border-color:var(--fan);color:var(--fan)}
+.heard{font-size:13px;color:var(--muted)}
+.heard b{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:var(--fan);margin-right:4px}
+.heard i{font-style:normal;font-family:var(--mono);font-size:11.5px}
+.heard em{font-style:normal;color:var(--accent)}
 .chip.ok{background:color-mix(in srgb,var(--fan) 30%,var(--bg-3))}
 .gapline{font-family:var(--mono);font-size:11.5px;color:var(--muted);padding:6px 0 0 108px}
 
@@ -123,7 +128,7 @@ async function tagShow(){
 
   // Every file, wherever it currently sits
   ROWS = [];
-  const add = (m, value, how) => { if (m.file) ROWS.push({m, value, current: value, how, t: m.taken ? Date.parse(m.taken) : null}); };
+  const add = (m, value, how) => { if (m.file) ROWS.push({m, value, current: value, how, t: m.taken ? Date.parse(m.taken) : null, shz: m.shazam}); };
   for (const a of SHOW.acts) for (const st of a.sets) for (const x of st.songs) for (const m of x.media) add(m, `${a.n}-${x.n}`, m.by_name ? 'matched by file name' : 'saved');
   for (const m of SHOW.extras) add(m, m.auto ? '' : 'extra', m.auto ? '' : 'saved');
   for (const m of (SHOW.hidden || [])) add(m, 'hidden', 'saved');
@@ -133,7 +138,7 @@ async function tagShow(){
   if (!ORDER.length) toast('This show has no setlist yet, so clips can only go under Other moments');
 
   page.innerHTML = `<h1>${esc(SHOW.artist)}</h1>
-    <p class="sub">${longDate(SHOW.date)} · ${esc(SHOW.venue)}. Clips are in filming order. Tag one and the clips after it get a suggested song (dashed); <b>Accept suggestions</b> keeps them all, or change any you disagree with.</p>
+    <p class="sub">${longDate(SHOW.date)} · ${esc(SHOW.venue)}. Clips are in filming order. ${ROWS.some(r => r.shz) ? 'Songs Shazam recognised are suggested (dashed), and so are the clips after a tagged one, from the time between them.' : 'Tag one and the clips after it get a suggested song (dashed), from the time between them.'} <b>Accept suggestions</b> keeps them all, or change any you disagree with.</p>
     <div class="bar"><span class="counts" id="counts"></span>
       <span class="acts"><button class="btn" id="accept">Accept suggestions</button><button class="btn primary" id="save" disabled>Save</button></span></div>
     <ol class="rows">${ROWS.map((r, i) => {
@@ -141,7 +146,7 @@ async function tagShow(){
       return `${gap >= 10 ? `<li class="gapline">… ${gap} minutes …</li>` : ''}<li class="row" data-i="${i}">
         <div class="when">${r.m.estimated ? '≈ ' : ''}${clockOf(r.m.taken)}<small>${dur(r.m.seconds)}${r.m.kind === 'image' ? 'photo' : ''}</small></div>
         <div class="media">${r.m.kind === 'image' ? `<img loading="lazy" src="${esc(r.m.url)}" alt="">` : r.m.kind === 'video' ? `<video controls playsinline preload="metadata" src="${esc(r.m.url)}"></video>` : `<a href="${esc(r.m.url)}" target="_blank">open</a>`}</div>
-        <div class="pick"><span class="file">${esc(r.m.file)}</span><select aria-label="Song for ${esc(r.m.file)}">${SELECT}</select><span class="state"></span></div>
+        <div class="pick"><span class="file">${esc(r.m.file)}</span><select aria-label="Song for ${esc(r.m.file)}">${SELECT}</select><span class="state"></span>${heardLine(r.shz)}</div>
       </li>`; }).join('')}</ol>`;
 
   page.querySelectorAll('.row select').forEach(sel => sel.addEventListener('change', e => {
@@ -153,14 +158,27 @@ async function tagShow(){
   refresh();
 }
 
-// Suggest a song for each untagged clip from the last tagged one before it:
-// within ~1.5 min of its end = same song, otherwise one song per ~4.5 minutes.
+// What Shazam heard in a clip (scripts/shazam_tag.py), shown under its song picker.
+function heardLine(z){
+  if (!z) return '';
+  if (!z.title) return `<span class="heard">Shazam didn't recognise this one</span>`;
+  return `<span class="heard"><b>Shazam:</b> ${esc(z.title)} — ${esc(z.artist)}${z.windows > 1 ? ` <i>(${z.votes} of ${z.windows} listens)</i>` : ''}${z.key ? '' : ' · <em>not on the setlist</em>'}</span>`;
+}
+
+// Suggest a song for each untagged clip: the one Shazam recognised if it's on the setlist,
+// otherwise from the last placed clip before it: within ~1.5 min of its end = same song,
+// otherwise one song per ~4.5 minutes.
 function suggest(){
   let prev = null;
   for (const r of ROWS){
-    r.suggestion = '';
+    r.suggestion = ''; r.sugBy = '';
     const eff = r.current;
     if (eff && eff !== 'extra' && eff !== 'hidden'){ prev = {i: ORDER.indexOf(eff), end: (r.t || 0) + (r.m.seconds || 0) * 1000}; continue; }
+    if (!eff && r.shz?.key && ORDER.includes(r.shz.key)){
+      r.suggestion = r.shz.key; r.sugBy = 'shazam';
+      prev = {i: ORDER.indexOf(r.suggestion), end: (r.t || 0) + (r.m.seconds || 0) * 1000};
+      continue;
+    }
     if (eff || !prev || !r.t || prev.i < 0) continue;
     const gapMin = (r.t - prev.end) / 60000;
     const steps = gapMin < 1.5 ? 0 : Math.max(1, Math.round(gapMin / SONG_MIN));
@@ -179,7 +197,7 @@ function refresh(){
     const isChanged = r.current !== r.value, isSug = !r.current && !!r.suggestion;
     li.classList.toggle('suggested', isSug); li.classList.toggle('changed', isChanged); li.classList.toggle('hidden-clip', r.current === 'hidden');
     li.querySelector('.state').innerHTML = isChanged ? '<span class="chip chg">Not saved</span>'
-      : isSug ? '<span class="chip sug">Suggested</span>'
+      : isSug ? `<span class="chip sug${r.sugBy === 'shazam' ? ' shz' : ''}">${r.sugBy === 'shazam' ? 'Shazam match' : 'Suggested from timing'}</span>`
       : r.current ? `<span class="chip ok">${r.current === 'hidden' ? 'Hidden' : r.current === 'extra' ? 'Other moments' : 'Tagged'}</span>${r.how && r.how !== 'saved' ? ` ${esc(r.how)}` : ''}`
       : '';
     if (isChanged) changed++;

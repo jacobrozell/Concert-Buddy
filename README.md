@@ -27,6 +27,7 @@ No server, no database, no accounts, no monthly bill. Your log is a CSV file, on
 - [Big videos and storage limits](#big-videos-and-storage-limits)
 - [The timeline page](#the-timeline-page)
 - [The show page and Play the show](#the-show-page-and-play-the-show)
+- [Stats, artist pages and memories](#stats-artist-pages-and-memories)
 - [What the build does (and its warnings)](#what-the-build-does-and-its-warnings)
 - [Publishing on GitHub Pages](#publishing-on-github-pages)
 - [Privacy: everything is public](#privacy-everything-is-public)
@@ -222,10 +223,16 @@ ConcertBuddy/
 │   ├── setlist.py               ← fetches or imports setlists
 │   ├── import_media.py          ← sorts photos/videos into shows by capture time; shrinks videos
 │   ├── upload_media.py          ← uploads media to Cloudflare R2
+│   ├── shazam_tag.py            ← tags clips with the song Shazam hears in them
 │   └── common.py                ← shared helpers
+├── tools/shazam/
+│   ├── main.swift               ← the Mac helper that asks ShazamKit what's playing
+│   └── build.sh                 ← builds and signs it (tools/shazam/cb-shazam, not committed)
 ├── site/
 │   ├── index.html               ← the timeline page
 │   ├── show.html                ← the show page and player
+│   ├── stats.html               ← stats: most-heard songs, venues, who you go with
+│   ├── artist.html              ← every time you've seen one artist
 │   ├── tag.html                 ← tag clips with songs (local preview only)
 │   └── assets/
 │       ├── base.css             ← colours, fonts, shared styles
@@ -586,6 +593,37 @@ With the preview running (`python3 scripts/build.py --serve`), open **http://loc
 - **Accept suggestions** keeps them all; **Save** writes your choices to `shows/<id>.json` and rebuilds the preview.
 - **Not a song (Other moments)** is for the crowd, the venue, the merch line. **Hide** keeps a clip off the site entirely (accidental pocket videos).
 - Clips you've already tagged by file name show up as tagged, and changing one here simply overrides the name.
+- If you've run [Shazam](#song-tagging-with-shazam) over the show, what it heard is written under each clip, and clips whose song is on the setlist are suggested from that (a solid green **Shazam match** chip) instead of from timing.
+
+### Song tagging with Shazam
+
+On a Mac, Apple's ShazamKit can listen to each clip and name the song, so most of the tagging does itself. It works best on studio-recorded songs by well-known artists; crowd noise, a stripped-down live arrangement or a brand-new song can stump it, and then the timing suggestions above fill in.
+
+**One-time setup** (needs Xcode, macOS 14 or later, and an Apple developer account):
+
+1. In [developer.apple.com](https://developer.apple.com/account/resources/identifiers/list) › *Certificates, IDs & Profiles* › *Identifiers*, click **+**, choose **App IDs** › **App**, and give it an explicit bundle ID such as `com.yourname.concertbuddy.shazam`. On the **App Services** tab, tick **ShazamKit**, then register it. (Shazam only answers apps whose bundle ID has ShazamKit turned on.)
+2. Make sure Xcode has a signing certificate: *Xcode › Settings › Accounts*, sign in, *Manage Certificates* › **+** › *Apple Development*.
+3. Build the helper, signed with that bundle ID:
+   ```bash
+   tools/shazam/build.sh com.yourname.concertbuddy.shazam
+   ```
+   That compiles `tools/shazam/main.swift` into `tools/shazam/cb-shazam`, embeds the bundle ID, and signs it with your first *Apple Development* certificate (set `CB_SHAZAM_SIGN_IDENTITY` to pick another). The ID is remembered, so later builds are just `tools/shazam/build.sh`.
+4. Try it on one clip: `tools/shazam/cb-shazam media/<show-id>/IMG_1234.MOV`. It prints one line of JSON with what it heard. If every window has an `error` mentioning authorization or a token, ShazamKit isn't enabled for that bundle ID yet (it can take a few minutes after you tick the box). If Apple won't serve a plain command-line tool at all, wrap the same `main.swift` in a minimal macOS app target in Xcode with that bundle ID, and point `CB_SHAZAM` at the binary inside the built `.app`.
+
+**Run it:**
+
+```bash
+python3 scripts/shazam_tag.py                       # listen to every untagged clip and report
+python3 scripts/shazam_tag.py --apply               # ...and tag the ones whose song is on the setlist
+python3 scripts/shazam_tag.py --show 2023-04-22-shakey-graves --apply
+python3 scripts/shazam_tag.py --retry               # listen again to clips it didn't recognise
+```
+
+- It listens to up to four 12-second windows spread through each clip and stops as soon as two agree. A few hundred clips take a while; stop any time (Ctrl+C or `--time-limit 600`) and run it again to carry on.
+- What it heard is saved in `media/.shazam.json` (not committed), so re-runs only listen to new clips.
+- Matching to the setlist ignores case, punctuation, *(Live)*, *- Remastered 2009*, *(feat. …)* and the like. Covers match on the title even though Shazam names the original artist ("Where Is My Mind?" by Pixies lands on Shakey Graves's cover).
+- **It never touches a clip you've tagged**, hidden or put under Other moments. With `--apply`, review the result in the tagging screen.
+- A clip whose song **isn't on the setlist** is reported and left untagged. That's common with a provisional setlist: it's a sign the real night was different. Add the song to `shows/<id>.json` in the right place, then tag it.
 
 ### The quick way: tag the file name
 
@@ -799,7 +837,8 @@ Any S3-compatible storage works the same way (Backblaze B2, Amazon S3); `upload_
 - **Headline and stats.** Total shows; *Most seen* (the artist you've seen most, by the `artist` column); *Home venue* (most visits); *Cities* (distinct `location` values); *With …* (if `highlight_companion` is set); *Shows with footage* (once there is any).
 - **Shows-per-year chart.** Click a bar to jump to that year. Years with no shows appear as empty bars, and on the timeline a line like *"2019–2020 · no shows"* marks the gap.
 - **Sort.** *Newest first* / *Oldest first*.
-- **Search.** Matches artist, venue, location, opener and notes as you type.
+- **Memories.** Shows from this time of year in past years (see [Stats, artist pages and memories](#stats-artist-pages-and-memories)).
+- **Search.** Matches artist, venue, location, opener, who you went with and notes as you type. `./?q=Bridgestone` opens the page already searched.
 - **Filters.** One chip per state or region (the dot shows its stub colour), *With …*, and *Has footage* (appears once any show has media). Click a chip again to turn it off.
 - **Stubs.** Date, artist, venue, opener, and the show number in date order. Shows with a setlist say how long it was (*17-song setlist*); once a show has footage, that becomes a bar of ticks (filled = song has footage) and a count like *4/16 filmed*. A show dated today gets a **TONIGHT** stamp. Click a stub to open its show page.
 
@@ -843,6 +882,18 @@ A show with no setlist shows a *No setlist yet* box, plus any media in *Photos &
 **Keyboard:** `→` next, `←` previous, `Esc` close. When the video itself has focus, the arrow keys seek within it as usual.
 
 **On phones:** browsers only autoplay video after you've tapped something. Tapping *Play the show* counts, so it normally runs without further taps. If a phone pauses between clips, tap play on the video.
+
+---
+
+## Stats, artist pages and memories
+
+Everything here is worked out by `build.py` from your CSV and setlists (into `_site/data/stats.json`); there's nothing to maintain.
+
+- **Stats page** (`stats.html`, linked as *All the stats* on the home page): the totals (shows, artists, songs heard, venues, cities, hours of footage); **Songs you keep hearing**, every song you've heard live more than once, with a chip per night (outlined in your accent colour if you filmed it, dashed if it came from a provisional setlist); the artists you've seen most and your venues, cities and companions (click one to search the timeline for it); the nights of the week and months you go out; a few odds and ends (first show, busiest year, longest wait between shows, most songs in a night, biggest bill, most filmed night); and everyone you've seen, A–Z.
+- **Artist pages** (`artist.html?a=<artist-slug>`, e.g. `artist.html?a=shakey-graves`): every time you saw them as a row of ticket stubs (headlining or opening, with whom, how much you filmed), every song you've heard them play with how often and on which nights, and the other acts on those bills.
+- **On the show page**, an act you've seen before says which time this was (*4th of 6 times →*, linking to the artist page), and each song you've heard more than once says which time it was (*2nd of 3 times live*).
+- **Memories** on the home page: shows from a week before to two weeks after today's date in past years (*Tomorrow · 5 years ago*), and *On this day* when there's an anniversary today.
+- Songs are matched across nights by title, ignoring case, punctuation and things like *(Live)*. Songs from provisional setlists count, but are marked.
 
 ---
 
@@ -980,11 +1031,12 @@ Wait for the Action to finish, then hard-refresh (`Cmd+Shift+R` / `Ctrl+Shift+R`
 - [x] Openers and co-headliners as full acts, with their own setlists, in playing order
 - [x] Genres: filter, by-genre chart, per-act genres
 - [ ] **Finding fan footage:** a list of ready-made YouTube/TikTok searches for every empty song slot
-- [ ] **Song stats across shows:** songs you've heard live most often, first and last time you heard each, rarities
-- [ ] **Artist pages:** every time you've seen an artist, side by side
+- [x] **Song stats across shows:** songs you've heard live most often, and on which nights
+- [x] **Artist pages:** every time you've seen an artist, side by side
+- [x] **Memories:** shows from this time of year, years ago
 - [ ] **Fan uploads:** a per-show upload page you can share (e.g. on Reddit) where people pick the song they filmed and upload it to a review inbox. See the [spec](docs/fan-uploads-spec.md).
 - [x] **Media import:** sort clips into shows by capture time, shrink videos, tag songs on a screen, upload to Cloudflare R2
-- [ ] **Song recognition:** suggest the song from the clip's audio, not just its timing
+- [x] **Song recognition:** Shazam names the song in each clip (Mac, ShazamKit)
 - [ ] **Ticket stub images:** attach a photo of the real ticket to each show
 - [ ] **Map view:** venues on a map, sized by number of visits
 

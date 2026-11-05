@@ -83,6 +83,10 @@
 .song.bare .note{font-size:12.5px}
 .song .note{font-size:13px;color:var(--muted)}
 .song .count{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.song .live{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.song .live:hover{border-color:var(--accent);color:var(--accent)}
+.genres a{color:var(--accent);text-decoration:none} .genres a:hover{text-decoration:underline}
+.ticket dd a{color:inherit}
 .song .play-from{margin-left:auto;font-size:11.5px;padding:6px 11px}
 .clips{grid-column:2;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:10px}
 
@@ -192,7 +196,7 @@
 </head>
 <body>
 <div class="wrap">
-  <nav class="crumb"><a href="./">← All shows</a></nav>
+  <nav class="crumb"><a href="./">← All shows</a> <a href="stats.html" style="margin-left:18px">Stats</a></nav>
   <main id="page"><div class="empty">Loading…</div></main>
   <footer class="site" id="foot"></footer>
 </div>
@@ -266,6 +270,9 @@ const ROLE = {opener:'Opener', 'co-headliner':'Co-headliner', headliner:'Headlin
 let ACTS = [], CUR = null;   // acts in stage order; the act whose setlist is showing
 
 const songsOf = a => a.sets.flatMap(st => st.songs);
+const ord = n => { const s = ['th','st','nd','rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
+const artistHref = a => `artist.html?a=${encodeURIComponent(a.slug || '')}`;
+const seenText = a => `${ord(a.seen_nth)} of ${a.seen} times`;
 const filmedIn = a => songsOf(a).filter(x => x.media.length).length;
 function setlistLink(url, fallbackQuery){
   if (!url) return {href:`https://www.setlist.fm/search?query=${encodeURIComponent(fallbackQuery)}`, label:'Find the setlist on setlist.fm'};
@@ -295,7 +302,7 @@ function render(cfg){
       <div class="top"><span>${longDate(s.date)}</span><span>${esc(regionName(st))}</span></div>
       <h1>${esc(s.artist)}</h1>
       <div class="where">${esc(s.venue)} <small>${esc(s.location)}</small></div>
-      <dl>${multi ? '' : dd('Opener', s.opener)}${dd('Genre', s.genres.join(' · '))}${dd('With', s.with)}${dd('Notes', s.notes)}</dl>
+      <dl>${multi ? '' : dd('Opener', s.opener)}${dd('Genre', s.genres.join(' · '))}${dd('With', s.with)}${dd('Notes', s.notes)}${head.seen > 1 ? `<div><dt>Seen</dt><dd><a href="${artistHref(head)}">${seenText(head)} →</a></dd></div>` : ''}</dl>
       <div class="actions">
         ${filmed.length ? `<button class="btn primary" data-play="0">▶ Play the show</button>` : ''}
         ${multi ? '' : `<a class="btn" href="${esc(sl.href)}" target="_blank" rel="noopener">${sl.label} ↗</a>`}
@@ -379,7 +386,7 @@ function renderAct(){
   const sl = setlistLink(a.source, a.artist + ' ' + s.venue);
   let h = '';
   if (multi) h += `<div class="act-head"><div>
-      <div class="genres">${ROLE[a.role] || a.role}${a.genres.length ? ' · ' + esc(a.genres.join(', ')) : ''}</div>
+      <div class="genres">${ROLE[a.role] || a.role}${a.genres.length ? ' · ' + esc(a.genres.join(', ')) : ''}${a.seen > 1 ? ` · <a href="${artistHref(a)}">${seenText(a)} →</a>` : ''}</div>
       <h2>${esc(a.artist)}</h2></div>
       <div class="actions">${f ? `<button class="btn primary" data-play="${songs[0].idx}">▶ Play this set</button>` : ''}
         <a class="btn" href="${esc(sl.href)}" target="_blank" rel="noopener">${sl.label} ↗</a></div></div>`;
@@ -391,6 +398,7 @@ function renderAct(){
         h += `<li class="song${x.media.length ? ' has' : ' bare'}" id="song-${x.key}">
           <div class="num">${String(x.n).padStart(2,'0')}</div>
           <div class="head"><h4 class="title">${esc(x.title)}</h4>${x.note ? `<span class="note">${esc(x.note)}</span>` : ''}
+            ${x.live?.count > 1 ? `<a class="live" href="${artistHref(a)}" title="You've heard ${esc(x.title)} live ${x.live.count} times; this was the ${ord(x.live.nth)}">${x.live.nth === 1 ? 'first' : ord(x.live.nth)} of ${x.live.count} times live</a>` : ''}
             ${x.media.length ? `<span class="count">${x.media.length} clip${x.media.length>1?'s':''}</span><button class="btn play-from" data-play="${x.idx}">▶ Play from here</button>` : ''}</div>
           ${x.media.length ? `<div class="clips">${x.media.map(m => clipCard(m, keyFor(m))).join('')}</div>` : ''}
         </li>`;
