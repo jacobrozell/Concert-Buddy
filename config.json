@@ -3,7 +3,7 @@
   "owner": "Jacob Rozell",
   "tagline": "Every concert I've been to, one ticket stub at a time. Open a show to relive it song by song.",
   "highlight_companion": "Samantha",
-  "media_base_url": "",
+  "media_base_url": "https://pub-58eca57492724eafa6f5a9d9b081bb98.r2.dev",
   "repo_url": "https://github.com/jacobrozell/Concert-Buddy",
   "site_url": "https://jacobrozell.github.io/Concert-Buddy/",
   "timezone": "America/Chicago"
