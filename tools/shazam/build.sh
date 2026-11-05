@@ -64,6 +64,9 @@ if [ -z "$IDENTITY" ]; then
 fi
 echo "$BUNDLE_ID" > bundle-id
 echo "$IDENTITY" > sign-identity
+# Sign by the certificate's SHA-1 fingerprint, not its name: Xcode often leaves two
+# copies of the same certificate in the keychain, and codesign refuses an ambiguous name.
+SIGN_HASH="$(security find-identity -v -p codesigning | awk -v n="$IDENTITY" -F'"' '$2 == n {split($1, a, " "); print a[2]; exit}')"
 
 cat > Info.plist <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -78,19 +81,22 @@ cat > Info.plist <<PLIST
 </plist>
 PLIST
 
+rm -f cb-shazam cb-shazam.new   # never leave an older, unsigned build lying around
 echo "Compiling..."
-xcrun swiftc -O -swift-version 5 -target "$(uname -m)-apple-macos14" main.swift -o cb-shazam \
+xcrun swiftc -O -swift-version 5 -target "$(uname -m)-apple-macos14" main.swift -o cb-shazam.new \
   -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker Info.plist
 
 echo "Signing as ${IDENTITY} (team $(team_of "$IDENTITY")) for ${BUNDLE_ID}..."
-codesign --force --sign "$IDENTITY" --identifier "$BUNDLE_ID" cb-shazam
+trap 'rm -f cb-shazam.new' EXIT   # a failed signing never leaves a tool Shazam would refuse
+codesign --force --sign "${SIGN_HASH:-$IDENTITY}" --identifier "$BUNDLE_ID" cb-shazam.new
 # Shazam goes by these two: the identifier must be the bundle ID, the team the one that owns it
-SIGNED="$(codesign -dv cb-shazam 2>&1)"
+SIGNED="$(codesign -dv cb-shazam.new 2>&1)"
 grep -E '^(Identifier|TeamIdentifier)=' <<< "$SIGNED" | sed 's/^/  /' || true
 if ! grep -qx "Identifier=${BUNDLE_ID}" <<< "$SIGNED"; then
   echo "Signing didn't take (identifier isn't ${BUNDLE_ID}); Shazam will refuse it." >&2
   exit 1
 fi
+mv cb-shazam.new cb-shazam
 
 echo "Built tools/shazam/cb-shazam. Try it on one clip:"
 echo "  tools/shazam/cb-shazam media/<show-id>/IMG_1234.MOV"
