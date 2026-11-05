@@ -1,0 +1,69 @@
+{
+ "acts": [
+  {
+   "artist": "Hobo Johnson",
+   "sets": [
+    {
+     "name": "Main set",
+     "songs": [
+      {
+       "title": "Demarcus Cousins & Ashley"
+      },
+      {
+       "title": "mom & dad"
+      },
+      {
+       "title": "Dear Labels,"
+      },
+      {
+       "title": "Romeo & Juliet"
+      },
+      {
+       "title": "Sex in the City"
+      },
+      {
+       "title": "Creve Coeur 1"
+      },
+      {
+       "title": "Father"
+      },
+      {
+       "title": "Earth Angel (Will You Be Mine)"
+      },
+      {
+       "title": "Mario & Link"
+      },
+      {
+       "title": "Peach Scone"
+      },
+      {
+       "title": "Moonlight"
+      },
+      {
+       "title": "feb. 15th (alone forever)"
+      },
+      {
+       "title": "A lil p diddy about my GF moving away"
+      },
+      {
+       "title": "3%"
+      }
+     ]
+    },
+    {
+     "name": "Encore",
+     "songs": [
+      {
+       "title": "Twin Size Mattress"
+      },
+      {
+       "title": "Jesus Christ"
+      }
+     ]
+    }
+   ],
+   "provisional": "Copied from the closest night on the same tour with a posted setlist (The Underground, Charlotte, Jun 19, 2018). Replace it if this night's is ever posted.",
+   "source": "https://www.jambase.com/show/hobo-johnson-the-underground-at-the-fillmore-20180619"
+  }
+ ]
+}

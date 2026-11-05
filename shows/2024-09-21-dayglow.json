@@ -1,0 +1,93 @@
+{
+ "acts": [
+  {
+   "artist": "Dayglow",
+   "sets": [
+    {
+     "name": "Main set",
+     "songs": [
+      {
+       "title": "Junior Varsity"
+      },
+      {
+       "title": "Broken Bone"
+      },
+      {
+       "title": "Silver Lining"
+      },
+      {
+       "title": "Hot Rod"
+      },
+      {
+       "title": "Then It All Goes Away"
+      },
+      {
+       "title": "Cocoon"
+      },
+      {
+       "title": "Every Little Thing I Say I Do"
+      },
+      {
+       "title": "Fair Game"
+      },
+      {
+       "title": "Balcony"
+      },
+      {
+       "title": "What People Really Do"
+      },
+      {
+       "title": "Medicine"
+      },
+      {
+       "title": "Weatherman"
+      },
+      {
+       "title": "Crying on the Dancefloor"
+      },
+      {
+       "title": "Like She Does"
+      },
+      {
+       "title": "Fuzzybrain"
+      },
+      {
+       "title": "Old Friend, New Face"
+      },
+      {
+       "title": "This Feeling"
+      },
+      {
+       "title": "Nothing Ever Does!!!"
+      },
+      {
+       "title": "Mindless Creatures"
+      },
+      {
+       "title": "Can I Call You Tonight?"
+      }
+     ]
+    },
+    {
+     "name": "Encore",
+     "songs": [
+      {
+       "title": "Close to You"
+      },
+      {
+       "title": "False Direction"
+      },
+      {
+       "title": "Listerine"
+      },
+      {
+       "title": "Run the World!!!"
+      }
+     ]
+    }
+   ],
+   "provisional": "Copied from the closest night on the same tour with a posted setlist (The Tabernacle, Atlanta, Sep 19, 2024). Replace it if this night's is ever posted.",
+   "source": "https://www.jambase.com/show/dayglow-the-tabernacle-20240919"
+  }
+ ]
+}

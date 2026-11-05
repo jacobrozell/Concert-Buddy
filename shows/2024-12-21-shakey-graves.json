@@ -1,0 +1,90 @@
+{
+ "acts": [
+  {
+   "artist": "Shakey Graves",
+   "sets": [
+    {
+     "name": "Main set",
+     "songs": [
+      {
+       "title": "Cold Weather"
+      },
+      {
+       "title": "Look Alive"
+      },
+      {
+       "title": "Green Grass"
+      },
+      {
+       "title": "Unknown Legend"
+      },
+      {
+       "title": "Grand Canyon"
+      },
+      {
+       "title": "Ready or Not"
+      },
+      {
+       "title": "As Long as You Love Me"
+      },
+      {
+       "title": "Place for Me"
+      },
+      {
+       "title": "Little Things"
+      },
+      {
+       "title": "Christmas Tree"
+      },
+      {
+       "title": "Sin City"
+      },
+      {
+       "title": "One in a Million"
+      },
+      {
+       "title": "Hard Wired"
+      },
+      {
+       "title": "Was Here"
+      },
+      {
+       "title": "Unlucky Skin"
+      },
+      {
+       "title": "If Not for You"
+      },
+      {
+       "title": "Roll the Bones"
+      },
+      {
+       "title": "Counting Sheep"
+      },
+      {
+       "title": "Evergreen"
+      },
+      {
+       "title": "Pansy Waltz"
+      },
+      {
+       "title": "Islands in the Stream"
+      }
+     ]
+    },
+    {
+     "name": "Encore",
+     "songs": [
+      {
+       "title": "Late July"
+      },
+      {
+       "title": "Dearly Departed"
+      }
+     ]
+    }
+   ],
+   "provisional": "Copied from the closest night on the same tour with a posted setlist (Haw River Ballroom, Saxapahaw, NC, Dec 19, 2024). Replace it if this night's is ever posted.",
+   "source": "https://www.jambase.com/show/shakey-graves-haw-river-ballroom-20241219"
+  }
+ ]
+}

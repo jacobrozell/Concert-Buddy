@@ -1,0 +1,60 @@
+{
+ "acts": [
+  {
+   "artist": "Shakey Graves",
+   "sets": [
+    {
+     "name": "Main set",
+     "songs": [
+      {
+       "title": "Look Alive"
+      },
+      {
+       "title": "Mansion Door"
+      },
+      {
+       "title": "Dearly Departed"
+      },
+      {
+       "title": "Family and Genus"
+      },
+      {
+       "title": "Kids These Days"
+      },
+      {
+       "title": "The Recipe"
+      },
+      {
+       "title": "Tomorrow"
+      },
+      {
+       "title": "Nobody's Fool"
+      },
+      {
+       "title": "Unlucky Skin"
+      },
+      {
+       "title": "Roll the Bones"
+      }
+     ]
+    },
+    {
+     "name": "Encore",
+     "songs": [
+      {
+       "title": "Georgia Moon"
+      },
+      {
+       "title": "Unknown Legend"
+      },
+      {
+       "title": "The Perfect Parts"
+      }
+     ]
+    }
+   ],
+   "provisional": "Copied from the closest night on the same tour with a posted setlist (The Senate, Columbia, SC, Nov 7, 2021). Replace it if this night's is ever posted.",
+   "source": "https://www.jambase.com/show/shakey-graves-the-senate-20211107"
+  }
+ ]
+}

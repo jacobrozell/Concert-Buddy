@@ -1,0 +1,124 @@
+{
+ "acts": [
+  {
+   "artist": "David Ramirez",
+   "sets": [
+    {
+     "name": "Main set",
+     "songs": [
+      {
+       "title": "Twins"
+      },
+      {
+       "title": "Time"
+      },
+      {
+       "title": "Good Heart"
+      },
+      {
+       "title": "That Ain't Love"
+      },
+      {
+       "title": "Mighty Fine"
+      },
+      {
+       "title": "Wandering Man"
+      },
+      {
+       "title": "Stick Around"
+      },
+      {
+       "title": "Stone Age"
+      },
+      {
+       "title": "Too Far Away"
+      },
+      {
+       "title": "I'm Not Going Anywhere"
+      }
+     ]
+    }
+   ],
+   "provisional": "Copied from the closest night on the same tour with a posted setlist (Delmar Hall, St. Louis, Aug 16, 2017). Replace it if this night's is ever posted.",
+   "source": "https://www.jambase.com/show/shakey-graves-delmar-hall-20170816"
+  },
+  {
+   "artist": "Shakey Graves",
+   "sets": [
+    {
+     "name": "Solo acoustic",
+     "songs": [
+      {
+       "title": "Word of Mouth"
+      },
+      {
+       "title": "Tomorrow"
+      },
+      {
+       "title": "City in a Bottle"
+      }
+     ]
+    },
+    {
+     "name": "Full band",
+     "songs": [
+      {
+       "title": "The Donor Blues"
+      },
+      {
+       "title": "Unlucky Skin"
+      },
+      {
+       "title": "War Horn"
+      },
+      {
+       "title": "Dearly Departed"
+      },
+      {
+       "title": "The Perfect Parts"
+      },
+      {
+       "title": "Pansy Waltz"
+      },
+      {
+       "title": "Once in a While"
+      },
+      {
+       "title": "Where a Boy Once Stood"
+      },
+      {
+       "title": "Family and Genus"
+      }
+     ]
+    },
+    {
+     "name": "Solo",
+     "songs": [
+      {
+       "title": "Nobody's Fool"
+      },
+      {
+       "title": "Roll the Bones"
+      }
+     ]
+    },
+    {
+     "name": "Encore",
+     "songs": [
+      {
+       "title": "Darkness on the Edge of Town"
+      },
+      {
+       "title": "Chinatown"
+      },
+      {
+       "title": "Late July"
+      }
+     ]
+    }
+   ],
+   "provisional": "Copied from the closest night on the same tour with a posted setlist (Delmar Hall, St. Louis, Aug 16, 2017). Replace it if this night's is ever posted.",
+   "source": "https://www.jambase.com/show/shakey-graves-delmar-hall-20170816"
+  }
+ ]
+}

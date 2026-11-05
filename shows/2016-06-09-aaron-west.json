@@ -1,0 +1,85 @@
+{
+ "acts": [
+  {
+   "artist": "Can't Swim",
+   "sets": [
+    {
+     "name": "Main set",
+     "songs": [
+      {
+       "title": "Stranger"
+      },
+      {
+       "title": "Come Home"
+      },
+      {
+       "title": "Way It Was"
+      },
+      {
+       "title": "What's Your Big Idea?"
+      },
+      {
+       "title": "Death Deserves a Name"
+      },
+      {
+       "title": "Your Clothes"
+      }
+     ]
+    }
+   ],
+   "provisional": "Copied from the closest night on the same tour with a posted setlist (Visulite Theatre, Charlotte, Jun 10, 2016). Replace it if this night's is ever posted.",
+   "source": "https://www.jambase.com/show/aaron-west-and-the-roaring-twenties-visulite-theatre-20160610"
+  },
+  {
+   "artist": "Aaron West",
+   "sets": [
+    {
+     "name": "Main set",
+     "songs": [
+      {
+       "title": "Our Apartment"
+      },
+      {
+       "title": "Grapefruit"
+      },
+      {
+       "title": "St. Joe Keeps Us Safe"
+      },
+      {
+       "title": "More Adventurous"
+      },
+      {
+       "title": "Runnin' Scared"
+      },
+      {
+       "title": "Divorce and the American South"
+      },
+      {
+       "title": "The Thunderbird Inn"
+      },
+      {
+       "title": "Get Me Out of Here Alive"
+      },
+      {
+       "title": "You Ain't No Saint"
+      },
+      {
+       "title": "Carolina Coast"
+      },
+      {
+       "title": "'67, Cherry Red"
+      },
+      {
+       "title": "Goodbye, Carolina Blues"
+      },
+      {
+       "title": "Green Like the G Train, Green Like Sea Foam"
+      }
+     ]
+    }
+   ],
+   "provisional": "Copied from the closest night on the same tour with a posted setlist (Visulite Theatre, Charlotte, Jun 10, 2016). Replace it if this night's is ever posted.",
+   "source": "https://www.jambase.com/show/aaron-west-and-the-roaring-twenties-visulite-theatre-20160610"
+  }
+ ]
+}

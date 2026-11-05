@@ -1,0 +1,54 @@
+{
+ "acts": [
+  {
+   "artist": "Black Jacket Symphony — Beatles",
+   "sets": [
+    {
+     "name": "Sgt. Pepper's Lonely Hearts Club Band",
+     "songs": [
+      {
+       "title": "Sgt. Pepper's Lonely Hearts Club Band"
+      },
+      {
+       "title": "With a Little Help from My Friends"
+      },
+      {
+       "title": "Lucy in the Sky with Diamonds"
+      },
+      {
+       "title": "Getting Better"
+      },
+      {
+       "title": "Fixing a Hole"
+      },
+      {
+       "title": "She's Leaving Home"
+      },
+      {
+       "title": "Being for the Benefit of Mr. Kite!"
+      },
+      {
+       "title": "Within You Without You"
+      },
+      {
+       "title": "When I'm Sixty-Four"
+      },
+      {
+       "title": "Lovely Rita"
+      },
+      {
+       "title": "Good Morning Good Morning"
+      },
+      {
+       "title": "Sgt. Pepper's Lonely Hearts Club Band (Reprise)"
+      },
+      {
+       "title": "A Day in the Life"
+      }
+     ]
+    }
+   ],
+   "provisional": "The album's track list, since the whole album was played in order. The greatest-hits set after it isn't posted anywhere: add it if you remember it."
+  }
+ ]
+}
