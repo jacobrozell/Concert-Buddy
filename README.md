@@ -579,7 +579,7 @@ python3 scripts/import_media.py --convert        # videos already in show folder
 python3 scripts/import_media.py --convert 720    # smaller still
 ```
 
-A 52-second iPhone clip goes from 68 MB to about 22 MB at 1080p, or 10 MB at 720p, and plays in every browser. On a Mac, ffmpeg uses **Apple's hardware video encoder** automatically, which is several times faster than the default and converts several clips at once. `--encoder x264` gives slightly smaller files, more slowly; `--jobs 4` converts four at a time. Originals of files converted in place are kept in `originals/` (never committed); delete them once you're happy, since the originals are still in Photos or on your drive.
+A 52-second iPhone clip goes from 68 MB to about 22 MB at 1080p, or 10 MB at 720p, and plays in every browser. On a Mac, ffmpeg uses **Apple's hardware video encoder** automatically, which is several times faster than the default and converts several clips at once. `--encoder x264` gives slightly smaller files, more slowly. x264 already uses every CPU core for each clip, so keep `--jobs` at 1 or 2 with it (more can overload the machine); the Apple encoder runs on its own chip and barely touches the CPU. Originals of files converted in place are kept in `originals/` (never committed); delete them once you're happy, since the originals are still in Photos or on your drive.
 
 It's safe to stop with Ctrl+C (or `--time-limit SECONDS`) and run it again: each clip is written to a temporary `.converting.mp4` and only swapped in once it's finished, so it picks up where it left off. Each clip keeps its real frame rate (iPhone files claim 120 fps, which used to make ffmpeg pad them with duplicate frames), and tags and Shazam results follow the new `.mp4` names.
 
