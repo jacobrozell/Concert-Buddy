@@ -127,7 +127,12 @@
               "title": "Long Yellow Dress"
             },
             {
-              "title": "50 Ways to Say Goodbye"
+              "title": "50 Ways to Say Goodbye",
+              "media": [
+                {
+                  "src": "IMG_9209.MOV"
+                }
+              ]
             },
             {
               "title": "Marry Me"

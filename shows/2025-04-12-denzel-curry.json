@@ -1,6 +1,69 @@
 {
   "acts": [
     {
+      "artist": "Kenny Mason",
+      "sets": [
+        {
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "MONEY SIGNS",
+              "media": [
+                {
+                  "src": "IMG_0160 (1).MOV"
+                }
+              ]
+            },
+            {
+              "title": "Hit"
+            },
+            {
+              "title": "Play Ball / HALLOWEEN"
+            },
+            {
+              "title": "JUMPIN IN"
+            },
+            {
+              "title": "EASY DUB"
+            },
+            {
+              "title": "Chevron"
+            },
+            {
+              "title": "PULP FICTION"
+            },
+            {
+              "title": "DRACULA"
+            },
+            {
+              "title": "BEEN HAVIN"
+            },
+            {
+              "title": "US"
+            },
+            {
+              "title": "Back Home"
+            },
+            {
+              "title": "HOODRAT"
+            },
+            {
+              "title": "SHELL"
+            },
+            {
+              "title": "Stick",
+              "note": "Dreamville cover"
+            },
+            {
+              "title": "ANGEL EYES"
+            }
+          ]
+        }
+      ],
+      "provisional": "Copied from the closest night on the same tour with a posted setlist (The Fillmore, Silver Spring, MD, Apr 14, 2025). Replace it if this night's is ever posted.",
+      "source": "https://www.setlist.fm/setlist/kenny-mason/2025/the-fillmore-silver-spring-silver-spring-md-2b5e0042.html"
+    },
+    {
       "artist": "Denzel Curry",
       "sets": [
         {
@@ -13,13 +76,23 @@
               "title": "RICKY"
             },
             {
-              "title": "HIT THE FLOOR"
+              "title": "HIT THE FLOOR",
+              "media": [
+                {
+                  "src": "IMG_0166 (1).MOV"
+                }
+              ]
             },
             {
               "title": "Zone 3"
             },
             {
-              "title": "Walkin"
+              "title": "Walkin",
+              "media": [
+                {
+                  "src": "IMG_0167 (1).MOV"
+                }
+              ]
             },
             {
               "title": "COLE PIMP"

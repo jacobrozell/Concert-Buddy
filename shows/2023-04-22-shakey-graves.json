@@ -1,69 +1,78 @@
 {
- "acts": [
-  {
-   "artist": "Shakey Graves",
-   "sets": [
+  "acts": [
     {
-     "name": "Main set",
-     "songs": [
-      {
-       "title": "Tomorrow"
-      },
-      {
-       "title": "Look Alive"
-      },
-      {
-       "title": "Chinatown"
-      },
-      {
-       "title": "Century City"
-      },
-      {
-       "title": "Excuses"
-      },
-      {
-       "title": "If Not for You"
-      },
-      {
-       "title": "Built to Roam"
-      },
-      {
-       "title": "Word of Mouth"
-      },
-      {
-       "title": "Where Is My Mind?"
-      },
-      {
-       "title": "Counting Sheep"
-      },
-      {
-       "title": "Ready or Not"
-      },
-      {
-       "title": "Family and Genus"
-      },
-      {
-       "title": "Kids These Days"
-      },
-      {
-       "title": "Dearly Departed"
-      }
-     ]
-    },
-    {
-     "name": "Encore",
-     "songs": [
-      {
-       "title": "Unlucky Skin"
-      },
-      {
-       "title": "Roll the Bones"
-      }
-     ]
+      "artist": "Shakey Graves",
+      "sets": [
+        {
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "Tomorrow"
+            },
+            {
+              "title": "Look Alive"
+            },
+            {
+              "title": "Chinatown"
+            },
+            {
+              "title": "Century City"
+            },
+            {
+              "title": "Excuses"
+            },
+            {
+              "title": "If Not for You"
+            },
+            {
+              "title": "Mansion Door",
+              "note": "Not on the borrowed setlist: Shazam heard it in your footage (placed by when you filmed it)",
+              "media": [
+                {
+                  "src": "IMG_7466.MOV"
+                }
+              ]
+            },
+            {
+              "title": "Built to Roam"
+            },
+            {
+              "title": "Word of Mouth"
+            },
+            {
+              "title": "Where Is My Mind?"
+            },
+            {
+              "title": "Counting Sheep"
+            },
+            {
+              "title": "Ready or Not"
+            },
+            {
+              "title": "Family and Genus"
+            },
+            {
+              "title": "Kids These Days"
+            },
+            {
+              "title": "Dearly Departed"
+            }
+          ]
+        },
+        {
+          "name": "Encore",
+          "songs": [
+            {
+              "title": "Unlucky Skin"
+            },
+            {
+              "title": "Roll the Bones"
+            }
+          ]
+        }
+      ],
+      "provisional": "Copied from the closest night on the same tour with a posted setlist (The Civic Theatre, New Orleans, Apr 21, 2023). Replace it if this night's is ever posted. Added from your footage: Mansion Door.",
+      "source": "https://www.jambase.com/show/shakey-graves-the-civic-theatre-20230421"
     }
-   ],
-   "provisional": "Copied from the closest night on the same tour with a posted setlist (The Civic Theatre, New Orleans, Apr 21, 2023). Replace it if this night's is ever posted.",
-   "source": "https://www.jambase.com/show/shakey-graves-the-civic-theatre-20230421"
-  }
- ]
+  ]
 }

@@ -31,7 +31,12 @@
           "name": "Set 2",
           "songs": [
             {
-              "title": "SOLO STEPPIN CRETE BOY"
+              "title": "SOLO STEPPIN CRETE BOY",
+              "media": [
+                {
+                  "src": "IMG_8564.MOV"
+                }
+              ]
             },
             {
               "title": "Slide"

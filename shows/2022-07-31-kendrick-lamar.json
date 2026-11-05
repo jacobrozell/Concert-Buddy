@@ -1,6 +1,73 @@
 {
   "acts": [
     {
+      "artist": "Baby Keem",
+      "sets": [
+        {
+          "name": "Main set",
+          "songs": [
+            {
+              "title": "trademark usa"
+            },
+            {
+              "title": "hooligan"
+            },
+            {
+              "title": "scapegoats",
+              "media": [
+                {
+                  "src": "IMG_6145.MOV"
+                }
+              ]
+            },
+            {
+              "title": "MOSHPIT"
+            },
+            {
+              "title": "HONEST"
+            },
+            {
+              "title": "Praise God",
+              "media": [
+                {
+                  "src": "IMG_6146.MOV"
+                }
+              ]
+            },
+            {
+              "title": "lost souls"
+            },
+            {
+              "title": "issues"
+            },
+            {
+              "title": "range brothers",
+              "media": [
+                {
+                  "src": "IMG_6147.MOV"
+                }
+              ]
+            },
+            {
+              "title": "16",
+              "media": [
+                {
+                  "src": "IMG_6148.MOV"
+                }
+              ]
+            },
+            {
+              "title": "ORANGE SODA"
+            },
+            {
+              "title": "vent"
+            }
+          ]
+        }
+      ],
+      "source": "https://www.jambase.com/show/kendrick-lamar-bridgestone-arena-20220731"
+    },
+    {
       "artist": "Kendrick Lamar",
       "sets": [
         {
@@ -37,7 +104,12 @@
               "title": "Purple Hearts"
             },
             {
-              "title": "King Kunta"
+              "title": "King Kunta",
+              "media": [
+                {
+                  "src": "IMG_6150.MOV"
+                }
+              ]
             },
             {
               "title": "Bitch, Don't Kill My Vibe",
@@ -47,7 +119,12 @@
               "title": "Die Hard"
             },
             {
-              "title": "DNA."
+              "title": "DNA.",
+              "media": [
+                {
+                  "src": "IMG_6151.MOV"
+                }
+              ]
             },
             {
               "title": "Count Me Out"
@@ -62,7 +139,12 @@
               "title": "Alright"
             },
             {
-              "title": "Mirror"
+              "title": "Mirror",
+              "media": [
+                {
+                  "src": "IMG_6153.MOV"
+                }
+              ]
             },
             {
               "title": "LOYALTY."
@@ -79,7 +161,12 @@
             },
             {
               "title": "Mr. Morale",
-              "note": "with Tanna Leone"
+              "note": "with Tanna Leone",
+              "media": [
+                {
+                  "src": "IMG_6155.MOV"
+                }
+              ]
             },
             {
               "title": "Savior"

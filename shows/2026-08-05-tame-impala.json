@@ -80,7 +80,12 @@
           "name": "Encore",
           "songs": [
             {
-              "title": "My Old Ways"
+              "title": "My Old Ways",
+              "media": [
+                {
+                  "src": "IMG_3103.MOV"
+                }
+              ]
             },
             {
               "title": "The Less I Know the Better"
