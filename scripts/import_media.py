@@ -768,42 +768,83 @@ def rename_references(sid, old, new):
         save_show(sid, json.loads(text.replace(json.dumps(old), json.dumps(new))))
 
 
-def convert_existing(height, encoder, jobs):
-    """Re-encode videos already in show folders; originals go to originals/ (git-ignored)."""
+def convert_existing(height, encoder, jobs, time_limit=None):
+    """Re-encode videos already in show folders; originals go to originals/ (git-ignored).
+    Safe to stop (Ctrl+C) and run again: each video is written to a .converting.mp4 file
+    first and only swapped in once it's complete."""
     shows = {r["id"] for r in read_concerts()}
+    for leftover in MEDIA_DIR.glob("*/*.converting.mp4"):  # from a run that was stopped
+        leftover.unlink()
     todo = sorted(p for p in MEDIA_DIR.glob("*/*") if p.parent.name in shows and p.suffix.lower() in VIDEO_EXT
                   and not (p.suffix.lower() == ".mp4" and p.stat().st_size < 30 * 1024 * 1024))
     if not todo:
         print("Nothing to convert.")
         return
-    print(f"Converting {len(todo)} video(s) to {height}p with the {'Apple hardware' if encoder == 'apple' else 'x264'} encoder…")
+    secs = sum((read_manifest(p.parent.name).get(p.name) or {}).get("seconds") or 0 for p in todo)
+    print(f"Converting {len(todo)} video(s) ({secs / 3600:.1f} h of footage) to {height}p with the "
+          f"{'Apple hardware' if encoder == 'apple' else 'x264'} encoder, {max(1, jobs)} at a time…  (Ctrl+C to stop; run again to continue)")
+    shazam = MEDIA_DIR / ".shazam.json"
+    heard = json.loads(shazam.read_text(encoding="utf-8")) if shazam.exists() else None
 
     def run(p):
-        out = p.with_suffix(".mp4") if p.suffix.lower() != ".mp4" else p.with_name(p.stem + "-small.mp4")
-        if not encode(p, out, height, encoder):
+        tmp = p.with_name(p.stem + ".converting.mp4")
+        if not encode(p, tmp, height, encoder):
             return p, None, 0
         size = p.stat().st_size
         (p.parent / "originals").mkdir(exist_ok=True)
         shutil.move(str(p), unique(p.parent / "originals" / p.name))
-        if out.name.endswith("-small.mp4"):
-            out = out.rename(p)
-        return p, out, size
+        target = p.with_suffix(".mp4")
+        if target.exists():  # never overwrite another clip that happens to share the name
+            target = unique(target)
+        return p, tmp.rename(target), size
 
-    before = after = 0
-    with cf.ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
-        for k, (p, out, size) in enumerate(pool.map(run, todo), 1):
-            if not out:
-                print(f"  [{k}/{len(todo)}] {p.parent.name}/{p.name}: failed, left as is")
-                continue
-            before += size
-            after += out.stat().st_size
-            entries = read_manifest(p.parent.name)
-            old = entries.pop(p.name, {})
-            entries[out.name] = {**old, "bytes": out.stat().st_size}
-            write_manifest(p.parent.name, entries)
-            rename_references(p.parent.name, p.name, out.name)
-            print(f"  [{k}/{len(todo)}] {p.parent.name}/{out.name}  {size / 1048576:.0f} → {out.stat().st_size / 1048576:.0f} MB", flush=True)
-    print(f"\n{before / 1048576:.0f} MB → {after / 1048576:.0f} MB. Originals are in each show's originals/ folder (not committed).")
+    before = after = done = 0
+    started = dt.datetime.now()
+    pool = cf.ThreadPoolExecutor(max_workers=max(1, jobs))
+    pending, queue = set(), iter(todo)
+    try:
+        while True:
+            while len(pending) < max(1, jobs):
+                if time_limit and (dt.datetime.now() - started).total_seconds() > time_limit:
+                    break
+                p = next(queue, None)
+                if p is None:
+                    break
+                pending.add(pool.submit(run, p))
+            if not pending:
+                break
+            finished, pending = cf.wait(pending, return_when=cf.FIRST_COMPLETED)
+            for f in finished:
+                p, out, size = f.result()
+                done += 1
+                if not out:
+                    print(f"  [{done}/{len(todo)}] {p.parent.name}/{p.name}: failed, left as is", flush=True)
+                    continue
+                before += size
+                after += out.stat().st_size
+                sid = p.parent.name
+                entries = read_manifest(sid)
+                old = entries.pop(p.name, {})
+                entries[out.name] = {**old, "bytes": out.stat().st_size}
+                write_manifest(sid, entries)
+                rename_references(sid, p.name, out.name)
+                if heard and p.name in heard.get(sid, {}):  # keep what Shazam heard under the new name
+                    heard[sid][out.name] = heard[sid].pop(p.name)
+                    shazam.write_text(json.dumps(heard, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+                print(f"  [{done}/{len(todo)}] {sid}/{out.name}  {size / 1048576:.0f} → {out.stat().st_size / 1048576:.0f} MB", flush=True)
+    except KeyboardInterrupt:
+        print("\nStopping… (the clips being converted right now are thrown away; run again to continue)")
+        pool.shutdown(wait=True, cancel_futures=True)
+        for leftover in MEDIA_DIR.glob("*/*.converting.mp4"):
+            leftover.unlink()
+        raise SystemExit(130)
+    pool.shutdown()
+    left = len(todo) - done
+    print(f"\n{before / 1048576:.0f} MB → {after / 1048576:.0f} MB"
+          + (f" ({(1 - after / before) * 100:.0f}% smaller)" if before else "")
+          + ". Originals are in each show's originals/ folder (not committed); delete those folders once you're happy.")
+    if left:
+        print(f"Stopped at the time limit with {left} still to convert; run again to continue.")
 
 
 def index():
@@ -871,7 +912,7 @@ if __name__ == "__main__":
         index()
     elif args.convert and not (args.apply or args.sources):
         enc = encoder_choice(args.encoder)
-        convert_existing(args.convert, enc, args.jobs or (3 if enc == "apple" else 1))
+        convert_existing(args.convert, enc, args.jobs or (3 if enc == "apple" else 2), args.time_limit)
     else:
         items = plan(args.sources, args.min_seconds, time_limit=args.time_limit)
         if not items:
