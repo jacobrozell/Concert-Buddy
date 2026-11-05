@@ -1,0 +1,78 @@
+{
+ "acts": [
+  {
+   "artist": "Shovels & Rope",
+   "sets": [
+    {
+     "name": "Main set",
+     "songs": [
+      {
+       "title": "I'm Waking Up"
+      },
+      {
+       "title": "Young Love"
+      },
+      {
+       "title": "By Blood"
+      },
+      {
+       "title": "Carry Me Home"
+      },
+      {
+       "title": "Love Song From a Dog"
+      },
+      {
+       "title": "Mississippi Nuthin'"
+      },
+      {
+       "title": "I'd Be Lying"
+      },
+      {
+       "title": "1200 Miles"
+      },
+      {
+       "title": "Stono River Blues"
+      },
+      {
+       "title": "The Devil Is All Around"
+      },
+      {
+       "title": "Something Is Working"
+      },
+      {
+       "title": "O' Be Joyful"
+      },
+      {
+       "title": "Birmingham"
+      },
+      {
+       "title": "The Human Race"
+      },
+      {
+       "title": "The Wire"
+      },
+      {
+       "title": "Shank Hill St."
+      },
+      {
+       "title": "Colorado River"
+      },
+      {
+       "title": "Two Wolves"
+      }
+     ]
+    },
+    {
+     "name": "Encore",
+     "songs": [
+      {
+       "title": "She Gets Down"
+      }
+     ]
+    }
+   ],
+   "provisional": "setlist.fm's average setlist for their 2026 shows (built from 11 posted setlists), since this night's was never posted.",
+   "source": "https://www.setlist.fm/stats/average-setlist/shovels-and-rope-7bd12e38.html?year=2026"
+  }
+ ]
+}
