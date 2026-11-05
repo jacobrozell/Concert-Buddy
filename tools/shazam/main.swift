@@ -20,11 +20,14 @@ struct Window: Encodable {
     var isrc: String?
     var appleMusicURL: String?
     var error: String?
+    var level: Double?      // loudness of the audio sent to Shazam, dBFS (-100 = silence)
+    var heard: Double?      // seconds of audio in the signature
 }
 
 struct Clip: Encodable {
     var file: String
     var seconds: Double = 0
+    var track: String?      // codec of the audio track listened to, e.g. "aac "
     var windows: [Window] = []
     var error: String?
 }
@@ -44,6 +47,8 @@ enum ListenError: Error, CustomStringConvertible {
 var windowLength = 10.0   // Shazam's catalog takes 3–12 s; decoding can overshoot by a few samples, so stay under
 var maxWindows = 4
 var pause = 0.3
+var useAsset = false      // --asset: let ShazamKit read the audio itself instead of our decoder
+var dumpDir: String?      // --dump DIR: also save each window's audio as a .wav, to listen to
 var files: [String] = []
 var argv = Array(CommandLine.arguments.dropFirst())
 while !argv.isEmpty {
@@ -52,8 +57,10 @@ while !argv.isEmpty {
     case "--window": windowLength = min(11.5, max(3.5, Double(argv.removeFirst()) ?? windowLength))
     case "--max-windows": maxWindows = Int(argv.removeFirst()) ?? maxWindows
     case "--pause": pause = Double(argv.removeFirst()) ?? pause
+    case "--asset": useAsset = true
+    case "--dump": dumpDir = argv.removeFirst()
     case "-h", "--help":
-        print("usage: cb-shazam [--window SECONDS] [--max-windows N] [--pause SECONDS] FILE...")
+        print("usage: cb-shazam [--window SECONDS] [--max-windows N] [--pause SECONDS] [--asset] [--dump DIR] FILE...")
         exit(0)
     default: files.append(a)
     }
@@ -71,8 +78,9 @@ let pcmSettings: [String: Any] = [
     AVLinearPCMIsNonInterleaved: false,
 ]
 
-/// A Shazam signature of `length` seconds of the clip's audio starting at `start`.
-@MainActor func signature(_ asset: AVURLAsset, track: AVAssetTrack, start: Double, length: Double) throws -> SHSignature {
+/// A Shazam signature of `length` seconds of the clip's audio starting at `start`,
+/// and how loud that audio was (dBFS), so a decoding problem (silence) shows up.
+@MainActor func signature(_ asset: AVURLAsset, track: AVAssetTrack, start: Double, length: Double, dump: URL?) throws -> (SHSignature, Double) {
     let reader = try AVAssetReader(asset: asset)
     reader.timeRange = CMTimeRange(start: CMTime(seconds: start, preferredTimescale: 600),
                                    duration: CMTime(seconds: length, preferredTimescale: 600))
@@ -81,15 +89,44 @@ let pcmSettings: [String: Any] = [
     reader.add(output)
     guard reader.startReading() else { throw ListenError.unreadable(reader.error?.localizedDescription ?? "start") }
     let generator = SHSignatureGenerator()
+    let file = try dump.map { try AVAudioFile(forWriting: $0, settings: pcm.settings) }
+    var sumSquares = 0.0, count = 0, failed = 0
     while let sample = output.copyNextSampleBuffer() {
         let frames = AVAudioFrameCount(CMSampleBufferGetNumSamples(sample))
         guard frames > 0, let buffer = AVAudioPCMBuffer(pcmFormat: pcm, frameCapacity: frames) else { continue }
         buffer.frameLength = frames
         let status = CMSampleBufferCopyPCMDataIntoAudioBufferList(sample, at: 0, frameCount: Int32(frames), into: buffer.mutableAudioBufferList)
-        if status == noErr { try generator.append(buffer, at: nil) }
+        guard status == noErr else { failed += 1; continue }
+        if let ch = buffer.floatChannelData?[0] {
+            for i in 0..<Int(frames) { sumSquares += Double(ch[i] * ch[i]) }
+            count += Int(frames)
+        }
+        try generator.append(buffer, at: nil)
+        try file?.write(from: buffer)
     }
     if reader.status == .failed { throw ListenError.unreadable(reader.error?.localizedDescription ?? "read") }
-    return generator.signature()
+    if count == 0 { throw ListenError.unreadable("no samples decoded (\(failed) buffers failed to copy)") }
+    let rms = (sumSquares / Double(count)).squareRoot()
+    return (generator.signature(), rms > 0 ? (20 * log10(rms) * 10).rounded() / 10 : -100)
+}
+
+/// The same, but ShazamKit reads the audio itself (a cross-check on our decoding).
+@MainActor func assetSignature(track: AVAssetTrack, start: Double, length: Double) async throws -> SHSignature {
+    let comp = AVMutableComposition()
+    guard let t = comp.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) else {
+        throw ListenError.unreadable("couldn't make a composition")
+    }
+    try t.insertTimeRange(CMTimeRange(start: CMTime(seconds: start, preferredTimescale: 600),
+                                      duration: CMTime(seconds: length, preferredTimescale: 600)), of: track, at: .zero)
+    return try await SHSignatureGenerator.signature(from: comp)
+}
+
+/// Four-character codec of an audio track ("aac ", "lpcm", "apac" for iPhone spatial audio…).
+func codec(_ track: AVAssetTrack) async -> String {
+    guard let desc = (try? await track.load(.formatDescriptions))?.first else { return "?" }
+    let c = CMFormatDescriptionGetMediaSubType(desc)
+    let bytes = [UInt8((c >> 24) & 255), UInt8((c >> 16) & 255), UInt8((c >> 8) & 255), UInt8(c & 255)]
+    return String(bytes: bytes, encoding: .ascii) ?? "?"
 }
 
 /// Where to listen: one window for a short clip, otherwise up to `maxWindows` spread evenly.
@@ -111,13 +148,32 @@ for path in files {
         let asset = AVURLAsset(url: URL(fileURLWithPath: path))
         clip.seconds = try await asset.load(.duration).seconds
         let tracks = try await asset.loadTracks(withMediaType: .audio)
-        guard let track = tracks.first else { throw ListenError.noAudio }
+        // iPhones that record spatial audio add an "apac" track; listen to the ordinary stereo one
+        var picked: (AVAssetTrack, String)?
+        for t in tracks {
+            let c = await codec(t)
+            if picked == nil || (picked!.1 == "apac" && c != "apac") { picked = (t, c) }
+        }
+        guard let chosen = picked else { throw ListenError.noAudio }
+        let track = chosen.0
+        clip.track = chosen.1
         if clip.seconds < 3.2 { throw ListenError.unreadable("under 3 seconds") }
         var agree: [String: Int] = [:]
         for at in starts(duration: clip.seconds) {
             var w = Window(at: (at * 10).rounded() / 10)
             do {
-                let sig = try signature(asset, track: track, start: at, length: min(windowLength, clip.seconds - at - 0.05))
+                let length = min(windowLength, clip.seconds - at - 0.05)
+                let sig: SHSignature
+                if useAsset {
+                    sig = try await assetSignature(track: track, start: at, length: length)
+                } else {
+                    let dump = dumpDir.map { URL(fileURLWithPath: $0).appendingPathComponent(
+                        "\(URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent)-\(Int(at))s.wav") }
+                    let (s, level) = try signature(asset, track: track, start: at, length: length, dump: dump)
+                    sig = s
+                    w.level = level
+                }
+                w.heard = (sig.duration * 10).rounded() / 10
                 switch await session.result(from: sig) {
                 case .match(let match):
                     if let item = match.mediaItems.first {
